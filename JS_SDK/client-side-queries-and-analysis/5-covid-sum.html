@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>5-covid-sum</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+
+    <script
+      type="module"
+      src="https://js.arcgis.com/calcite-components/2.6.0/calcite.esm.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://js.arcgis.com/calcite-components/2.6.0/calcite.css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.29/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #panel {
+        padding: 20px 20px 0 20px;
+        width: 200px;
+      }
+
+      .panel-heading {
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .panel-content {
+        font-size: 30px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/core/promiseUtils",
+      ], function (Map, MapView, FeatureLayer, promiseUtils) {
+        const url =
+          "https://services9.arcgis.com/N9p5hsImWXAccRNI/ArcGIS/rest/services/Nc2JKvYFoAEOFCG5JSI6/FeatureServer/1";
+
+        const featureLayer = new FeatureLayer({
+          url,
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-marker",
+              size: 4,
+              color: "red",
+              outline: null,
+            },
+          },
+          outFields: ["Deaths", "Confirmed"],
+        });
+
+        const map = new Map({
+          basemap: "dark-gray-vector",
+          layers: [featureLayer],
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map,
+          extent: {
+            xmin: -125,
+            ymin: 30,
+            xmax: -59,
+            ymax: 47,
+          },
+          ui: {
+            components: [],
+          },
+        });
+        view.ui.add(document.getElementById("panel"), "top-left");
+
+        view.on("pointer-move", (event) => {
+          debouncedMoveHandler(event).catch((error) => {
+            if (!promiseUtils.isAbortError(error)) {
+              throw error;
+            }
+          });
+        });
+
+        const debouncedMoveHandler = promiseUtils.debounce(async (event) => {
+          const featureLayerView = await view.whenLayerView(featureLayer);
+
+          const query = {
+            geometry: view.toMap(event),
+            spatialRelationship: "contains",
+            distance: 300,
+            units: "kilometers",
+            outStatistics: [
+              {
+                onStatisticField: "Confirmed",
+                outStatisticFieldName: "sum_of_cases",
+                statisticType: "sum",
+              },
+              {
+                onStatisticField: "Deaths",
+                outStatisticFieldName: "sum_of_deaths",
+                statisticType: "sum",
+              },
+            ],
+            returnQueryGeometry: true,
+          };
+          const featureSet = await featureLayerView.queryFeatures(query);
+          const {
+            features: [
+              {
+                attributes: { sum_of_cases, sum_of_deaths },
+              },
+            ],
+            queryGeometry,
+          } = featureSet;
+
+          const formatter = new Intl.NumberFormat();
+          const cases = formatter.format(sum_of_cases); // .padStart(9);
+          const deaths = formatter.format(sum_of_deaths); // .padStart(9);
+
+          document.getElementById("cases").innerText = cases;
+          document.getElementById("deaths").innerText = deaths;
+
+          view.graphics.removeAll();
+          view.graphics.add({
+            geometry: queryGeometry,
+            symbol: {
+              type: "simple-fill",
+              outline: {
+                color: "white",
+                style: "short-dash",
+                width: 2,
+              },
+            },
+          });
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="panel" class="esri-widget esri-component">
+      <div class="panel-heading">Cases</div>
+      <div class="panel-content" id="cases">-</div>
+      <div class="panel-heading">Deaths</div>
+      <div class="panel-content" id="deaths">-</div>
+    </div>
+  </body>
+</html>

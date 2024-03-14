@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>1-basic</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/OGCFeatureLayer"
+    ],
+      function (Map, MapView, OGCFeatureLayer) {
+        const layer = new OGCFeatureLayer({
+          url: "https://servicesdev.arcgis.com/87fb59a2b0b24422b15f9aa459a46160/ArcGIS/rest/services/countries_02142023_OgcFL/OGCFeatureServer",
+          collectionId: "0"
+        });
+
+        const map = new Map({
+          basemap: "satellite",
+          layers: [layer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          center: [16, 48],
+          zoom: 5,
+          map
+        });
+      });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

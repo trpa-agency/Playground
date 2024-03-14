@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>3-symbology</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/OGCFeatureLayer",
+      "esri/widgets/Legend",
+      "esri/smartMapping/renderers/color"
+    ],
+      function (Map, MapView, OGCFeatureLayer, Legend, colorRendererCreator) {
+        const layer = new OGCFeatureLayer({
+          url: "https://servicesdev.arcgis.com/87fb59a2b0b24422b15f9aa459a46160/ArcGIS/rest/services/countries_02142023_OgcFL/OGCFeatureServer",
+          collectionId: "0",
+          maxRecordCount: 1000,
+          title: "Countries"
+        });
+
+        const map = new Map({
+          basemap: "gray-vector",
+          layers: [layer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          center: [16, 48],
+          zoom: 5,
+          map
+        });
+
+        const options = {
+          layer,
+          view,
+          field: "POP2007",
+          minValue: 0,
+          maxValue: 200_000_000,
+          legendOptions: { title: "Population" }
+        };
+
+        colorRendererCreator.createClassBreaksRenderer(options).then(({ renderer }) => {
+          layer.set({ renderer });
+        });
+
+        view.ui.add(new Legend({ view }), "bottom-right");
+      });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

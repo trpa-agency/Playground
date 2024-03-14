@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>7-mars-rovers</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.29/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/layers/TileLayer",
+        "esri/Map",
+        "esri/layers/FeatureLayer",
+        "esri/views/MapView",
+        "esri/geometry/support/geodesicUtils",
+        "esri/geometry/Point",
+        "esri/geometry/Polyline",
+        "esri/renderers/UniqueValueRenderer",
+      ], function (
+        TileLayer,
+        Map,
+        FeatureLayer,
+        MapView,
+        geodesicUtils,
+        Point,
+        Polyline,
+        UniqueValueRenderer
+      ) {
+        const spatialReference = { wkid: 104905 };
+
+        const CURIOSITY = new Point({ x: 137.2, y: -4.6 });
+        const OPPORTUNITY = new Point({ x: 354.4734, y: -1.9462 });
+
+        const formatter = new Intl.NumberFormat(undefined, {
+          style: "unit",
+          unit: "kilometer",
+          unitDisplay: "short",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        });
+
+        const renderer = new UniqueValueRenderer({
+          field: "name",
+          uniqueValueInfos: [
+            {
+              value: "Curiosity",
+              symbol: {
+                type: "picture-marker",
+                url: "curiosity.png",
+                width: "120px",
+                height: "92px",
+              },
+            },
+            {
+              value: "Opportunity",
+              symbol: {
+                type: "picture-marker",
+                url: "opportunity.png",
+                width: "120px",
+                height: "92px",
+              },
+            },
+          ],
+        });
+
+        const basemap = {
+          baseLayers: [
+            new TileLayer({
+              url: "https://tiles.arcgis.com/tiles/nzS0F0zdNLvs7nc8/arcgis/rest/services/Mars_MOLA_elevation/MapServer",
+            }),
+          ],
+        };
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: {
+            basemap,
+          },
+          zoom: 3
+        });
+        view.on("click", async (event) => {
+          await view.when();
+          event.stopPropagation();
+          drawRovers(event.mapPoint, OPPORTUNITY);
+        });
+
+        drawRovers(CURIOSITY, OPPORTUNITY);
+
+        function drawRovers(curiosityLocation, opportunityLocation) {
+          const curiosity = {
+            attributes: { oid: 1, name: "Curiosity" },
+            geometry: curiosityLocation,
+          };
+
+          const opportunity = {
+            attributes: { oid: 2, name: "Opportunity" },
+            geometry: opportunityLocation,
+          };
+
+          const line = new Polyline({
+            paths: [
+              [
+                [curiosityLocation.x, curiosityLocation.y],
+                [opportunityLocation.x, opportunityLocation.y],
+              ],
+            ],
+            spatialReference,
+          });
+
+          const distance = geodesicUtils.geodesicLengths(
+            [line],
+            "kilometers"
+          )[0];
+          const geometry = geodesicUtils.geodesicDensify(line, 100000);
+          const formattedDistance = formatter.format(distance);
+
+          const path = {
+            attributes: { oid: 1 },
+            geometry,
+          };
+
+          const roverPath = new FeatureLayer({
+            fields: [{ name: "oid", alias: "oid", type: "oid" }],
+            objectIdField: "oid",
+            geometryType: "polyline",
+            spatialReference,
+            source: [path],
+            renderer: {
+              type: "simple",
+              symbol: {
+                type: "simple-line",
+                color: "red",
+                width: "12px",
+                style: "short-dash",
+              },
+            },
+            labelingInfo: [
+              {
+                labelExpressionInfo: {
+                  expression: `"${formattedDistance}"`,
+                },
+                symbol: {
+                  type: "text",
+                  haloSize: "3px",
+                  haloColor: "white",
+                  font: {
+                    size: 18,
+                    weight: "bold",
+                  },
+                },
+              },
+            ],
+          });
+
+          const rovers = new FeatureLayer({
+            fields: [
+              {
+                name: "oid",
+                alias: "oid",
+                type: "oid",
+              },
+              {
+                name: "name",
+                alias: "name",
+                type: "string",
+              },
+            ],
+            objectIdField: "oid",
+            geometryType: "point",
+            spatialReference,
+            source: [curiosity, opportunity],
+            renderer,
+            labelingInfo: [
+              {
+                labelExpressionInfo: {
+                  expression: "$feature.name",
+                },
+                labelPlacement: "above-center",
+                symbol: {
+                  type: "text",
+                  haloSize: "3px",
+                  haloColor: "white",
+                  font: {
+                    size: 18,
+                    weight: "bold",
+                  },
+                },
+              },
+            ],
+          });
+
+          view.map.removeAll();
+          view.map.addMany([roverPath, rovers]);
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

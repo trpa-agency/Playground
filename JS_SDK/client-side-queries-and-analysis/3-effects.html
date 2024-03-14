@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>3-effects</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.29/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/core/promiseUtils",
+      ], function (Map, MapView, FeatureLayer, promiseUtils) {
+        const url =
+          "https://services9.arcgis.com/N9p5hsImWXAccRNI/ArcGIS/rest/services/Nc2JKvYFoAEOFCG5JSI6/FeatureServer/1";
+
+        const featureLayer = new FeatureLayer({
+          url,
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-marker",
+              size: 4,
+              color: "red",
+              outline: null,
+            },
+          },
+          outFields: ["Deaths", "Confirmed"],
+        });
+
+        const map = new Map({
+          basemap: "dark-gray-vector",
+          layers: [featureLayer],
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map,
+          extent: {
+            xmin: -125,
+            ymin: 30,
+            xmax: -59,
+            ymax: 47,
+          },
+          ui: {
+            components: [],
+          },
+        });
+
+        view.on("pointer-move", (event) => {
+          debouncedMoveHandler(event).catch((error) => {
+            if (!promiseUtils.isAbortError(error)) {
+              throw error;
+            }
+          });
+        });
+
+        const debouncedMoveHandler = promiseUtils.debounce(async (event) => {
+          const featureLayerView = await view.whenLayerView(featureLayer);
+
+          const filter = {
+            geometry: view.toMap(event),
+            spatialRelationship: "contains",
+            distance: 300,
+            units: "kilometers",
+          };
+
+          featureLayerView.featureEffect = {
+            filter,
+            includedEffect: "invert() bloom(1.5, 0.1px, 0)",
+          };
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

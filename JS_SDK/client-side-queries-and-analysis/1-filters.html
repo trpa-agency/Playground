@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>1-filters</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+
+    <script
+      type="module"
+      src="https://js.arcgis.com/calcite-components/2.6.0/calcite.esm.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://js.arcgis.com/calcite-components/2.6.0/calcite.css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.29/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #timeSliderDiv {
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+      }
+
+      #panel {
+        padding: 20px;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/TimeSlider",
+      ], function (Map, MapView, FeatureLayer, TimeSlider) {
+        const url =
+          "https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/quakes/FeatureServer/0";
+        const MAGNITUDE_MIN = 5;
+
+        const layer = new FeatureLayer({
+          url,
+          definitionExpression: `mag >= ${MAGNITUDE_MIN}`,
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-marker",
+              style: "circle",
+              size: 7,
+              color: "#FF7F00",
+              outline: {
+                style: "solid",
+                color: "#3A3B3B",
+                width: 0.5,
+              },
+            },
+          },
+          popupTemplate: {
+            title: "{place}",
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  { label: "Id", fieldName: "id" },
+                  { label: "Time", fieldName: "time" },
+                  { label: "Latitude", fieldName: "latitude" },
+                  { label: "Longitude", fieldName: "longitude" },
+                  { label: "Depth", fieldName: "depth" },
+                  { label: "Magnitude", fieldName: "mag" },
+                  { label: "Type", fieldName: "type" },
+                ],
+              },
+            ],
+          },
+        });
+
+        const map = new Map({
+          basemap: "dark-gray-vector",
+          layers: [layer],
+        });
+
+        const view = new MapView({
+          container: "map",
+          map,
+          center: [170, 0],
+          zoom: 2,
+          ui: { components: [] },
+        });
+        view.ui.add(document.getElementById("panel"), "top-left");
+
+        const timeExtent = {
+          start: new Date(1900, 0, 1),
+          end: new Date(2019, 0, 1),
+        };
+
+        const timeSlider = new TimeSlider({
+          container: "timeSliderDiv",
+          playRate: 100,
+          stops: {
+            interval: {
+              value: 1,
+              unit: "years",
+            },
+          },
+          fullTimeExtent: timeExtent,
+          timeExtent,
+        });
+        timeSlider.watch("timeExtent", () => {
+          updateLayerView();
+        });
+
+        document
+          .getElementById("seismic-type")
+          .addEventListener("calciteRadioButtonGroupChange", () => {
+            updateLayerView();
+          });
+
+        async function updateLayerView() {
+          const { timeExtent } = timeSlider;
+
+          const { value } =
+            document.getElementById("seismic-type").selectedItem;
+          const where = value === "all" ? null : `type='${value}'`;
+
+          const layerView = await view.whenLayerView(layer);
+          layerView.filter = {
+            timeExtent,
+            where,
+          };
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="timeSliderDiv"></div>
+    <div id="panel" class="esri-widget esri-component">
+      <calcite-radio-button-group
+        name="Options"
+        layout="vertical"
+        id="seismic-type"
+      >
+        <calcite-label layout="inline">
+          <calcite-radio-button value="all" checked></calcite-radio-button>
+          All
+        </calcite-label>
+        <!-- <calcite-label layout="inline">
+        <calcite-radio-button value="mining explosion"></calcite-radio-button>
+        Mining Explosion
+      </calcite-label> -->
+        <calcite-label layout="inline">
+          <calcite-radio-button value="earthquake"></calcite-radio-button>
+          Earthquake
+        </calcite-label>
+        <calcite-label layout="inline">
+          <calcite-radio-button value="rock burst"></calcite-radio-button>
+          Rock Burst
+        </calcite-label>
+        <!-- <calcite-label layout="inline">
+        <calcite-radio-button value="mine collapse"></calcite-radio-button>
+        Mine Collapse
+      </calcite-label> -->
+        <!-- <calcite-label layout="inline">
+        <calcite-radio-button value="quarry blast"></calcite-radio-button>
+        Quarry Blast
+      </calcite-label> -->
+        <calcite-label layout="inline">
+          <calcite-radio-button
+            value="nuclear explosion"
+          ></calcite-radio-button>
+          Nuclear Explosion
+        </calcite-label>
+        <calcite-label layout="inline">
+          <calcite-radio-button
+            value="volcanic eruption"
+          ></calcite-radio-button>
+          Volcanic Eruption
+        </calcite-label>
+        <!-- <calcite-label layout="inline">
+        <calcite-radio-button value="sonic boom"></calcite-radio-button>
+        Sonic Boom
+      </calcite-label> -->
+      </calcite-radio-button-group>
+    </div>
+  </body>
+</html>
