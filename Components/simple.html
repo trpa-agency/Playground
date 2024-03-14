@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Just a simple map</title>
+    <link rel="icon" href="data:;base64,=" />
+
+    <style>
+      html,
+      body {
+        background-color: var(--calcite-ui-foreground-2);
+        padding: 0;
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+    <!-- Load the ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <!-- Load the Map Components -->
+    <script type="module" src="https://js.arcgis.com/map-components/4.29/arcgis-map-components.esm.js"></script>
+  </head>
+  
+
+<body>
+  <!--<arcgis-map item-id="d9d7a3332f16487181ea257b154c40a3" basemap="gray-vector" zoom="9"> -->
+    
+    <!--
+    <arcgis-map item-id="d9d7a3332f16487181ea257b154c40a3">
+    <arcgis-legend position="bottom-left" />
+    <arcgis-layer-list position="top-right" />
+    <arcgis-scale-bar position="bottom-right" />/
+    <arcgis-home position="top-left" />
+    <arcgis-search position="top-right" />
+    
+  </arcgis-map>
+  -->
+  <arcgis-scene 
+  item-id="dee98b64107e410a8fdd8d82dd66ca6b"
+  camera="{
+    position: [7.5, 46.9, 10000000],
+    heading: 0,
+    tilt: 0
+  }">
+  </arcgis-scene>  
+</body>
+
+
+</html>
