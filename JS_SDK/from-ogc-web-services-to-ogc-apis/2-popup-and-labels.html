@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>2-popup-and-labels</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/OGCFeatureLayer"
+    ],
+      function (Map, MapView, OGCFeatureLayer) {
+        const layer = new OGCFeatureLayer({
+          url: "https://servicesdev.arcgis.com/87fb59a2b0b24422b15f9aa459a46160/ArcGIS/rest/services/countries_02142023_OgcFL/OGCFeatureServer",
+          collectionId: "0",
+          popupTemplate: {
+            title: "{CNTRY_NAME}",
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  { label: "Long Name", fieldName: "LONG_NAME" },
+                  { label: "Long Name (localized)", fieldName: "LOCLNGNAM" },
+                  { label: "Short Name (localized)", fieldName: "LOCSHRTNAM" },
+                  { label: "Population", fieldName: "POP2007" },
+                  { label: "ISO (2 digit)", fieldName: "ISO_2DIGIT" },
+                  { label: "ISO (3 digit)", fieldName: "ISO_3DIGIT" },
+                  { label: "Area (km²)", fieldName: "LAND_SQKM" },
+                  { label: "UN Status", fieldName: "STATUS" }
+                ]
+              }
+            ]
+          },
+          labelingInfo: [
+            {
+              labelExpressionInfo: { expression: "$feature.CNTRY_NAME" },
+              symbol: {
+                type: "text",
+                color: "white",
+                haloSize: 2,
+                haloColor: "black",
+                font: { size: 18 }
+              }
+            }
+          ]
+        });
+
+        const map = new Map({
+          basemap: "satellite",
+          layers: [layer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          center: [16, 48],
+          zoom: 5,
+          map
+        });
+      });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>5-nasa-blue-marble</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/WebTileLayer",
+      "esri/layers/FeatureLayer",
+    ],
+      function (
+        Map,
+        MapView,
+        WebTileLayer,
+        FeatureLayer,
+      ) {
+        (async () => {
+          const urlTemplate = "https://maps.ecere.com/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/{level}/{row}/{col}.jpg";
+          const layer = new WebTileLayer({ urlTemplate });
+
+          const map = new Map({
+            basemap: {
+              baseLayers: [layer]
+            },
+            layers: [
+              new FeatureLayer({
+                url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Major_Cities_/FeatureServer/0"
+              })
+            ]
+          });
+
+          const view = new MapView({
+            container: "viewDiv",
+            map,
+            popup: {
+              defaultPopupTemplateEnabled: true
+            }
+          });
+        })();
+      });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

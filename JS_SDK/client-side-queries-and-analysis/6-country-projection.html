@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>6-country-projection</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.29/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/GeoJSONLayer",
+        "esri/Graphic",
+        "esri/geometry/projection",
+        "esri/core/promiseUtils",
+      ], function (
+        Map,
+        MapView,
+        GeoJSONLayer,
+        Graphic,
+        projection,
+        promiseUtils
+      ) {
+        (async () => {
+          let countryGraphic = null;
+          let pointerStart = null;
+          let projectedGeometry = null;
+
+          const countries = new GeoJSONLayer({
+            url: "https://developers.arcgis.com/javascript/latest/sample-code/client-projection/live/percent-forest-area.json",
+            outFields: ["*"],
+            definitionExpression: "Country <> 'Antarctica'",
+          });
+
+          const map = new Map({
+            basemap: "gray-vector",
+            layers: [countries],
+          });
+
+          const view = new MapView({
+            container: "viewDiv",
+            map,
+            zoom: 2,
+          });
+
+          await Promise.all([countries.load(), view.when(), projection.load()]);
+
+          view.on("click", async (event) => {
+            view.graphics.removeAll();
+            countryGraphic = null;
+
+            const { results } = await view.hitTest(event, {
+              include: [countries],
+            });
+
+            const country = results.map(({ graphic }) => graphic).at(0);
+            if (!country) {
+              return;
+            }
+
+            projectedGeometry = projection.project(
+              country.geometry,
+              { wkid: 54016 } // World Cylindrical Equal Area
+            );
+
+            countryGraphic = new Graphic({
+              geometry: projectedGeometry,
+              symbol: {
+                type: "simple-fill",
+                color: [0, 255, 255, 0.5],
+                outline: {
+                  color: "cyan",
+                  width: 2,
+                },
+              },
+            });
+            view.graphics.add(countryGraphic);
+          });
+
+          const debouncedDragHandler = promiseUtils.debounce(async (event) => {
+            if (!countryGraphic) {
+              return;
+            }
+
+            event.stopPropagation();
+
+            switch (event.action) {
+              case "start":
+                pointerStart = projection.project(view.toMap(event), {
+                  wkid: 54016,
+                });
+                return;
+              case "end":
+                pointerStart = null;
+                return;
+            }
+
+            const pointerUpdate = projection.project(view.toMap(event), {
+              wkid: 54016, // World Cylindrical Equal Area
+            });
+            const clonedProjectedGeometry = projectedGeometry.clone();
+
+            for (const ring of clonedProjectedGeometry.rings) {
+              for (const point of ring) {
+                point[0] += pointerUpdate.x - pointerStart.x;
+                point[1] += pointerUpdate.y - pointerStart.y;
+              }
+            }
+            countryGraphic.geometry = clonedProjectedGeometry;
+          });
+
+          view.on("drag", (event) => {
+            debouncedDragHandler(event).catch((error) => {
+              if (!promiseUtils.isAbortError(error)) {
+                throw error;
+              }
+            });
+          });
+        })();
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
