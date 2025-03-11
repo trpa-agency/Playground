@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Tahoe SEZ</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.14/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.14/"></script>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #gridDiv {
+        padding: 10px;
+        max-width: 1000px;
+        min-height: 200px;
+          }
+
+    .table-expand{
+        width: 800px;
+            }
+
+    .dgrid {
+        height: auto !important;
+          }
+
+    .dgrid .dgrid-scroller {
+        position: relative;
+        max-height: 200px;
+        min-height: 200px;
+        overflow: auto;
+          }
+      #infoDiv {
+        position: absolute;
+        top: 15px;
+        left: 60px;
+      }
+      #infoDiv input {
+        border: none;
+        box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 2px;
+      }
+
+      .esri-widget--button.active,
+      .esri-widget--button.active:hover,
+      .esri-widget--button.active:focus {
+        cursor: default;
+        background-color: #999696;
+      }
+      .esri-widget--button.active path,
+      .esri-widget--button.active:hover path,
+      .esri-widget--button.active:focus path {
+        fill: #e4e4e4;
+      }
+      
+    img{
+        max-width: 100%;
+        max-height: 100%;
+        display: block; 
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+        .overlay {
+            opacity:0;
+            position:fixed;
+            top:-999em;
+            left:-999em;
+            width:100%;
+            height:100%;
+            display:table;
+            background:rgba(0,0,0,0.8);
+            -webkit-animation: splash 20s forwards; 
+            animation: splash 20s forwards;
+        }
+
+        .overlay-inner {
+            display:table-cell;
+            vertical-align:middle;
+            text-align:center;
+        }
+        .title{
+            align-content: center;
+        }
+        .message {
+/*            border:1px solid #6e6e6e;*/
+            border-radius: 4px;
+            background: rgba(102,128,168, 0.6);
+            display:inline-block;
+            vertical-align:middle;
+            width:50%;
+            text-align:center;
+            font-family: "Avenir Next W00";
+            color: #f9f9f9;
+            padding:10px;
+        }
+
+        .active {
+            background: #6680a8;
+            color: #4c4c4c;
+
+        }
+
+        .overlay-wrap {
+            position:fixed;
+            top:0;
+            left:0;
+            right:0;
+            z-index:99;
+        }
+
+        .overlay-wrap .hide {
+            position:absolute;
+            top:-999em;
+            right:20px;
+/*            border:1px solid #6e6e6e;*/
+            border-radius: 2px;
+            background: rgba(102,128,168, 0.6);
+            display:inline-block;
+            text-align:middle;
+            font-family: "Avenir Next W00";
+            opacity:0;
+            color:#f9f9f9;
+            padding:2px;
+            font-size:100%;
+            z-index:2;
+            cursor:pointer;
+            -webkit-animation:15s fadein 2s forwards;
+            -moz-animation:15s fadein 2s forwards;
+            -ms-animation:15s fadein 2s forwards;
+            animation:15s fadein 2s forwards;
+        }
+
+        #hide {
+            position:absolute;
+            left:-999em;
+            top:-999em;
+        }
+
+        .overlay2{
+            position:absolute;
+            opacity:1;
+            -webkit-transition:all 2s;
+            -moz-transition:all 2s;
+            -ms-transition:all 2s;
+            transition:all 2s ;
+        }
+
+        #hide:checked ~ div,#hide:checked ~ div *, #hide:checked + label {
+            opacity:0;
+            left:-999em;
+            right:auto;
+            top:-999em;
+            pointer-events:none;
+        }
+
+        @-webkit-keyframes splash {
+            0%  {opacity: 0;top:0;left:0}
+            20% {opacity:1;top:0;left:0}
+            60% {opacity:1;top:0;left:0}
+            99% {top:0;left:0}
+            100% {opacity:0;top:-999em;left:-999em}
+        }
+
+        @-moz-keyframes splash {
+            0%  {opacity: 0;top:0;left:0}
+            20% {opacity:1;top:0;left:0}
+            60% {opacity:1;top:0;left:0}
+            99% {top:0;left:0}
+            100% {opacity:0;top:-999em;left:-999em}
+        }
+
+        @-ms-keyframes splash {
+            0% {opacity: 0;top:0;left:0}
+            20% {opacity:1;top:0;left:0}
+            60% {opacity:1;top:0;left:0}
+            99% {top:0;left:0}
+            100% {opacity:0;top:-999em;left:-999em}
+        }
+
+        @keyframes splash {
+            0%  {opacity: 0;top:0;left:0}
+            20% {opacity:1;top:0;left:0}
+            60% {opacity:1;top:0;left:0}
+            99% {top:0;left:0}
+            100% {opacity:0;top:-999em;left:-999em}
+        }
+
+        @-webkit-keyframes fadein {
+            0% {opacity: 0;top:10px;}
+            20% {opacity:1;top:10px;}
+            60%{opacity:1;top:10px}
+            99% {top:10px}
+            100%{opacity:0;top:-999em}
+        }
+
+        @-moz-keyframes fadein {
+            0% {opacity: 0;top:10px;}
+            20% {opacity:1;top:10px;}
+            60%{opacity:1;top:10px}
+            99% {top:10px}
+            100%{opacity:0;top:-999em
+        }
+
+        @-ms-keyframes fadein {
+            0% {opacity: 0;top:10px;}
+            20% {opacity:1;top:10px;}
+            60%{opacity:1;top:10px}
+            99% {top:10px}
+            100%{opacity:0;top:-999em
+        }
+
+        @keyframes fadein {
+            0% {opacity: 0;top:10px;}
+            20% {opacity:1;top:10px;}
+            60%{opacity:1;top:10px}
+            99% {top:10px}
+            100%{opacity:0;top:-999em}
+        }
+
+  </style>
+
+  <script>
+    require([
+        "esri/config",
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Measurement",
+        "esri/widgets/Expand",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/BasemapToggle",
+        "esri/widgets/Search",
+        "esri/widgets/LayerList",
+        "esri/widgets/LayerList/LayerListViewModel",
+        "esri/widgets/Home",
+        "esri/widgets/Legend",
+        "esri/widgets/Print",
+        "esri/Graphic",
+        "esri/widgets/Legend",
+        "esri/widgets/Expand",
+        "esri/geometry/SpatialReference",
+        "dgrid/OnDemandGrid",
+        "dgrid/extensions/ColumnHider",
+        "dojo/store/Memory",
+        "dstore/legacy/StoreAdapter",
+        "dgrid/Selection",
+        "esri/widgets/Locate",
+        "esri/widgets/Track"
+      ],
+      function(
+        esriConfig, 
+        WebMap, 
+        MapView, 
+        FeatureLayer,
+        Measurement,
+        Expand,
+        BasemapGallery,
+        BasemapToggle,
+        Search,
+        LayerList,
+        LayerListVM,
+        Home,
+        Legend,
+        Print,
+        Graphic, 
+        Legend, 
+        Expand, 
+        SpatialReference,
+        OnDemandGrid, 
+        ColumnHider, 
+        Memory, 
+        StoreAdapter, 
+        Selection,
+        Locate,
+        Track
+      ) {
+        {
+//        esriConfig.portalUrl = "https://maps.trpa.org/portal";
+          esriConfig.portalUrl = "https://trpa.maps.arcgis.com";
+            };
+                
+        let  meadowLayerView, grid;
+        const gridDiv = document.getElementById("grid");
+        const infoDiv = document.getElementById("info");
+
+        // create new map, view and csvlayer
+        const gridFields = ["OBJECTID", "Assessment_Unit_Name", "SEZ_Type", "Final_Rating","Conifer_Encroachment_Rating", "Ditches_Rating", "Habitat_Fragmentation_Rating", "Incision_Rating", "Invasive_Rating",
+        "Biotic_Integrity_Rating", "Bank_Stability_Rating",
+        "AquaticOrganismPassage_Rating", "Ownership_Primary", "Ownership_Secondary", "Comments"
+        ];
+        
+        const meadowLayer = new FeatureLayer({            
+            //url: "https://services5.arcgis.com/fXXSUzHD5JjcOt1v/arcgis/rest/services/SEZ_Assessment_Unit_Meadow_Rating/FeatureServer",
+            url: "https://maps.trpa.org/server/rest/services/SEZ_Assessment_Unit/FeatureServer/0",
+            outFields: gridFields,
+            title: "Assessment Unit Ratings"
+        });
+
+
+        var map = new WebMap({
+            portalItem: {
+                id: "11a76c4853354493bae0ab03e820a658"
+            }
+          });
+        
+        map.add(meadowLayer);
+        
+        var view = new MapView({
+            container: "viewDiv",
+            map: map,
+            center: [-120.01,39.05],
+            zoom: 10,
+            highlightOptions: {
+              color: "#2B65EC",
+              fillOpacity: 0.4
+            },
+            padding: {
+              bottom: infoDiv.clientHeight
+            }
+          });
+        
+        // function to create print service
+        view.when(function() {
+            var print = new Print({
+                container: document.createElement("div"),
+                view: view,
+                // specify print service url
+                printServiceUrl:"https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+        });
+            
+        // Create Print Button
+        var printExpand = new Expand({
+            expandIconClass: "esri-icon-printer",  // see https://developers.arcgis.com/javascript/latest/guide/esri-icon-font/
+            expandTooltip: "Print",
+            view: view,
+            autoCollapse: true,
+            content: print.domNode,
+            group: "top-right"
+            });
+
+        // Add print widget to the top right corner of the view
+        view.ui.add(printExpand, "top-right");
+        });
+        
+        // create a new datastore for the on demandgrid
+        // will be used to display attributes of selected features
+        const dataStore = new StoreAdapter({
+          objectStore: new Memory({
+            idProperty: "OBJECTID"
+          })
+        });
+        /****************************************************
+         * Selects features from the layer that intersect
+         * a polygon that user drew using sketch view model
+         ****************************************************/
+        function popGrid() {
+          view.graphics.removeAll();
+          if (meadowLayerView) {
+            const query = {
+              where: "1=1",
+              outFields: ["*"]
+            };
+
+            // query graphics from the layer view. Geometry set for the query
+            // can be polygon for point features and only intersecting geometries are returned
+            meadowLayerView.queryFeatures(query).then(function(results) {
+                const graphics = results.features;
+                // if the grid div is displayed while query results does not
+                // return graphics then hide the grid div and show the instructions div
+                if (graphics.length > 0) {
+                  gridDiv.style.zIndex = 90;
+                  infoDiv.style.zIndex = 80;
+                  document.getElementById("featureCount").innerHTML =
+                    "<b>Showing attributes for " +
+                    graphics.length.toString() + " features </b>"
+                } else {
+                  gridDiv.style.zIndex = 80;
+                  infoDiv.style.zIndex = 90;
+                }
+
+                // get the attributes to display in the grid
+                const data = graphics.map(function(feature, i) {
+                  return Object.keys(feature.attributes)
+                    .filter(function(key) {
+                      // get fields that exist in the grid
+                      return (gridFields.indexOf(key) !== -1);
+                    })
+                    // need to create key value pairs from the feature
+                    // attributes so that info can be displayed in the grid
+                    .reduce(function(obj, key) {
+                      obj[key] = feature.attributes[key];
+                      return obj;
+                    }, {});
+                });
+
+                // set the datastore for the grid using the
+                // attributes we got for the query results
+                dataStore.objectStore.data = data;
+                grid.set("collection", dataStore);
+              })
+              .catch(errorCallback);
+          }
+        }
+        /************************************************
+         * fires when user clicks a row in the grid
+         * get the corresponding graphic and select it
+         *************************************************/
+        function selectFeatureFromGrid(event) {
+          // close view popup if it is open
+          view.popup.close();
+          // get the ObjectID value from the clicked row
+          const row = event.rows[0]
+          const id = row.data.OBJECTID;
+
+          // setup a query by specifying objectIds
+          const query = {
+            objectIds: [parseInt(id)],
+            outFields: ["*"],
+            returnGeometry: true,
+            outSpatialReference: view.SpatialReference
+          };
+
+          // query the csvLayerView using the query set above
+          meadowLayerView.queryFeatures(query).then(function(results) {
+              const graphics = results.features;
+              // remove all graphics to make sure no selected graphics
+              view.graphics.removeAll();
+              view.goTo(graphics[0].geometry);
+
+              // create a new selected graphic
+              const selectedGraphic = new Graphic({
+                geometry: graphics[0].geometry,
+                symbol: {
+                  type: "simple-fill",
+                  color: [130, 194, 232, 0.4],
+                  style: "solid",
+                  outline: {  // autocasts as new SimpleLineSymbol()
+                    color:[130, 194, 232, 0.4],
+                    width: 3
+                  }
+                }
+              });
+
+              // add the selected graphic to the view
+              // this graphic corresponds to the row that was clicked
+              view.graphics.add(selectedGraphic);
+            })
+            .catch(errorCallback);
+        }
+
+        /************************************************
+         * Creates a new grid. Loops through layer 
+         * fields and creates grid columns
+         * Grid with selection and columnhider extensions
+         *************************************************/
+        function createGrid(fields) {
+          var columns = fields.filter(function(field, i) {
+            if (gridFields.indexOf(field.name) !== -1) {
+              return field;
+            }
+          }).map(function(field) {
+            if (field.name === "Assessment_Unit_Name" || field.name === "SEZ_Type" || field.name === "Ownership_Primary" || field.name === "Final_Rating") {
+              return {
+                field: field.name,
+                label: field.alias,
+                sortable: true,
+                hidden: false
+              };
+            } else {
+              return {
+                field: field.name,
+                label: field.alias,
+                sortable: true,
+                hidden: true
+              };
+            }
+          });
+
+          // create a new onDemandGrid with its selection and columnhider
+          // extensions. Set the columns of the grid to display attributes
+          // the hurricanes cvslayer
+          grid = new(OnDemandGrid.createSubclass([Selection, ColumnHider]))({
+            columns: columns
+          }, "grid");
+
+          // add a row-click listener on the grid. This will be used
+          // to highlight the corresponding feature on the view
+          grid.on("dgrid-select", selectFeatureFromGrid);
+        }
+        
+        function errorCallback(error) {
+          console.log("error:", error)
+        }
+        
+        // create a grid with given columns once the layer is loaded
+        meadowLayer.when(function () {
+            // create a grid with columns specified in gridFields variable
+            createGrid(meadowLayer.fields);
+
+            // get a reference the meadowlayerview when it is ready.
+            view.whenLayerView(meadowLayer).then(function (layerView) {
+              meadowLayerView = layerView;
+                //wait for the layerview to be done updating
+              meadowLayerView.watch("updating", function(bool){
+                if(!bool){
+                  popGrid();
+                }
+              })
+            });
+          })
+          .catch(errorCallback);
+
+        // create grid expand
+        const gridExpand = new Expand({
+          expandTooltip: "Show Attribute Table",
+          expanded: false,
+          view: view,
+          content: document.getElementById("gridDiv"),
+          expandIconClass: "esri-icon-table",
+          group: "bottom-right"
+        });
+
+                  
+        // Add a legend instance to the panel of a
+        // ListItem in a LayerList instance
+        const layerList = new LayerList({
+                  view: view,
+                  listItemCreatedFunction: function(event) {
+                    const item = event.item;
+                    if (item.layer.type != "group") {
+                      // don't show legend twice
+                      item.panel = {
+                        content: "legend",
+                        open: false
+                      };
+                    }
+                  }
+            });
+            
+        view.ui.add(layerList, "top-right");
+        
+        // Create collapasable button for Table of Contents
+        var layerListExpand = new Expand({
+            expandIconClass: "esri-icon-layers",  // see https://developers.arcgis.com/javascript/latest/guide/esri-icon-font/
+            expandTooltip: "Layer List",
+            view: view,
+            autoCollapse: true,
+            content: layerList.domNode,
+            group: "top-right"
+            });
+
+        // add layer list button to the top right corner of the view
+        view.ui.add(layerListExpand, "top-right");
+                
+        
+        // Create new instance of the Measurement widget
+        const measurement = new Measurement();
+
+        const distanceButton = document.getElementById("distance");
+        const areaButton = document.getElementById("area");
+        const clearButton = document.getElementById("clear");
+        
+        distanceButton.addEventListener("click", function() {
+          distanceMeasurement();
+        });
+        areaButton.addEventListener("click", function() {
+          areaMeasurement();
+        });
+        clearButton.addEventListener("click", function() {
+          clearMeasurements();
+        });
+
+        // Call the loadView() function for the initial view
+        loadView();
+
+        // The loadView() function to define the view for the widgets and div
+        function loadView() {
+          view.set({
+            container: "viewDiv"
+          });
+          // Add the appropriate measurement UI to the  when activated
+          view.ui.add(measurement, "top-right");
+          // Set the views for the widgets
+          measurement.view = view;
+        }
+
+        // Call the appropriate DistanceMeasurement2D
+        function distanceMeasurement() {
+          const type = view.type;
+          measurement.activeTool =
+            type.toUpperCase() === "2D" ? "distance" : "direct-line";
+          distanceButton.classList.add("active");
+          areaButton.classList.remove("active");
+        }
+
+        // Call the appropriate AreaMeasurement2D
+        function areaMeasurement() {
+          measurement.activeTool = "area";
+          distanceButton.classList.remove("active");
+          areaButton.classList.add("active");
+        }
+
+        // Clears all measurements
+        function clearMeasurements() {
+          distanceButton.classList.remove("active");
+          areaButton.classList.remove("active");
+          measurement.clear();
+        }
+
+        var parcels = new FeatureLayer({
+            url: "https://maps.trpa.org/server/rest/services/Parcels/MapServer/0",
+//                popupTemplate: {
+//                // autocasts as new PopupTemplate()
+//                    title: "Parcel: {APN}",
+//                    overwriteActions: false
+//                }
+        });
+
+        // Create Search Widget
+        var searchWidget = new Search({
+          view: view,
+          allPlaceholder: "Address or APN",
+          locationEnabled: false,
+          includeDefaultSources: false,
+          popupEnabled: false,
+          sources: [
+            {
+              layer: parcels,
+              searchFields: ["APO_ADDRESS"],
+              displayField: "APO_ADDRESS",
+              exactMatch: false,
+              outFields: ["APO_ADDRESS"],
+              name: "Address",
+              zoomScale: 24000,
+            },
+            {
+              layer: parcels,
+              searchFields: ["APN"],
+              displayField: "APN",
+              exactMatch: false,
+              outFields: ["APN"],
+              name: "APN",
+              zoomScale: 24000,
+            }
+          ]
+        });
+
+        // Add the search widget to the top left corner of the view
+        view.ui.add(searchWidget, {
+            position: "top-left"
+        });
+
+        // move zoom buttons to top left
+        view.ui.move("zoom", "top-left");
+
+        // Createa Home Button
+        var homeWidget = new Home({
+            view: view
+        });
+
+        // adds the home widget to the top left corner of the MapView
+        view.ui.add(homeWidget, "top-left");            
+
+        // add a legend widget instance to the view
+        // and set the style to 'card'. This is a
+        // responsive style, which is good for mobile devices
+        // or 'classic' for PC users
+        const legend = new Expand({
+            expandIconClass: "esri-icon-layer-list",  // see https://developers.arcgis.com/javascript/latest/guide/esri-icon-font
+            expandTooltip: "Legend",
+            content: new Legend({
+                view: view,
+                style: "classic" // other styles include 'card'
+                }),
+            view: view,
+            expanded: false,
+            group: "bottom-left"
+        });
+        view.ui.add(legend, "bottom-left");
+
+        var basemapToggle = new BasemapToggle({
+            container: document.createElement("div"),
+            view: view,
+            nextBasemap: "hybrid"  // Allows for toggling to the "hybrid" basemap
+        });
+
+        // Create an Expand instance and set the content
+        // property to the DOM node of the basemap gallery widget
+        var bgExpand = new Expand({
+            expandIconClass: "esri-icon-basemap",  // see https://developers.arcgis.com/javascript/latest/guide/esri-icon-font
+            expandTooltip: "Toggle Basemap",
+            view: view,
+            content: basemapToggle.domNode,
+            group: "bottom-left"
+        });
+
+        // Add the basemap gallery button
+        view.ui.add(bgExpand, "bottom-left"); 
+
+        // create button to open report
+        var reportButton = document.createElement('div');
+        reportButton.className = "esri-icon-documentation esri-widget--button esri-widget esri-interactive";
+        reportButton.title = "Open Report"
+        reportButton.addEventListener('click', function(evt){
+          console.log("clicked");
+          window.open("http://gis.trpa.org/TahoeSEZViewer/SEZ baseline condition assessment_v8.pdf");
+        })
+        
+        // add report button
+        view.ui.add(reportButton, "bottom-right");
+        
+        // Add grid expand to the view
+        view.ui.add(gridExpand, "bottom-right");
+
+          var locate = new Locate({
+            view: view,
+            useHeadingEnabled: false,
+            goToOverride: function(view, options) {
+              options.target.scale = 1500;  // Override the default map scale
+              return view.goTo(options.target);
+            }
+          });
+
+          view.ui.add(locate, "top-left");
+
+          var track = new Track({
+            view: view,
+            graphic: new Graphic({
+              symbol: {
+                type: "simple-marker",
+                size: "12px",
+                color: "blue",
+                outline: {
+                  color: "#efefef",
+                  width: "1.5px"
+                }
+              }
+            }),
+            useHeadingEnabled: false  // Don't change orientation of the map
+          });
+
+          view.ui.add(track, "top-left"); 
+        // add the toolbar for the measurement widgets
+        view.ui.add("toolbarDiv", "top-right");
+      });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+    <div id="gridDiv" class="esri-widget table-expand">
+    <div id="info">
+      <span class="info" id="featureCount"></span>
+      <div id="grid"></div>
+    </div>
+    </div>
+    <div id="toolbarDiv" class="esri-component esri-widget">
+      <button
+        id="distance"
+        class="esri-widget--button esri-interactive esri-icon-measure-line"
+        title="Distance Measurement Tool"
+      ></button>
+      <button
+        id="area"
+        class="esri-widget--button esri-interactive esri-icon-measure-area"
+        title="Area Measurement Tool"
+      ></button>
+      <button
+        id="clear"
+        class="esri-widget--button esri-interactive esri-icon-trash"
+        title="Clear Measurements"
+      ></button>
+    </div>
+      <div class="overlay-wrap">
+		<input type="checkbox" name="hide" id="hide">
+		<label class="hide" for="hide">X</label>
+		  <div class="overlay2">
+              <div class="overlay">
+                <div class="overlay-inner">
+                  <div class="message">
+                      <p><h2>The Stream Environment Zones of Lake Tahoe</h2></p> 
+                        <p><img src="lib/SEZ_Map_Instructions.jpg" alt="" /></p>
+                      <p>Use this application to visualize <b>CURRENT CONDITIONS</b> of stream environment zones, <b>SEARCH</b> for a meadow or stream, <b>FILTER</b> monitoring attributes, <b>EXPLORE</b> monitoring data such as streambank erosion and channel incision, <b>LOCATE</b> where you are, and <b>TRACK</b> where you've been.</p>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+	
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GGW1331881"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-GGW1331881');
+</script>
+</body>
+
+</html>
