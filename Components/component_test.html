@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>At-Risk Communities in the Tahoe Basin</title>
+
+  <!-- ArcGIS Maps SDK for JavaScript -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/@arcgis/core/assets/esri/themes/dark/main.css">
+  
+  <!-- Calcite Design System -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0/calcite.esm.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0/calcite.css">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    
+    #viewDiv {
+      height: 100%;
+      width: 100%;
+    }
+    
+    calcite-shell {
+      height: 100vh;
+    }
+
+    calcite-shell-panel {
+      width: 300px;
+    }
+
+    .panel-content {
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <calcite-shell>
+    <!-- Header -->
+    <calcite-shell-panel slot="header">
+      <calcite-action text="At-Risk Communities in the Tahoe Basin" icon="globe" />
+    </calcite-shell-panel>
+
+    <!-- Map View -->
+    <div id="viewDiv"></div>
+
+    <!-- Sidebar Panel -->
+    <calcite-shell-panel slot="panel-start" position="start">
+      <calcite-panel heading="Layers">
+        <div id="layerListContainer" class="panel-content"></div>
+      </calcite-panel>
+      <calcite-panel heading="Legend">
+        <div id="legendContainer" class="panel-content"></div>
+      </calcite-panel>
+    </calcite-shell-panel>
+  </calcite-shell>
+
+  <script type="module">
+    import WebMap from "https://js.arcgis.com/4.29/@arcgis/core/WebMap.js";
+    import MapView from "https://js.arcgis.com/4.29/@arcgis/core/views/MapView.js";
+    import LayerList from "https://js.arcgis.com/4.29/@arcgis/core/widgets/LayerList.js";
+    import Legend from "https://js.arcgis.com/4.29/@arcgis/core/widgets/Legend.js";
+    import Fullscreen from "https://js.arcgis.com/4.29/@arcgis/core/widgets/Fullscreen.js";
+
+    async function initializeMap() {
+      const map = new WebMap({
+        portalItem: { id: "76703565932a4b6f9167e013d752a550" }
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-120.01, 39.01],
+        zoom: 9
+      });
+
+      await view.when(); // Ensure the map is fully loaded before adding widgets
+
+      // Create widgets
+      const layerList = new LayerList({ view });
+      const legend = new Legend({ view });
+      const fullscreen = new Fullscreen({ view });
+
+      // Add fullscreen button
+      view.ui.add(fullscreen, "top-left");
+
+      // Wait for Calcite UI elements to be available before adding widgets
+      setTimeout(() => {
+        document.getElementById("layerListContainer").appendChild(layerList.container);
+        document.getElementById("legendContainer").appendChild(legend.container);
+      }, 500);
+    }
+
+    initializeMap();
+  </script>
+</body>
+</html>
