@@ -1,0 +1,18 @@
+{
+  "limitGraphics": false,
+  "maxGraphics": 0,
+  "noDataMessage": "",
+  "styleType": "usePopupDefined",
+  "style": {
+    "textColor": "",
+    "fontSizeType": "auto",
+    "fontSize": {
+      "distance": 14,
+      "unit": "px"
+    },
+    "backgroundColor": ""
+  },
+  "dsNavigator": true,
+  "featureNavigator": true,
+  "dsConfigs": []
+}

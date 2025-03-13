@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Map components AMD sample</title>
+    <link rel="icon" href="data:;base64,=" />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      arcgis-map {
+        display: block;
+        height: 100vh;
+      }
+    </style>
+
+    <!-- Load Calcite Components-->
+    <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+
+    <!-- Load the ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+    <!-- Load the Map components -->
+    <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+  </head>
+  <body>
+    <arcgis-map item-id="d5dda743788a4b0688fe48f43ae7beb9">
+      <arcgis-expand position="top-right">
+        <arcgis-search></arcgis-search>
+      </arcgis-expand>
+      <arcgis-legend position="bottom-left"></arcgis-legend>
+    </arcgis-map>
+  </body>
+</html>
