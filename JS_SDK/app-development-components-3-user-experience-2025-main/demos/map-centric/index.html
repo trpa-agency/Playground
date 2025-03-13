@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Museums in the United States</title>
+    <!-- Common styles between Map Centric and Non Map Centric -->
+    <link rel="stylesheet" href="../common/common.css" />
+    <!-- Map Centric styles -->
+    <link rel="stylesheet" href="./style.css" />
+    <!-- Calcite Design System -->
+    <script
+      type="module"
+      src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"
+    ></script>
+    <!-- ArcGIS Maps SDK For JavaScript -->
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.32/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.32/"></script>
+    <!-- ArcGIS Maps Components -->
+    <script
+      type="module"
+      src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"
+    ></script>
+    <!-- ArcGIS Chart Components -->
+    <script
+      type="module"
+      src="https://js.arcgis.com/charts-components/4.32/arcgis-charts-components.esm.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/charts-components/4.32/arcgis-charts-components.css"
+    />
+  </head>
+  <body>
+    <calcite-shell>
+      <arcgis-map id="arcgisMap" item-id="ad11753a40764bd39f7ac5685dffdc21">
+        <arcgis-home position="top-left"></arcgis-home>
+        <arcgis-zoom position="top-left"></arcgis-zoom>
+        <arcgis-expand
+          expand-icon="graph-bar"
+          position="bottom-left"
+          label="Charts"
+        >
+          <arcgis-placement>
+            <calcite-carousel arrow-type="none">
+              <calcite-carousel-item>
+                <calcite-panel>
+                  <arcgis-chart
+                    id="chart"
+                    class="chart-container"
+                    filter-by-extent="true"
+                  >
+                  </arcgis-chart>
+                </calcite-panel>
+              </calcite-carousel-item>
+              <calcite-carousel-item>
+                <calcite-panel>
+                  <arcgis-chart
+                    id="chart2"
+                    class="chart-container"
+                    filter-by-extent="true"
+                  >
+                  </arcgis-chart>
+                </calcite-panel>
+              </calcite-carousel-item>
+              <calcite-carousel-item>
+                <calcite-panel>
+                  <arcgis-chart
+                    id="chart3"
+                    class="chart-container"
+                    filter-by-extent="true"
+                  >
+                  </arcgis-chart>
+                </calcite-panel>
+              </calcite-carousel-item>
+            </calcite-carousel>
+          </arcgis-placement>
+        </arcgis-expand>
+        <arcgis-expand position="top-right" group="top-right" label="Legend">
+          <arcgis-legend id="legend"></arcgis-legend>
+        </arcgis-expand>
+        <arcgis-expand position="top-right" group="top-right" label="Bookmarks">
+          <arcgis-bookmarks></arcgis-bookmarks
+        ></arcgis-expand>
+      </arcgis-map>
+    </calcite-shell>
+    <script type="module" src="../common/common.js"></script>
+  </body>
+</html>
