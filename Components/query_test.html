@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>Dot Density | Sample | ArcGIS Maps SDK for JavaScript 4.32</title>
+  <title>Dot Density | ArcGIS & Calcite</title>
 
   <!-- Load Calcite Components -->
   <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
   <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/3.0.3/calcite.css">
 
-  <!-- Load ArcGIS Maps SDK -->
+  <!-- Load ArcGIS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css">
   <script src="https://js.arcgis.com/4.32/"></script>
 
@@ -17,13 +17,8 @@
   <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
 
   <style>
-    html, body {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
-    }
-    #chip-container {
+    html, body { padding: 0; margin: 0; height: 100%; width: 100%; }
+    #search-container {
       position: absolute;
       top: 10px;
       left: 50%;
@@ -32,8 +27,8 @@
       padding: 10px;
       border-radius: 8px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
+      flex-direction: column;
+      align-items: center;
     }
   </style>
 </head>
@@ -44,81 +39,101 @@
     <arcgis-expand position="top-left" group="top-left">
       <arcgis-legend></arcgis-legend>
     </arcgis-expand>
-    
   </arcgis-map>
 
-  <!-- Container for Calcite Chips -->
-  <div id="chip-container"></div>
+  <!-- Calcite Search Bar -->
+  <div id="search-container">
+    <calcite-combobox id="search-box" placeholder="Search Use Type..." ></calcite-combobox>
+  </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const map = document.querySelector("#map");
-      const chipContainer = document.getElementById("chip-container");
+      console.log("🚀 Script Loaded!");
 
-      
+      require(["esri/layers/FeatureLayer"], (FeatureLayer) => {
+        console.log("✅ ArcGIS Modules Loaded");
 
-      // Wait for the map's view to be ready
-      map.addEventListener("arcgisViewReadyChange", (event) => {
-        if (event.detail?.view) {
-          console.log("Map view is ready!");
-          const view = event.detail.view;
-          const mapServiceUrl = "https://maps.trpa.org/server/rest/services/Zoning/MapServer"; // 🔹 Replace with your actual Map Service URL
-          const tableLayer = new esri.layers.FeatureLayer({
-            url: `${mapServiceUrl}/6`, // 🔹 Update with your table's correct index
-            outFields: ["Use_Type"]
-          });
-
-          // Function to get unique values from the "Permissible Uses" field
-          function getUniqueValues() {
-            const query = tableLayer.createQuery();
-            query.where = "1=1";  // Get all records
-            query.outFields = ["Use_Type"];
-            query.returnDistinctValues = true;
-
-            tableLayer.queryFeatures(query).then((results) => {
-              const uniqueValues = new Set();
-
-              results.features.forEach((feature) => {
-                const value = feature.attributes.Permissible_Uses;
-                if (value) {
-                  uniqueValues.add(value);
-                }
-              });
-
-              createChips([...uniqueValues]);
-            }).catch((error) => console.error("Error fetching values:", error));
-          }
-
-          // Function to create Calcite Chips
-          function createChips(values) {
-            chipContainer.innerHTML = ""; // Clear existing chips
-
-            values.forEach((value) => {
-              const chip = document.createElement("calcite-chip");
-              chip.textContent = value;
-              chip.value = value;
-              chip.removable = false;
-              chip.addEventListener("click", () => filterMap(value));
-              chipContainer.appendChild(chip);
-            });
-          }
-
-          // Function to filter the map based on the selected chip
-          function filterMap(selectedValue) {
-            tableLayer.definitionExpression = `Permissible_Uses = '${selectedValue}'`;
-          }
-
-          // Add the table layer to the map
-          view.map.add(tableLayer);
-
-          // Wait for the table layer to load and then get unique values
-          tableLayer.when(() => {
-            console.log("Table layer loaded!");
-            getUniqueValues();
-          });
-
+        const mapServiceUrl = "https://maps.trpa.org/server/rest/services/Zoning/MapServer";
+        const tableLayer = new FeatureLayer({
+          url: `${mapServiceUrl}/6`, // Adjust the index if needed
+          outFields: ["Use_Type"]
+        });
+        
           
+
+        console.log("✅ FeatureLayer Created:", tableLayer);
+
+        tableLayer.load().then(() => {
+          console.log("✅ Table layer loaded!");
+          getUniqueValues(tableLayer);
+        });
+
+        function getUniqueValues(tableLayer) {
+          console.log("🔍 Fetching unique values...");
+          const query = tableLayer.createQuery();
+          query.where = "1=1";
+          query.outFields = ["Use_Type"];
+          query.returnDistinctValues = true;
+
+          tableLayer.queryFeatures(query).then((results) => {
+            console.log("✅ Query Results:", results);
+            const uniqueValues = new Set();
+
+            results.features.forEach((feature) => {
+              console.log("Feature Data:", feature.attributes);
+              const value = feature.attributes.Use_Type;
+              if (value) uniqueValues.add(value);
+            });
+
+            console.log("✅ Unique Values Found:", uniqueValues);
+            populateSearch([...uniqueValues]);
+          }).catch((error) => console.error("❌ Query Error:", error));
         }
+
+        function populateSearch(values) {
+          console.log("💠 Populating search box...");
+          const searchBox = document.getElementById("search-box");
+          searchBox.innerHTML = ""; // Clear existing options
+
+          values.forEach((itemvalue) => {
+            const item = document.createElement("calcite-combobox-item");
+            item.value = itemvalue.trim();
+            item.heading = itemvalue.trim();
+            searchBox.appendChild(item);
+          });
+
+          console.log("✅ Search Box Populated:", values);
+        }
+
+        // Listen for search selection and filter map
+        document.getElementById("search-box").addEventListener("calciteComboboxChange", (event) => {
+  const selectedValue = event.target.value;
+  console.log("🔍 Selected Use_Type:", selectedValue);
+
+  if (selectedValue) {
+    // Query tableLayer for matching zoning_id
+    const query = tableLayer.createQuery();
+    query.where = `Use_Type = '${selectedValue}'`;
+    query.outFields = ["zoning_id"];
+    
+    tableLayer.queryFeatures(query).then((results) => {
+      const zoningIds = results.features.map(f => f.attributes.zoning_id);
+      console.log("✅ Found Zoning IDs:", zoningIds);
+
+      if (zoningIds.length > 0) {
+        // Apply filter to zoningLayer
+        zoningLayer.definitionExpression = `zoning_id IN (${zoningIds.join(",")})`;
+      } else {
+        zoningLayer.definitionExpression = ""; // Show all if no match
+      }
+    }).catch((error) => console.error("❌ Query Error:", error));
+  } else {
+    zoningLayer.definitionExpression = ""; // Reset filter if no selection
+  }
+});
+
+        //use this use type to select all zoning_ids from the table layer
+        //use the zoning ids to highlight all zoning districs https://maps.trpa.org/server/rest/services/Zoning/MapServer/0 by zoning_id
       });
     });
   </script>
