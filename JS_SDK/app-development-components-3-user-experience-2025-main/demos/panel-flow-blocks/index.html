@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>2025 Esri Developer & Technology Summit</title>
+
+  <!-- Calcite import -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+
+  <!-- ArcGIS Maps SDK for JavaScript imports -->
+  <script src="https://js.arcgis.com/4.32/"></script>
+  <link id="jsapi-mode-light" rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+  <link disabled id="jsapi-mode-dark" rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css" />
+  <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+    }
+
+    calcite-menu-item {
+      --calcite-menu-background-color: var(--calcite-color-background);
+    }
+
+    calcite-navigation-logo {
+      --calcite-navigation-logo-text-color: var(--calcite-color-brand);
+    }
+
+    calcite-shell-panel[slot="panel-start"] calcite-flow,
+    calcite-shell-panel[slot="panel-end"] calcite-action-bar {
+      border-top: 0;
+    }
+
+    arcgis-search {
+      display: flex;
+    }
+
+    /* :root,
+    .calcite-mode-light {
+      --calcite-color-brand: #238b45;
+      --calcite-color-brand-hover: #a1d99b;
+      --calcite-color-brand-press: #41ab5d;
+
+      --calcite-color-background: #f7fcf5;
+      --calcite-color-foreground-1: #e5f5e0;
+      --calcite-color-foreground-2: #c7e9c0;
+      --calcite-color-foreground-3: #a1d99b;
+
+      --calcite-color-text-2: #005a32;
+      --calcite-color-text-3: #238b45;
+    }
+
+    .calcite-mode-dark {
+      --calcite-color-brand: #e5f5e0;
+      --calcite-color-brand-hover: #f7fcf5;
+      --calcite-color-brand-press: #c7e9c0;
+
+      --calcite-color-background: #005a32;
+      --calcite-color-foreground-1: #005a32;
+      --calcite-color-foreground-2: #238b45;
+      --calcite-color-foreground-3: #41ab5d;
+
+      --calcite-color-text-2: #f7fcf5;
+      --calcite-color-text-3: #e5f5e0;
+    }
+
+    calcite-shell .esri-widget {
+      color: inherit;
+      background-color: inherit;
+    } */
+  </style>
+</head>
+
+<body>
+  <calcite-shell>
+
+    <calcite-navigation navigation-action slot="header">
+      <calcite-navigation-logo icon="shopping-cart" alt="Shopping Cart" slot="logo"
+        heading="Grocery access in the United States"
+        description="Areas within a 10 min walk or drive of a grocery store"></calcite-navigation-logo>
+      <calcite-action slot="content-end" id="toggle-mode" text="Toggle mode" icon="brightness"></calcite-action>
+
+      <calcite-tooltip placement="bottom" reference-element="toggle-mode" slot="content-end">Toggle
+        mode</calcite-tooltip>
+    </calcite-navigation>
+
+    <calcite-shell-panel slot="panel-start">
+
+      <calcite-flow id="flow">
+
+        <calcite-flow-item id="root-flow-item" selected>
+
+          <calcite-action-bar slot="action-bar" expand-disabled>
+            <calcite-action id="save" text="Save" icon="save"></calcite-action>
+            <calcite-action id="download" text="Download" icon="download"></calcite-action>
+            <calcite-action id="contact" text="Contact" icon="email-address"></calcite-action>
+            <calcite-action id="share" text="Share" slot="actions-end" icon="share"></calcite-action>
+          </calcite-action-bar>
+
+          <calcite-tooltip placement="bottom" reference-element="save">Save this application</calcite-tooltip>
+          <calcite-tooltip placement="bottom" reference-element="download">Download this data</calcite-tooltip>
+          <calcite-tooltip placement="bottom" reference-element="contact">Contact</calcite-tooltip>
+          <calcite-tooltip placement="bottom" reference-element="share">Share</calcite-tooltip>
+
+          <calcite-block collapsible open heading="Search">
+            <arcgis-search reference-element="my-map"></arcgis-search>
+          </calcite-block>
+
+          <calcite-block collapsible heading="Map" description="" icon-start="map">
+
+            <calcite-list>
+              <calcite-list-item data-toggle-flow="legend" label="Legend" icon-start="legend" icon-end="chevron-right"
+                icon-flip-rtl="end"></calcite-list-item>
+              <calcite-list-item data-toggle-flow="layers" label="Layers" icon-start="layers" icon-end="chevron-right"
+                icon-flip-rtl="end"></calcite-list-item>
+              <calcite-list-item data-toggle-flow="bookmarks" label="Bookmarks" icon-start="bookmark"
+                icon-end="chevron-right" icon-flip-rtl="end"></calcite-list-item>
+            </calcite-list>
+
+          </calcite-block>
+
+          <calcite-block collapsible heading="Change Basemap" description="" icon-start="basemap">
+
+            <calcite-chip-group selection-mode="single-persist">
+              <calcite-chip selected>Default</calcite-chip>
+              <calcite-chip value="satellite">Satellite</calcite-chip>
+              <calcite-chip value="streets">Streets</calcite-chip>
+            </calcite-chip-group>
+
+            <script type="module">
+              document.querySelector('calcite-chip-group').addEventListener('calciteChipGroupSelect', (event) => {
+                const arcgisMap = document.querySelector("arcgis-map");
+                const selectedChipValue = event.target.selectedItems[0]?.value;
+
+                arcgisMap.map.basemap = selectedChipValue ?? document.body.classList.contains("calcite-mode-dark")
+                  ? { portalItem: { id: "082831bea053406792d29b2aedcf4a81" } }
+                  : { portalItem: { id: "01126f0ff00143f5bcd451221ccf459a" } };;
+              });
+            </script>
+
+          </calcite-block>
+
+        </calcite-flow-item>
+
+      </calcite-flow>
+
+      <script type="module">
+        const flowActions = document.querySelectorAll("[data-toggle-flow]");
+        const flow = document.getElementById("flow");
+        const rootFlowItem = document.getElementById("root-flow-item");
+
+        const drillInClassName = "drill-in";
+
+        // create a new flow item component
+        function createFlowItem(heading, componentName) {
+          const flowItem = document.createElement("calcite-flow-item");
+          flowItem.heading = heading;
+          flowItem.className = drillInClassName;
+          flowItem.selected = true;
+          const component = document.createElement(componentName);
+          component.referenceElement = "my-map";
+          flowItem.appendChild(component);
+          return flowItem;
+        }
+
+        flowActions.forEach((action) => {
+          action.addEventListener("click", () => {
+            rootFlowItem.selected = false;
+            // remove existing flow item
+            document.querySelector(`.${drillInClassName}`)?.remove();
+
+            let newFlowItem;
+            switch (action.getAttribute("data-toggle-flow")) {
+              case "legend":
+                newFlowItem = createFlowItem("Legend", "arcgis-legend");
+                break;
+              case "layers":
+                newFlowItem = createFlowItem("Layers", "arcgis-layer-list");
+                break;
+              case "bookmarks":
+                newFlowItem = createFlowItem("Bookmarks", "arcgis-bookmarks");
+                break;
+            }
+
+            flow.appendChild(newFlowItem);
+          });
+        });
+
+      </script>
+
+    </calcite-shell-panel>
+
+    <arcgis-map id="my-map" item-id="cece49703cc24b0783dffb3032b0679c"></arcgis-map>
+
+    <script type="module">
+      const arcgisMap = document.querySelector("arcgis-map");
+      const darkModeCss = document.getElementById("jsapi-mode-dark");
+      const lightModeCss = document.getElementById("jsapi-mode-light");
+      const toggleMode = document.getElementById("toggle-mode");
+
+      toggleMode.addEventListener("click", () => {
+        const isDarkMode = document.body.classList.contains("calcite-mode-dark");
+        const setDarkMode = !isDarkMode;
+        darkModeCss.disabled = !setDarkMode;
+        lightModeCss.disabled = setDarkMode;
+
+        // toggle basemap based on mode
+        arcgisMap.map.basemap = setDarkMode
+          ? { portalItem: { id: "082831bea053406792d29b2aedcf4a81" } }
+          : { portalItem: { id: "01126f0ff00143f5bcd451221ccf459a" } };
+
+        toggleMode.icon = setDarkMode ? "moon" : "brightness";
+        document.body.classList.toggle("calcite-mode-dark", setDarkMode);
+
+        // toggle all existing mode classes within the body
+        document.body.querySelectorAll(".calcite-mode-light, .calcite-mode-dark").forEach((el) => {
+          el.classList.toggle("calcite-mode-light");
+          el.classList.toggle("calcite-mode-dark");
+        });
+      });
+    </script>
+
+    <calcite-shell-panel slot="panel-end" position="end" id="shell-panel-end" collapsed>
+      <calcite-action-bar slot="action-bar" expand-disabled class="calcite-mode-dark">
+        <calcite-action text="Layer" icon="sliders-horizontal"></calcite-action>
+        <calcite-action text="Styles" icon="shapes"></calcite-action>
+        <calcite-action text="Filter" icon="layer-filter"></calcite-action>
+        <calcite-action text="Configure" icon="popup"></calcite-action>
+      </calcite-action-bar>
+    </calcite-shell-panel>
+
+  </calcite-shell>
+
+  <calcite-sheet id="sheet" display-mode="float" width-scale="m">
+
+    <calcite-panel heading="Esri Developer & Technology Summit" description="Helpful conference links" closable
+      id="sheet-panel">
+
+      <calcite-menu layout="vertical" label="2025 Esri Developer & Technology Summit Menu">
+        <calcite-menu-item text="2025 Esri Developer & Technology Summit Overview" icon-end="launch"
+          href="https://www.esri.com/en-us/about/events/devsummit/overview" target="_blank"></calcite-menu-item>
+        <calcite-menu-item text="Esri Developer Events GitHub" icon-end="launch" href="https://github.com/EsriDevEvents"
+          target="_blank"></calcite-menu-item>
+        <calcite-menu-item text="Esri.com" icon-end="launch" href="https://esri.com"
+          target="_blank"></calcite-menu-item>
+      </calcite-menu>
+
+      <calcite-notice open slot="footer" width="full" scale="s">
+        <span slot="title">Note</span>
+        <span slot="message">This is a demonstration application showcasing platform functionality. While Esri strives
+          to ensure the sample is accurate, it
+          may not reflect implementation behavior in certain environments.</span>
+      </calcite-notice>
+
+    </calcite-panel>
+
+  </calcite-sheet>
+
+  <script type="module">
+    const navigation = document.querySelector("calcite-navigation");
+    const sheetPanel = document.getElementById("sheet-panel");
+    const sheet = document.getElementById("sheet");
+
+    navigation.addEventListener("calciteNavigationActionSelect", () => {
+      sheet.open = true;
+      sheetPanel.closed = false;
+    });
+
+    sheetPanel.addEventListener("calcitePanelClose", () => (sheet.open = false));
+  </script>
+
+</body>
+
+</html>

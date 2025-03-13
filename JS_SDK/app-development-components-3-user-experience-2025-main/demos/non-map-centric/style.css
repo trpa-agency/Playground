@@ -1,0 +1,66 @@
+.grid-container {
+  margin: 1.5rem;
+  height: calc(100% - 4rem);
+  max-height: calc(100% - 4rem);
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr;
+  row-gap: 1.5rem;
+  column-gap: 1.5rem;
+  grid-template-areas:
+    "panel-bookmarks panel-map panel-legend"
+    "panel-bookmarks panel-map panel-legend"
+    "panel-chart panel-chart2 panel-chart3";
+}
+
+.panel-bookmarks {
+  grid-area: panel-bookmarks;
+}
+
+.panel-map {
+  grid-area: panel-map;
+}
+
+.panel-legend {
+  grid-area: panel-legend;
+}
+
+.panel-chart {
+  grid-area: panel-chart;
+}
+
+.panel-chart2 {
+  grid-area: panel-chart2;
+}
+
+.panel-chart3 {
+  grid-area: panel-chart3;
+}
+
+.grid-container calcite-panel {
+  border-radius: 5px;
+  box-shadow: var(--calcite-shadow-sm);
+}
+
+.chart-container {
+  width: 100%;
+}
+
+@media (max-width: 813px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "panel-map"
+      "panel-bookmarks"
+      "panel-legend"
+      "panel-chart"
+      "panel-chart2"
+      "panel-chart3";
+  }
+
+  .grid-container calcite-panel {
+    min-height: 360px;
+  }
+}
