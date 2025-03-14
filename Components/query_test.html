@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Dot Density | ArcGIS & Calcite</title>
+
+  <!-- Load Calcite Components -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/3.0.3/calcite.css">
+
+  <!-- Load ArcGIS -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css">
+  <script src="https://js.arcgis.com/4.32/"></script>
+
+  <!-- Load ArcGIS Map Components -->
+  <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+
+  <style>
+    html, body { padding: 0; margin: 0; height: 100%; width: 100%; }
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <arcgis-map id="map" item-id="f1f9ac92570d4377ae21aca0958105cb">
+    <arcgis-zoom position="top-left"></arcgis-zoom>
+    <arcgis-expand position="top-left" group="top-left">
+      <arcgis-legend></arcgis-legend>
+    </arcgis-expand>
+  </arcgis-map>
+
+  <!-- Calcite Search Bar -->
+  <div id="search-container">
+    <calcite-combobox id="search-box" placeholder="Search Use Type..." ></calcite-combobox>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("🚀 Script Loaded!");
+
+      require(["esri/layers/FeatureLayer"], (FeatureLayer) => {
+        console.log("✅ ArcGIS Modules Loaded");
+
+        const mapServiceUrl = "https://maps.trpa.org/server/rest/services/Zoning/MapServer";
+        const tableLayer = new FeatureLayer({
+          url: `${mapServiceUrl}/6`, // Adjust the index if needed
+          outFields: ["Use_Type"]
+        });
+
+          
+
+        console.log("✅ FeatureLayer Created:", tableLayer);
+
+        tableLayer.load().then(() => {
+          console.log("✅ Table layer loaded!");
+          getUniqueValues(tableLayer);
+        });
+
+        function getUniqueValues(tableLayer) {
+          console.log("🔍 Fetching unique values...");
+          const query = tableLayer.createQuery();
+          query.where = "1=1";
+          query.outFields = ["Use_Type"];
+          query.returnDistinctValues = true;
+
+          tableLayer.queryFeatures(query).then((results) => {
+            console.log("✅ Query Results:", results);
+            const uniqueValues = new Set();
+
+            results.features.forEach((feature) => {
+              console.log("Feature Data:", feature.attributes);
+              const value = feature.attributes.Use_Type;
+              if (value) uniqueValues.add(value);
+            });
+
+            console.log("✅ Unique Values Found:", uniqueValues);
+            populateSearch([...uniqueValues]);
+          }).catch((error) => console.error("❌ Query Error:", error));
+        }
+
+        function populateSearch(values) {
+          console.log("💠 Populating search box...");
+          const searchBox = document.getElementById("search-box");
+          searchBox.innerHTML = ""; // Clear existing options
+
+          values.forEach((itemvalue) => {
+            const item = document.createElement("calcite-combobox-item");
+            item.value = itemvalue.trim();
+            item.heading = itemvalue.trim();
+            searchBox.appendChild(item);
+          });
+
+          console.log("✅ Search Box Populated:", values);
+        }
+
+        // Listen for search selection and filter map
+        document.getElementById("search-box").addEventListener("calciteComboboxChange", (event) => {
+  const selectedValue = event.target.value;
+  console.log("🔍 Selected Use_Type:", selectedValue);
+
+  if (selectedValue) {
+    // Query tableLayer for matching zoning_id
+    const query = tableLayer.createQuery();
+    query.where = `Use_Type = '${selectedValue}'`;
+    query.outFields = ["zoning_id"];
+    
+    tableLayer.queryFeatures(query).then((results) => {
+      
+      const zoningIds = results.features.map(f => f.attributes.zoning_id);
+      console.log("✅ Found Zoning IDs:", zoningIds);
+      // Get the existing layer from the map
+      const mapElement = document.getElementById("map"); // Get <arcgis-map>
+      const map = mapElement.map; // Access the map instance
+        //const planningLocalPlanLayer = map.layers.find(layer => layer.title === "District");
+    
+      const planningLocalPlanLayer = map.layers.find(layer => layer.title === "District");
+      if (zoningIds.length > 0) {
+        // Get the existing layer from the map
+        const mapElement = document.getElementById("map"); // Get <arcgis-map>
+        const map = mapElement.map; // Access the map instance
+        //const planningLocalPlanLayer = map.layers.find(layer => layer.title === "District");
+        
+        if (planningLocalPlanLayer) {
+          planningLocalPlanLayer.definitionExpression = `ZONING_ID IN ('${zoningIds.join("','")}')`; // Filter by zoning_id
+          
+          console.log("✅ Applied Filter:", planningLocalPlanLayer.definitionExpression);
+        } else {
+          console.error("❌ Planning Local Plan layer not found in map.");
+        }
+      } else {
+        planningLocalPlanLayer.definitionExpression = ""; // Show all if no match
+      }
+    }).catch((error) => console.error("❌ Query Error:", error));
+  } else {
+    planningLocalPlanLayer.definitionExpression = ""; // Reset filter if no selection
+  }
+});
+});
+
+        //use this use type to select all zoning_ids from the table layer
+        //use the zoning ids to highlight all zoning districs https://maps.trpa.org/server/rest/services/Zoning/MapServer/0 by zoning_id
+      });
+    
+  </script>
+
+</body>
+</html>

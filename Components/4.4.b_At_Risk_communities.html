@@ -1,0 +1,92 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+
+    <title>At Risk Communities in the Tahoe Basin</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/dark/main.css" />
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }/* Adjust the width of Legend and LayerList containers */
+      /* Adjust the width of Legend and LayerList containers */
+    .esri-expand__content-pane.esri-widget, /* for LayerList */
+    .esri-expand__content-pane.esri-legend.esri-widget { /* for Legend */
+      width: 25px; /* You can adjust this width as needed */
+    }
+    </style>
+
+    <script src="https://js.arcgis.com/4.29/"></script>
+
+    <script>
+      require(["esri/WebMap", 
+        "esri/views/MapView", 
+        "esri/widgets/LayerList",
+        "esri/widgets/Fullscreen",
+        "esri/widgets/Legend"],
+      (WebMap, MapView, LayerList, Fullscreen,Legend) => {
+        const map = new WebMap({
+          portalItem: {
+            id: "76703565932a4b6f9167e013d752a550"
+          }
+        });
+
+        // Add the map to a MapView
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [-120.01,39.01],
+          zoom: 9
+        });
+
+        // Add a legend instance to the panel of a
+        // ListItem in a LayerList instance
+        const layerList = new LayerList({
+          view: view,
+          listItemCreatedFunction: (event) => {
+            const item = event.item;
+            if (item.layer.type !== "group") {
+              // Don't show legend twice
+              item.panel = {
+                content: "legend",
+                open: false
+              };
+            } else if (item.layer.type === "group") {
+              item.open = true;
+              
+            }
+          }
+          
+        });
+        const legend = new Legend({
+            view: view,
+        title: null
+          })
+        // add fullscreen button to top left
+        var fullscreen = new Fullscreen({view: view});
+        view.ui.add(fullscreen, "top-left");
+        // add layer list to top right
+        view.ui.add(layerList, "top-right");
+        // create legend card
+        view.ui.add(legend, "bottom-left");
+        layerList.container.style.width = "225px"; // Adjust width for LayerList
+        legend.container.style.width = "175px"; // Adjust width for Legend
+        // Disable scroll on zoom
+        view.on("mouse-wheel", function(evt) {evt.stopPropagation(); });
+        
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

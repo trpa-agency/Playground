@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Dot Density | Sample | ArcGIS Maps SDK for JavaScript 4.32</title>
+
+  <!-- Load Calcite components -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+
+  <!-- Load ArcGIS Maps SDK -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css">
+  <script src="https://js.arcgis.com/4.32/"></script>
+
+  <!-- Load ArcGIS Map Components -->
+  <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+
+  <style>
+    html, body {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <arcgis-map id="map" item-id="76703565932a4b6f9167e013d752a550">
+    <arcgis-zoom position="top-left"></arcgis-zoom>
+    <arcgis-expand position="top-left" group="top-left">
+      <arcgis-legend></arcgis-legend>
+    </arcgis-expand>
+    <arcgis-layer-list id="layerList" collapsed="false" position="top-right"></arcgis-layer-list>
+  </arcgis-map>
+<script>
+  const layerList = document.getElementById("layerList");
+  layerList.listItemCreatedFunction= (event) => {
+            const item = event.item;
+            if (item.layer.type !== "group") {
+              // Don't show legend twice
+              item.panel = {
+                content: "legend",
+                open: false
+              };
+            } else if (item.layer.type === "group") {
+              item.open = true;
+            }};
+</script>
+  
+
+
+</body>
+</html>
