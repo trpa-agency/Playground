@@ -58,7 +58,7 @@
           url: `${mapServiceUrl}/6`, // Adjust the index if needed
           outFields: ["Use_Type"]
         });
-        
+
           
 
         console.log("✅ FeatureLayer Created:", tableLayer);
@@ -117,25 +117,42 @@
     query.outFields = ["zoning_id"];
     
     tableLayer.queryFeatures(query).then((results) => {
+      
       const zoningIds = results.features.map(f => f.attributes.zoning_id);
       console.log("✅ Found Zoning IDs:", zoningIds);
-
+      // Get the existing layer from the map
+      const mapElement = document.getElementById("map"); // Get <arcgis-map>
+      const map = mapElement.map; // Access the map instance
+        //const planningLocalPlanLayer = map.layers.find(layer => layer.title === "District");
+    
+      const planningLocalPlanLayer = map.layers.find(layer => layer.title === "District");
       if (zoningIds.length > 0) {
-        // Apply filter to zoningLayer
-        zoningLayer.definitionExpression = `zoning_id IN (${zoningIds.join(",")})`;
+        // Get the existing layer from the map
+        const mapElement = document.getElementById("map"); // Get <arcgis-map>
+        const map = mapElement.map; // Access the map instance
+        //const planningLocalPlanLayer = map.layers.find(layer => layer.title === "District");
+        
+        if (planningLocalPlanLayer) {
+          planningLocalPlanLayer.definitionExpression = `ZONING_ID IN ('${zoningIds.join("','")}')`; // Filter by zoning_id
+          
+          console.log("✅ Applied Filter:", planningLocalPlanLayer.definitionExpression);
+        } else {
+          console.error("❌ Planning Local Plan layer not found in map.");
+        }
       } else {
-        zoningLayer.definitionExpression = ""; // Show all if no match
+        planningLocalPlanLayer.definitionExpression = ""; // Show all if no match
       }
     }).catch((error) => console.error("❌ Query Error:", error));
   } else {
-    zoningLayer.definitionExpression = ""; // Reset filter if no selection
+    planningLocalPlanLayer.definitionExpression = ""; // Reset filter if no selection
   }
+});
 });
 
         //use this use type to select all zoning_ids from the table layer
         //use the zoning ids to highlight all zoning districs https://maps.trpa.org/server/rest/services/Zoning/MapServer/0 by zoning_id
       });
-    });
+    
   </script>
 
 </body>
