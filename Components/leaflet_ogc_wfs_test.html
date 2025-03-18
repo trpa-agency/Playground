@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lake Tahoe WFS Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <h1>Lake Tahoe WFS Map</h1>
+    <div id="map" style="height: 600px;"></div>
+
+    <script>
+        // Initialize Leaflet map
+        const map = L.map('map').setView([39.0968, -120.0324], 10); // Centered on Lake Tahoe
+
+        // Add OpenStreetMap basemap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // WFS Base URL
+        const wfsBaseUrl = "https://mapserver.laketahoeinfo.org/geoserver/LakeTahoeInfo/ows";
+
+        // Function to fetch and display WFS features
+        function loadWFS(geometryType, layerStyle) {
+            const params = new URLSearchParams({
+                service: 'WFS',
+                version: '2.0.0',
+                request: 'GetFeature',
+                typeName: 'LakeTahoeInfo:vEIPProjectLocationDetail',
+                outputFormat: 'text/javascript',
+                cql_filter: `geometryType(ProjectLocationGeometry)='${geometryType}'`,
+                format_options: 'callback:loadFeatures'
+            });
+
+            const wfsUrl = `${wfsBaseUrl}?${params.toString()}`;
+            const script = document.createElement('script');
+            script.src = wfsUrl;
+            document.body.appendChild(script);
+
+            // Callback to load features
+            window.loadFeatures = function (geojson) {
+                L.geoJSON(geojson, { style: layerStyle }).addTo(map);
+            };
+        }
+
+        // Load different geometry types with unique styles
+        loadWFS('Polygon', { color: 'blue', weight: 2, fillOpacity: 0.3 });      // Polygons
+        // loadWFS('LineString', { color: 'green', weight: 3 });                    // Lines
+        // loadWFS('Point', { color: 'red', radius: 5 });                            // Points
+
+    </script>
+</body>
+
+</html>

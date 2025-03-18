@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Lake Tahoe WFS Map with Layer List</title>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    .esri-layer-list {
+      background: white;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.32/"></script>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/GeoJSONLayer",
+      "esri/widgets/LayerList"
+    ], (Map, MapView, GeoJSONLayer, LayerList) => {
+
+      // WFS Base URL
+      const wfsBaseUrl = "https://mapserver.laketahoeinfo.org/geoserver/LakeTahoeInfo/ows";
+
+      // Helper: Fetch WFS Data and return Blob URL
+      async function fetchWFS(geometryType) {
+        const params = new URLSearchParams({
+          service: "WFS",
+          version: "2.0.0",
+          request: "GetFeature",
+          typeName: "LakeTahoeInfo:vEIPProjectLocationDetail",
+          outputFormat: "application/json",
+          cql_filter: `geometryType(ProjectLocationGeometry)='${geometryType}'`
+        });
+        const response = await fetch(`${wfsBaseUrl}?${params}`);
+        const geojson = await response.json();
+
+        // Create a Blob URL to use with GeoJSONLayer
+        const blob = new Blob([JSON.stringify(geojson)], { type: "application/json" });
+        return URL.createObjectURL(blob);
+      }
+
+      // Helper: Create GeoJSONLayer with Blob URL
+      function createGeoJSONLayer(blobUrl, geometryType, color) {
+        return new GeoJSONLayer({
+          url: blobUrl,
+          title: `${geometryType} Layer`,
+          renderer: {
+            type: "simple",
+            symbol: getSymbol(geometryType, color)
+          },
+          popupTemplate: {
+            title: "Project Details",
+            content: "{*}"
+          }
+        });
+      }
+
+      // Get the correct symbol based on the geometry type
+      function getSymbol(geometryType, color) {
+        switch (geometryType) {
+          case "Point":
+            return {
+              type: "simple-marker",
+              color: color,
+              size: "8px",
+              outline: { color: "white" }
+            };
+          case "LineString":
+            return {
+              type: "simple-line",
+              color: color,
+              width: 2
+            };
+          case "Polygon":
+            return {
+              type: "simple-fill",
+              color: color,
+              outline: { color: "white", width: 1 },
+              style: "solid"
+            };
+          default:
+            console.warn("Unknown geometry type:", geometryType);
+            return {
+              type: "simple-marker",
+              color: "gray",
+              size: "6px"
+            };
+        }
+      }
+
+      // Initialize the map
+      const map = new Map({
+        basemap: "gray-vector"
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-120.0324, 39.0968], // Center on Lake Tahoe
+        zoom: 10
+      });
+
+      // Layer collection for easy access in LayerList
+      const layers = [];
+
+      // Load and add WFS layers for each geometry type
+      Promise.all([
+        fetchWFS("Point").then(blobUrl => {
+          const pointLayer = createGeoJSONLayer(blobUrl, "Point", "red");
+          map.add(pointLayer);
+          layers.push(pointLayer);
+        }),
+        fetchWFS("LineString").then(blobUrl => {
+          const lineLayer = createGeoJSONLayer(blobUrl, "LineString", "green");
+          map.add(lineLayer);
+          layers.push(lineLayer);
+        }),
+        fetchWFS("Polygon").then(blobUrl => {
+          const polygonLayer = createGeoJSONLayer(blobUrl, "Polygon", "blue");
+          map.add(polygonLayer);
+          layers.push(polygonLayer);
+        })
+      ]).then(() => {
+        // Add LayerList widget after layers are loaded
+        const layerList = new LayerList({
+          view: view,
+          listItemCreatedFunction: function (event) {
+            const item = event.item;
+            item.open = true; // Expand each item by default
+          }
+        });
+        view.ui.add(layerList, "top-right");
+      }).catch(err => console.error("Error loading WFS layers: ", err));
+
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>
