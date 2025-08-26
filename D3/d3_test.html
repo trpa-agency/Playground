@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lake Tahoe Mid-Lake Temperature</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f8f9fa;
+  }
+  #chart {
+    width: 95%;
+    max-width: 1000px;
+    height: 600px;
+    margin: auto;
+  }
+</style>
+</head>
+<body>
+
+<h2>Lake Tahoe Mid-Lake Surface Temperature (7-Day Average)</h2>
+<div id="chart"></div>
+
+<script>
+const stationIDs = [1, 2, 3, 4];
+
+// Date formatting for API
+const now = new Date();
+const startDate = new Date(now.getTime() - 400 * 24 * 60 * 60 * 1000);
+const formatDate = d => d.toISOString().slice(0,10).replace(/-/g, '');
+const start = formatDate(startDate);
+const end = formatDate(now);
+
+async function fetchLakeData() {
+  let allData = [];
+  for (let id of stationIDs) {
+    const url = `https://tepfsail50.execute-api.us-west-2.amazonaws.com/v1/report/nasa-tb?rptdate=${start}&rptend=${end}&id=${id}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    allData = allData.concat(json);
+  }
+  return allData;
+}
+
+function processData(data) {
+  // Convert to Date + Fahrenheit, filter invalid
+  const validData = data
+    .map(d => {
+      const val = parseFloat(d.RBR_0p5_m);
+      if (isNaN(val)) return null;
+      return {
+        dateTime: new Date(d.TmStamp),
+        tempF: val * 9/5 + 32
+      };
+    })
+    .filter(d => d !== null);
+
+  // Group by date
+  const dailyMap = {};
+  validData.forEach(d => {
+    const dayKey = d.dateTime.toISOString().slice(0,10);
+    if (!dailyMap[dayKey]) dailyMap[dayKey] = [];
+    dailyMap[dayKey].push(d.tempF);
+  });
+
+  // Daily averages
+  let dailyData = Object.entries(dailyMap).map(([day, temps]) => {
+    const avg = temps.reduce((a,b) => a+b, 0) / temps.length;
+    return { date: new Date(day), temp: avg };
+  });
+
+  // Sort by date
+  dailyData.sort((a,b) => a.date - b.date);
+
+  // Rolling 7-day average
+  dailyData.forEach((d, i) => {
+    const slice = dailyData.slice(Math.max(0, i-6), i+1);
+    d.temp7 = slice.reduce((sum, row) => sum + row.temp, 0) / slice.length;
+  });
+
+  return dailyData;
+}
+
+function plotData(dailyData) {
+  const trace = {
+    x: dailyData.map(d => d.date),
+    y: dailyData.map(d => d.temp7),
+    type: "scatter",
+    mode: "lines",
+    line: { color: "#023f64", width: 2 },
+    hovertemplate: "<b>%{y:.0f}°F</b><extra></extra>"
+  };
+
+  const layout = {
+    title: "Lake Tahoe Mid-Lake Surface Temperature (7-Day Average)",
+    xaxis: { title: "Date" },
+    yaxis: { title: "Temperature (°F)", tickformat: ".0f" },
+    hovermode: "x unified",
+    plot_bgcolor: "#f8f9fa",
+    paper_bgcolor: "#f8f9fa"
+  };
+
+  Plotly.newPlot("chart", [trace], layout);
+}
+
+(async function(){
+  const rawData = await fetchLakeData();
+  const dailyData = processData(rawData);
+  plotData(dailyData);
+})();
+</script>
+
+</body>
+</html>
