@@ -44,7 +44,7 @@
 
   <!-- Calcite Search Bar -->
   <div id="search-container">
-    <calcite-combobox id="search-box" placeholder="Search Use Type..."></calcite-combobox>
+    <calcite-combobox id="search-box" placeholder="Search Use Type..." selectionMode ="single"></calcite-combobox>
   </div>
 
   <script>
@@ -73,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       query.where = "1=1";
       query.outFields = ["Use_Type"];
       query.returnDistinctValues = true;
+      
 
       tableLayer.queryFeatures(query).then((results) => {
         console.log("✅ Query Results:", results);
@@ -98,14 +99,21 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("✅ Search Box Populated:", values);
     }
         // 🔥 Directly find the ArcGIS Map Component
-        const arcgisMap = document.querySelector("arcgis-map");
+    const arcgisMap = document.querySelector("arcgis-map");
     // 🔥 Keep this event listener the same – your map is already working!
     document.getElementById("search-box").addEventListener("calciteComboboxChange", async (event) => {
       const selectedValue = event.target.value;
+       // 🔥 Get the view from the ArcGIS Map Component (NO `await`, NO `whenLayerView`)
+       const view = arcgisMap.view;
+      const planningLocalPlanLayer = view.map.layers.find(layer => layer.title === "District");
+    if (!planningLocalPlanLayer) {
+    console.error("❌ Planning Local Plan layer not found.");
+    return;
+    }
       console.log("🔍 Selected Use_Type:", selectedValue);
-
-      if (!selectedValue) return;
-
+      if (!selectedValue) {planningLocalPlanLayer.featureEffect = null;
+        console.log("🔄 Reset Map Styling");
+        return;}
       const query = tableLayer.createQuery();
       query.where = `Use_Type = '${selectedValue}'`;
       query.outFields = ["zoning_id"];
@@ -119,33 +127,31 @@ document.addEventListener("DOMContentLoaded", () => {
           console.warn("⚠ No matching zones found!");
           return;
         }
- // 🔥 Get the view from the ArcGIS Map Component (NO `await`, NO `whenLayerView`)
- const view = arcgisMap.view;
 
-if (!view) {
-  console.error("❌ Map View not found.");
-  return;
-}
+            
+    if (!view) {
+    console.error("❌ Map View not found.");
+    return;
+    }
+    // Get the correct layer **without waiting**
+    const planningLocalPlanLayer = view.map.layers.find(layer => layer.title === "District");
+    if (!planningLocalPlanLayer) {
+    console.error("❌ Planning Local Plan layer not found.");
+    return;
+    }
 
-// Get the correct layer **without waiting**
-const planningLocalPlanLayer = view.map.layers.find(layer => layer.title === "District");
-if (!planningLocalPlanLayer) {
-  console.error("❌ Planning Local Plan layer not found.");
-  return;
-}
+    // Apply the effect **directly**
+    planningLocalPlanLayer.featureEffect = {
+    filter: { where: `ZONING_ID IN ('${zoningIds.join("','")}')` },
+    includedEffect: "bloom(1.5) drop-shadow(3px 3px 6px rgba(0,255,0,0.5)) brightness(1.2) saturate(1.5)",
+    excludedEffect: "grayscale(90%) opacity(30%)"
+    };
 
-// Apply the effect **directly**
-planningLocalPlanLayer.featureEffect = {
-  filter: { where: `ZONING_ID IN ('${zoningIds.join("','")}')` },
-  includedEffect: "bloom(1.5) drop-shadow(2px 2px 4px black) hue-rotate(30deg) brightness(1.2)",
-  excludedEffect: "grayscale(90%) opacity(30%)"
-};
+    console.log("🎯 Effect Applied to Layer");
 
-console.log("🎯 Effect Applied to Layer");
-
-} catch (error) {
-console.error("❌ Query Error:", error);
-}
+    } catch (error) {
+    console.error("❌ Query Error:", error);
+    }
 });
 });
 });
