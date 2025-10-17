@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>TRPA Weighted Demographics Map</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <style>
+    html, body, #viewDiv {
+      padding: 0; margin: 0; height: 100%; width: 100%;
+    }
+    #controls {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 99;
+      width: 250px;
+    }
+    label { display: block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="viewDiv"></div>
+  <div id="controls">
+    <h4>Adjust Variable Weights</h4>
+    <label>BIPOC Rate:
+      <input id="w1" type="range" min="0" max="1" step="0.01" value="0.33">
+      <span id="w1val">0.33</span>
+    </label>
+    <label>Housing Issues (Renters):
+      <input id="w2" type="range" min="0" max="1" step="0.01" value="0.33">
+      <span id="w2val">0.33</span>
+    </label>
+    <label>Zero Vehicle Rate:
+      <input id="w3" type="range" min="0" max="1" step="0.01" value="0.34">
+      <span id="w3val">0.34</span>
+    </label>
+  </div>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer"
+    ], function(Map, MapView, FeatureLayer) {
+
+      const map = new Map({ basemap: "streets-vector" });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-120, 39],  // Tahoe region
+        zoom: 9
+      });
+
+      const featureLayer = new FeatureLayer({
+        url: "https://maps.trpa.org/server/rest/services/Demographics/MapServer/2",
+        outFields: ["bipoc_rate", "housing_issues_rate_renter", "zero_vehicle_rate"]
+      });
+      map.add(featureLayer);
+
+      // store max values for normalization
+      let fieldMax = {
+        bipoc_rate: 1,
+        housing_issues_rate_renter: 1,
+        zero_vehicle_rate: 1
+      };
+
+      // get max values dynamically from the layer
+      async function fetchFieldStats() {
+        const fields = Object.keys(fieldMax);
+        for (let f of fields) {
+          const q = featureLayer.createQuery();
+          q.outStatistics = [{
+            onStatisticField: f,
+            outStatisticFieldName: "maxval",
+            statisticType: "max"
+          }];
+          const res = await featureLayer.queryFeatures(q);
+          fieldMax[f] = res.features[0].attributes.maxval || 1;
+        }
+      }
+
+      // read sliders
+      function getNormalizedWeights() {
+        let w1 = parseFloat(document.getElementById("w1").value);
+        let w2 = parseFloat(document.getElementById("w2").value);
+        let w3 = parseFloat(document.getElementById("w3").value);
+        let sum = w1 + w2 + w3;
+        if (sum === 0) sum = 1;  // avoid division by zero
+        return [w1/sum, w2/sum, w3/sum];
+      }
+
+      // update map symbology
+      function updateRenderer() {
+        const [w1n, w2n, w3n] = getNormalizedWeights();
+
+        // update labels (show normalized values)
+        document.getElementById("w1val").textContent = w1n.toFixed(2);
+        document.getElementById("w2val").textContent = w2n.toFixed(2);
+        document.getElementById("w3val").textContent = w3n.toFixed(2);
+
+        const expression = `
+          var v1 = $feature.bipoc_rate;
+          var v2 = $feature.housing_issues_rate_renter;
+          var v3 = $feature.zero_vehicle_rate;
+          return (${w1n} * v1) + (${w2n} * v2) + (${w3n} * v3);
+        `;
+
+        const maxScore = (w1n * fieldMax.bipoc_rate) +
+                         (w2n * fieldMax.housing_issues_rate_renter) +
+                         (w3n * fieldMax.zero_vehicle_rate);
+
+        featureLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "simple-fill",
+            outline: { width: 0.25, color: "white" }
+          },
+          visualVariables: [{
+            type: "color",
+            valueExpression: expression,
+            stops: [
+              { value: 0, color: "#f7fbff" },
+              { value: maxScore * 0.25, color: "#c6dbef" },
+              { value: maxScore * 0.5, color: "#6baed6" },
+              { value: maxScore * 0.75, color: "#2171b5" },
+              { value: maxScore, color: "#08306b" }
+            ]
+          }]
+        };
+      }
+
+      fetchFieldStats().then(() => {
+        updateRenderer();
+        document.querySelectorAll("#controls input").forEach(slider => {
+          slider.addEventListener("input", updateRenderer);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
