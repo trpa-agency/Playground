@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Forest Health Treatments — Dynamic</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin:16px; background:#f7f7f7; }
+    #chart { width:100%; max-width:1100px; margin:0 auto; background:#fff; padding:10px; border-radius:6px; min-height:420px; box-shadow:0 1px 6px rgba(0,0,0,0.08); }
+    #status { margin-bottom:8px; font-size:14px; color:#444; }
+    .error { color:crimson; font-weight:600; }
+  </style>
+</head>
+<body>
+  <h2>Forest Health Treatment</h2>
+  <div id="status">Loading data...</div>
+  <div id="chart"></div>
+
+<script>
+const URL = "https://www.laketahoeinfo.org/WebServices/GetReportedEIPIndicatorProjectAccomplishments/JSON/e17aeb86-85e3-4260-83fd-a2b32501c476/19";
+const YEAR_ORDER = ["2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020","2021","2022","2023"];
+const COLORS = ["#ABCD66", "#E69800", "#A87000", "#F5CA7A"];
+
+function el(id){ return document.getElementById(id); }
+function setStatus(msg, isError=false){ el('status').innerHTML = msg; if(isError) el('status').classList.add('error'); else el('status').classList.remove('error'); }
+
+async function buildChart(){
+  try {
+    const resp = await fetch(URL);
+    if(!resp.ok) throw new Error("Failed to fetch data.");
+    const json = await resp.json();
+
+    // Filter Treatment Zone only
+    let filtered = json.filter(r => r.PMSubcategoryName1 === "Treatment Zone");
+
+    // Rename + normalize
+    filtered = filtered.map(r => ({
+      Year: String(r.IndicatorProjectYear),
+      Zone: r.PMSubcategoryOption1 === "Community Defense Zone" ? "Defense Zone" : r.PMSubcategoryOption1,
+      Acres: Number(r.IndicatorProjectValue) || 0
+    }));
+
+    // Group by Year and Zone
+    const grouped = {};
+    filtered.forEach(r => {
+      if(!grouped[r.Year]) grouped[r.Year] = {};
+      if(!grouped[r.Year][r.Zone]) grouped[r.Year][r.Zone] = 0;
+      grouped[r.Year][r.Zone] += r.Acres;
+    });
+
+    // Build plotly traces per Treatment Zone
+    const zones = [...new Set(filtered.map(r => r.Zone))];
+    const traces = zones.map((zone, i) => ({
+      x: YEAR_ORDER,
+      y: YEAR_ORDER.map(year => grouped[year]?.[zone] || 0),
+      name: zone,
+      type: "bar",
+      marker: { color: COLORS[i % COLORS.length] },
+      customdata: Array(YEAR_ORDER.length).fill(zone),
+      hovertemplate: "<b>%{y:,.0f} acres</b> of forest health treatment<br>in the <i>%{customdata}</i><extra></extra>"
+    }));
+
+    Plotly.newPlot('chart', traces, {
+      barmode: "stack",
+      yaxis: { title: "Acres Treated" },
+      xaxis: { title: "Year", tickmode:"array", tickvals: YEAR_ORDER },
+      template: "plotly_white",
+      hovermode: "x unified",
+      dragmode: false,
+      margin:{ t:30 },
+      legend: {
+        title: { text: "Forest Health Treatment Zone" },
+        orientation: "h",
+        entrywidth: 85,
+        yanchor: "bottom",
+        y: 1.05,
+        xanchor: "right",
+        x: 0.95
+      }
+    }, { displayModeBar:false, responsive:true });
+
+    setStatus("");
+  } catch (e) {
+    setStatus("Error loading chart.", true);
+  }
+}
+
+buildChart();
+</script>
+</body>
+</html>
