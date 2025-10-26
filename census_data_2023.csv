@@ -1,0 +1,247 @@
+OBJECTID,Category,Code,Value,Year,Source,Notes,Geography,variable_code,dataset,sample_level,variable_name
+2217,House Heating Fuel,B25040_010E,0.0,2023,acs/acs5,,North Lake,B25040_010E,acs/acs5,tract,No fuel used
+2210,House Heating Fuel,B25040_008E,0.0,2023,acs/acs5,,South Lake,B25040_008E,acs/acs5,tract,Solar energy
+2209,House Heating Fuel,B25040_008E,0.0,2023,acs/acs5,,North Lake,B25040_008E,acs/acs5,tract,Solar energy
+2204,House Heating Fuel,B25040_008E,0.0,2023,acs/acs5,,Basin,B25040_008E,acs/acs5,tract,Solar energy
+2201,House Heating Fuel,B25040_006E,0.0,2023,acs/acs5,,South Lake,B25040_006E,acs/acs5,tract,Coal or coke
+2200,House Heating Fuel,B25040_006E,0.0,2023,acs/acs5,,North Lake,B25040_006E,acs/acs5,tract,Coal or coke
+2195,House Heating Fuel,B25040_006E,0.0,2023,acs/acs5,,Basin,B25040_006E,acs/acs5,tract,Coal or coke
+2191,House Heating Fuel,B25040_005E,6.0,2023,acs/acs5,,South Lake,B25040_005E,acs/acs5,tract,"Fuel oil, kerosene, etc."
+2186,House Heating Fuel,B25040_005E,19.0,2023,acs/acs5,,North Lake,B25040_005E,acs/acs5,tract,"Fuel oil, kerosene, etc."
+2183,House Heating Fuel,B25040_005E,25.0,2023,acs/acs5,,Basin,B25040_005E,acs/acs5,tract,"Fuel oil, kerosene, etc."
+2181,House Heating Fuel,B25040_010E,31.0,2023,acs/acs5,,South Lake,B25040_010E,acs/acs5,tract,No fuel used
+2179,House Heating Fuel,B25040_010E,31.0,2023,acs/acs5,,Basin,B25040_010E,acs/acs5,tract,No fuel used
+2177,House Heating Fuel,B25040_009E,40.0,2023,acs/acs5,,North Lake,B25040_009E,acs/acs5,tract,Other fuel
+2168,House Heating Fuel,B25040_009E,86.0,2023,acs/acs5,,Basin,B25040_009E,acs/acs5,tract,Other fuel
+2167,House Heating Fuel,B25040_007E,86.0,2023,acs/acs5,,North Lake,B25040_007E,acs/acs5,tract,Wood
+2166,House Heating Fuel,B25040_003E,125.0,2023,acs/acs5,,North Lake,B25040_003E,acs/acs5,tract,"Bottled, tank, or LP gas"
+2158,House Heating Fuel,B25040_007E,420.0,2023,acs/acs5,,South Lake,B25040_007E,acs/acs5,tract,Wood
+2155,House Heating Fuel,B25040_007E,506.0,2023,acs/acs5,,Basin,B25040_007E,acs/acs5,tract,Wood
+2154,House Heating Fuel,B25040_003E,532.0,2023,acs/acs5,,South Lake,B25040_003E,acs/acs5,tract,"Bottled, tank, or LP gas"
+2153,House Heating Fuel,B25040_003E,657.0,2023,acs/acs5,,Basin,B25040_003E,acs/acs5,tract,"Bottled, tank, or LP gas"
+2151,House Heating Fuel,B25040_004E,833.0,2023,acs/acs5,,North Lake,B25040_004E,acs/acs5,tract,Electricity
+2149,House Heating Fuel,B25040_004E,1978.0,2023,acs/acs5,,South Lake,B25040_004E,acs/acs5,tract,Electricity
+2145,House Heating Fuel,B25040_004E,2811.0,2023,acs/acs5,,Basin,B25040_004E,acs/acs5,tract,Electricity
+2139,House Heating Fuel,B25040_002E,6574.0,2023,acs/acs5,,North Lake,B25040_002E,acs/acs5,tract,Utility gas
+2137,House Heating Fuel,B25040_001E,7677.0,2023,acs/acs5,,North Lake,B25040_001E,acs/acs5,tract,Total Heating Methods
+2135,House Heating Fuel,B25040_002E,12641.0,2023,acs/acs5,,South Lake,B25040_002E,acs/acs5,tract,Utility gas
+2132,House Heating Fuel,B25040_001E,15654.0,2023,acs/acs5,,South Lake,B25040_001E,acs/acs5,tract,Total Heating Methods
+2130,House Heating Fuel,B25040_002E,19215.0,2023,acs/acs5,,Basin,B25040_002E,acs/acs5,tract,Utility gas
+2129,House Heating Fuel,B25040_001E,23331.0,2023,acs/acs5,,Basin,B25040_001E,acs/acs5,tract,Total Heating Methods
+2174,House Heating Fuel,B25040_009E,46.0,2023,acs/acs5,,South Lake,B25040_009E,acs/acs5,tract,Other fuel
+4245,Race,B03002_007E,46.0,2023,acs/acs5,,North Lake,B03002_007E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4245,Race,B03002_007E,46.0,2023,acs/acs5,,North Lake,B03002_007E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4244,Race,B03002_007E,46.0,2023,acs/acs5,,North Lake,B03002_007E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4244,Race,B03002_007E,46.0,2023,acs/acs5,,North Lake,B03002_007E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4243,Race,B03002_007E,57.0,2023,acs/acs5,,South Lake,B03002_007E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4243,Race,B03002_007E,57.0,2023,acs/acs5,,South Lake,B03002_007E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4242,Race,B03002_007E,57.0,2023,acs/acs5,,South Lake,B03002_007E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4242,Race,B03002_007E,57.0,2023,acs/acs5,,South Lake,B03002_007E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4235,Race,B03002_004E,98.0,2023,acs/acs5,,North Lake,B03002_004E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Black or African American alone
+4235,Race,B03002_004E,98.0,2023,acs/acs5,,North Lake,B03002_004E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Black or African American alone
+4234,Race,B03002_004E,98.0,2023,acs/acs5,,North Lake,B03002_004E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Black or African American alone
+4234,Race,B03002_004E,98.0,2023,acs/acs5,,North Lake,B03002_004E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Black or African American alone
+4233,Race,B03002_007E,103.0,2023,acs/acs5,,Basin,B03002_007E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4233,Race,B03002_007E,103.0,2023,acs/acs5,,Basin,B03002_007E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4232,Race,B03002_007E,103.0,2023,acs/acs5,,Basin,B03002_007E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4232,Race,B03002_007E,103.0,2023,acs/acs5,,Basin,B03002_007E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Native Hawaiian and Other Pacific Islander alone
+4227,Race,B03002_004E,137.0,2023,acs/acs5,,South Lake,B03002_004E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Black or African American alone
+4227,Race,B03002_004E,137.0,2023,acs/acs5,,South Lake,B03002_004E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Black or African American alone
+4226,Race,B03002_004E,137.0,2023,acs/acs5,,South Lake,B03002_004E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Black or African American alone
+4226,Race,B03002_004E,137.0,2023,acs/acs5,,South Lake,B03002_004E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Black or African American alone
+4223,Race,B03002_008E,141.0,2023,acs/acs5,,South Lake,B03002_008E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Some other race alone
+4223,Race,B03002_008E,141.0,2023,acs/acs5,,South Lake,B03002_008E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Some other race alone
+4222,Race,B03002_008E,141.0,2023,acs/acs5,,South Lake,B03002_008E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Some other race alone
+4222,Race,B03002_008E,141.0,2023,acs/acs5,,South Lake,B03002_008E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Some other race alone
+4221,Race,B03002_008E,141.0,2023,acs/acs5,,Basin,B03002_008E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Some other race alone
+4221,Race,B03002_008E,141.0,2023,acs/acs5,,Basin,B03002_008E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Some other race alone
+4220,Race,B03002_008E,141.0,2023,acs/acs5,,Basin,B03002_008E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Some other race alone
+4220,Race,B03002_008E,141.0,2023,acs/acs5,,Basin,B03002_008E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Some other race alone
+4269,Race,B03002_005E,0.0,2023,acs/acs5,,North Lake,B03002_005E,acs/acs5,block group,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4269,Race,B03002_005E,0.0,2023,acs/acs5,,North Lake,B03002_005E,acs/acs5,tract,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4268,Race,B03002_005E,0.0,2023,acs/acs5,,North Lake,B03002_005E,acs/acs5,block group,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4268,Race,B03002_005E,0.0,2023,acs/acs5,,North Lake,B03002_005E,acs/acs5,tract,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4207,Race,B03002_005E,211.0,2023,acs/acs5,,South Lake,B03002_005E,acs/acs5,block group,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4207,Race,B03002_005E,211.0,2023,acs/acs5,,South Lake,B03002_005E,acs/acs5,tract,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4206,Race,B03002_005E,211.0,2023,acs/acs5,,South Lake,B03002_005E,acs/acs5,block group,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4206,Race,B03002_005E,211.0,2023,acs/acs5,,South Lake,B03002_005E,acs/acs5,tract,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4205,Race,B03002_005E,211.0,2023,acs/acs5,,Basin,B03002_005E,acs/acs5,block group,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4205,Race,B03002_005E,211.0,2023,acs/acs5,,Basin,B03002_005E,acs/acs5,tract,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4204,Race,B03002_005E,211.0,2023,acs/acs5,,Basin,B03002_005E,acs/acs5,block group,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4204,Race,B03002_005E,211.0,2023,acs/acs5,,Basin,B03002_005E,acs/acs5,tract,Total population:  Not Hispanic or Latino; American Indian and Alaska Native alone
+4201,Race,B03002_004E,235.0,2023,acs/acs5,,Basin,B03002_004E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Black or African American alone
+4201,Race,B03002_004E,235.0,2023,acs/acs5,,Basin,B03002_004E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Black or African American alone
+4200,Race,B03002_004E,235.0,2023,acs/acs5,,Basin,B03002_004E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Black or African American alone
+4200,Race,B03002_004E,235.0,2023,acs/acs5,,Basin,B03002_004E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Black or African American alone
+4197,Race,B03002_006E,367.0,2023,acs/acs5,,North Lake,B03002_006E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Asian alone
+4197,Race,B03002_006E,367.0,2023,acs/acs5,,North Lake,B03002_006E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Asian alone
+4196,Race,B03002_006E,367.0,2023,acs/acs5,,North Lake,B03002_006E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Asian alone
+4196,Race,B03002_006E,367.0,2023,acs/acs5,,North Lake,B03002_006E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Asian alone
+4191,Race,B03002_009E,838.0,2023,acs/acs5,,North Lake,B03002_009E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Two or more races
+4191,Race,B03002_009E,838.0,2023,acs/acs5,,North Lake,B03002_009E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Two or more races
+4190,Race,B03002_009E,838.0,2023,acs/acs5,,North Lake,B03002_009E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Two or more races
+4190,Race,B03002_009E,838.0,2023,acs/acs5,,North Lake,B03002_009E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Two or more races
+4177,Race,B03002_009E,1690.0,2023,acs/acs5,,South Lake,B03002_009E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Two or more races
+4177,Race,B03002_009E,1690.0,2023,acs/acs5,,South Lake,B03002_009E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Two or more races
+4176,Race,B03002_009E,1690.0,2023,acs/acs5,,South Lake,B03002_009E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Two or more races
+4176,Race,B03002_009E,1690.0,2023,acs/acs5,,South Lake,B03002_009E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Two or more races
+4173,Race,B03002_006E,1856.0,2023,acs/acs5,,South Lake,B03002_006E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Asian alone
+4173,Race,B03002_006E,1856.0,2023,acs/acs5,,South Lake,B03002_006E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Asian alone
+4172,Race,B03002_006E,1856.0,2023,acs/acs5,,South Lake,B03002_006E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Asian alone
+4172,Race,B03002_006E,1856.0,2023,acs/acs5,,South Lake,B03002_006E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Asian alone
+4169,Race,B03002_006E,2223.0,2023,acs/acs5,,Basin,B03002_006E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Asian alone
+4169,Race,B03002_006E,2223.0,2023,acs/acs5,,Basin,B03002_006E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Asian alone
+4168,Race,B03002_006E,2223.0,2023,acs/acs5,,Basin,B03002_006E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Asian alone
+4168,Race,B03002_006E,2223.0,2023,acs/acs5,,Basin,B03002_006E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Asian alone
+4167,Race,B03002_009E,2528.0,2023,acs/acs5,,Basin,B03002_009E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Two or more races
+4167,Race,B03002_009E,2528.0,2023,acs/acs5,,Basin,B03002_009E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Two or more races
+4166,Race,B03002_009E,2528.0,2023,acs/acs5,,Basin,B03002_009E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Two or more races
+4166,Race,B03002_009E,2528.0,2023,acs/acs5,,Basin,B03002_009E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Two or more races
+4163,Race,B03002_012E,3512.0,2023,acs/acs5,,North Lake,B03002_012E,acs/acs5,block group,Total population:  Hispanic or Latino
+4163,Race,B03002_012E,3512.0,2023,acs/acs5,,North Lake,B03002_012E,acs/acs5,tract,Total population:  Hispanic or Latino
+4162,Race,B03002_012E,3512.0,2023,acs/acs5,,North Lake,B03002_012E,acs/acs5,block group,Total population:  Hispanic or Latino
+4162,Race,B03002_012E,3512.0,2023,acs/acs5,,North Lake,B03002_012E,acs/acs5,tract,Total population:  Hispanic or Latino
+4129,Race,B03002_003E,36509.0,2023,acs/acs5,,Basin,B03002_003E,acs/acs5,block group,Total population:  Not Hispanic or Latino; White alone
+4129,Race,B03002_003E,36509.0,2023,acs/acs5,,Basin,B03002_003E,acs/acs5,tract,Total population:  Not Hispanic or Latino; White alone
+4128,Race,B03002_003E,36509.0,2023,acs/acs5,,Basin,B03002_003E,acs/acs5,block group,Total population:  Not Hispanic or Latino; White alone
+4128,Race,B03002_003E,36509.0,2023,acs/acs5,,Basin,B03002_003E,acs/acs5,tract,Total population:  Not Hispanic or Latino; White alone
+4150,Race,B03002_012E,8015.0,2023,acs/acs5,,South Lake,B03002_012E,acs/acs5,block group,Total population:  Hispanic or Latino
+4150,Race,B03002_012E,8015.0,2023,acs/acs5,,South Lake,B03002_012E,acs/acs5,tract,Total population:  Hispanic or Latino
+4149,Race,B03002_012E,8015.0,2023,acs/acs5,,South Lake,B03002_012E,acs/acs5,block group,Total population:  Hispanic or Latino
+4149,Race,B03002_012E,8015.0,2023,acs/acs5,,South Lake,B03002_012E,acs/acs5,tract,Total population:  Hispanic or Latino
+4144,Race,B03002_012E,11527.0,2023,acs/acs5,,Basin,B03002_012E,acs/acs5,block group,Total population:  Hispanic or Latino
+4144,Race,B03002_012E,11527.0,2023,acs/acs5,,Basin,B03002_012E,acs/acs5,tract,Total population:  Hispanic or Latino
+4143,Race,B03002_012E,11527.0,2023,acs/acs5,,Basin,B03002_012E,acs/acs5,block group,Total population:  Hispanic or Latino
+4143,Race,B03002_012E,11527.0,2023,acs/acs5,,Basin,B03002_012E,acs/acs5,tract,Total population:  Hispanic or Latino
+4141,Race,B03002_003E,12866.0,2023,acs/acs5,,North Lake,B03002_003E,acs/acs5,block group,Total population:  Not Hispanic or Latino; White alone
+4141,Race,B03002_003E,12866.0,2023,acs/acs5,,North Lake,B03002_003E,acs/acs5,tract,Total population:  Not Hispanic or Latino; White alone
+4140,Race,B03002_003E,12866.0,2023,acs/acs5,,North Lake,B03002_003E,acs/acs5,block group,Total population:  Not Hispanic or Latino; White alone
+4140,Race,B03002_003E,12866.0,2023,acs/acs5,,North Lake,B03002_003E,acs/acs5,tract,Total population:  Not Hispanic or Latino; White alone
+4135,Race,B03002_003E,23643.0,2023,acs/acs5,,South Lake,B03002_003E,acs/acs5,block group,Total population:  Not Hispanic or Latino; White alone
+4135,Race,B03002_003E,23643.0,2023,acs/acs5,,South Lake,B03002_003E,acs/acs5,tract,Total population:  Not Hispanic or Latino; White alone
+4134,Race,B03002_003E,23643.0,2023,acs/acs5,,South Lake,B03002_003E,acs/acs5,block group,Total population:  Not Hispanic or Latino; White alone
+4134,Race,B03002_003E,23643.0,2023,acs/acs5,,South Lake,B03002_003E,acs/acs5,tract,Total population:  Not Hispanic or Latino; White alone
+4279,Race,B03002_008E,0.0,2023,acs/acs5,,North Lake,B03002_008E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Some other race alone
+4279,Race,B03002_008E,0.0,2023,acs/acs5,,North Lake,B03002_008E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Some other race alone
+4278,Race,B03002_008E,0.0,2023,acs/acs5,,North Lake,B03002_008E,acs/acs5,block group,Total population:  Not Hispanic or Latino; Some other race alone
+4278,Race,B03002_008E,0.0,2023,acs/acs5,,North Lake,B03002_008E,acs/acs5,tract,Total population:  Not Hispanic or Latino; Some other race alone
+4692,Tenure By Age Of Householder,B25007_021E,0.0,2023,acs/acs5,,North Lake,B25007_021E,acs/acs5,tract,Renter Occupied: Householder 85 Years And Over
+4685,Tenure By Age Of Householder,B25007_003E,0.0,2023,acs/acs5,,North Lake,B25007_003E,acs/acs5,tract,Owner Occupied: Householder 15 To 24 Years
+4681,Tenure By Age Of Householder,B25007_020E,13.0,2023,acs/acs5,,North Lake,B25007_020E,acs/acs5,tract,Renter Occupied: Householder 75 To 84 Years
+4667,Tenure By Age Of Householder,B25007_003E,62.0,2023,acs/acs5,,Basin,B25007_003E,acs/acs5,tract,Owner Occupied: Householder 15 To 24 Years
+4659,Tenure By Age Of Householder,B25007_011E,77.0,2023,acs/acs5,,North Lake,B25007_011E,acs/acs5,tract,Owner Occupied: Householder 85 Years And Over
+4653,Tenure By Age Of Householder,B25007_013E,122.0,2023,acs/acs5,,North Lake,B25007_013E,acs/acs5,tract,Renter Occupied: Householder 15 To 24 Years
+4651,Tenure By Age Of Householder,B25007_021E,123.0,2023,acs/acs5,,South Lake,B25007_021E,acs/acs5,tract,Renter Occupied: Householder 85 Years And Over
+4649,Tenure By Age Of Householder,B25007_021E,123.0,2023,acs/acs5,,Basin,B25007_021E,acs/acs5,tract,Renter Occupied: Householder 85 Years And Over
+4647,Tenure By Age Of Householder,B25007_018E,130.0,2023,acs/acs5,,North Lake,B25007_018E,acs/acs5,tract,Renter Occupied: Householder 60 To 64 Years
+4646,Tenure By Age Of Householder,B25007_017E,132.0,2023,acs/acs5,,North Lake,B25007_017E,acs/acs5,tract,Renter Occupied: Householder 55 To 59 Years
+4644,Tenure By Age Of Householder,B25007_004E,135.0,2023,acs/acs5,,North Lake,B25007_004E,acs/acs5,tract,Owner Occupied: Householder 25 To 34 Years
+4639,Tenure By Age Of Householder,B25007_019E,154.0,2023,acs/acs5,,North Lake,B25007_019E,acs/acs5,tract,Renter Occupied: Householder 65 To 74 Years
+4669,Tenure By Age Of Householder,B25007_003E,62.0,2023,acs/acs5,,South Lake,B25007_003E,acs/acs5,tract,Owner Occupied: Householder 15 To 24 Years
+4628,Tenure By Age Of Householder,B25007_011E,235.0,2023,acs/acs5,,South Lake,B25007_011E,acs/acs5,tract,Owner Occupied: Householder 85 Years And Over
+4627,Tenure By Age Of Householder,B25007_020E,252.0,2023,acs/acs5,,South Lake,B25007_020E,acs/acs5,tract,Renter Occupied: Householder 75 To 84 Years
+4624,Tenure By Age Of Householder,B25007_020E,265.0,2023,acs/acs5,,Basin,B25007_020E,acs/acs5,tract,Renter Occupied: Householder 75 To 84 Years
+4618,Tenure By Age Of Householder,B25007_013E,300.0,2023,acs/acs5,,South Lake,B25007_013E,acs/acs5,tract,Renter Occupied: Householder 15 To 24 Years
+4614,Tenure By Age Of Householder,B25007_011E,312.0,2023,acs/acs5,,Basin,B25007_011E,acs/acs5,tract,Owner Occupied: Householder 85 Years And Over
+4607,Tenure By Age Of Householder,B25007_013E,422.0,2023,acs/acs5,,Basin,B25007_013E,acs/acs5,tract,Renter Occupied: Householder 15 To 24 Years
+4599,Tenure By Age Of Householder,B25007_017E,467.0,2023,acs/acs5,,South Lake,B25007_017E,acs/acs5,tract,Renter Occupied: Householder 55 To 59 Years
+4596,Tenure By Age Of Householder,B25007_018E,502.0,2023,acs/acs5,,South Lake,B25007_018E,acs/acs5,tract,Renter Occupied: Householder 60 To 64 Years
+4594,Tenure By Age Of Householder,B25007_014E,515.0,2023,acs/acs5,,North Lake,B25007_014E,acs/acs5,tract,Renter Occupied: Householder 25 To 34 Years
+4593,Tenure By Age Of Householder,B25007_016E,522.0,2023,acs/acs5,,North Lake,B25007_016E,acs/acs5,tract,Renter Occupied: Householder 45 To 54 Years
+4592,Tenure By Age Of Householder,B25007_007E,533.0,2023,acs/acs5,,North Lake,B25007_007E,acs/acs5,tract,Owner Occupied: Householder 55 To 59 Years
+4589,Tenure By Age Of Householder,B25007_010E,572.0,2023,acs/acs5,,North Lake,B25007_010E,acs/acs5,tract,Owner Occupied: Householder 75 To 84 Years
+4587,Tenure By Age Of Householder,B25007_017E,599.0,2023,acs/acs5,,Basin,B25007_017E,acs/acs5,tract,Renter Occupied: Householder 55 To 59 Years
+4582,Tenure By Age Of Householder,B25007_018E,632.0,2023,acs/acs5,,Basin,B25007_018E,acs/acs5,tract,Renter Occupied: Householder 60 To 64 Years
+4581,Tenure By Age Of Householder,B25007_015E,640.0,2023,acs/acs5,,North Lake,B25007_015E,acs/acs5,tract,Renter Occupied: Householder 35 To 44 Years
+4580,Tenure By Age Of Householder,B25007_016E,685.0,2023,acs/acs5,,South Lake,B25007_016E,acs/acs5,tract,Renter Occupied: Householder 45 To 54 Years
+4579,Tenure By Age Of Householder,B25007_005E,692.0,2023,acs/acs5,,North Lake,B25007_005E,acs/acs5,tract,Owner Occupied: Householder 35 To 44 Years
+4578,Tenure By Age Of Householder,B25007_019E,698.0,2023,acs/acs5,,South Lake,B25007_019E,acs/acs5,tract,Renter Occupied: Householder 65 To 74 Years
+4577,Tenure By Age Of Householder,B25007_004E,704.0,2023,acs/acs5,,South Lake,B25007_004E,acs/acs5,tract,Owner Occupied: Householder 25 To 34 Years
+4568,Tenure By Age Of Householder,B25007_010E,789.0,2023,acs/acs5,,South Lake,B25007_010E,acs/acs5,tract,Owner Occupied: Householder 75 To 84 Years
+4565,Tenure By Age Of Householder,B25007_008E,823.0,2023,acs/acs5,,North Lake,B25007_008E,acs/acs5,tract,Owner Occupied: Householder 60 To 64 Years
+4564,Tenure By Age Of Householder,B25007_004E,839.0,2023,acs/acs5,,Basin,B25007_004E,acs/acs5,tract,Owner Occupied: Householder 25 To 34 Years
+4563,Tenure By Age Of Householder,B25007_019E,852.0,2023,acs/acs5,,Basin,B25007_019E,acs/acs5,tract,Renter Occupied: Householder 65 To 74 Years
+4561,Tenure By Age Of Householder,B25007_007E,999.0,2023,acs/acs5,,South Lake,B25007_007E,acs/acs5,tract,Owner Occupied: Householder 55 To 59 Years
+4560,Tenure By Age Of Householder,B25007_006E,1031.0,2023,acs/acs5,,North Lake,B25007_006E,acs/acs5,tract,Owner Occupied: Householder 45 To 54 Years
+4556,Tenure By Age Of Householder,B25007_016E,1207.0,2023,acs/acs5,,Basin,B25007_016E,acs/acs5,tract,Renter Occupied: Householder 45 To 54 Years
+4554,Tenure By Age Of Householder,B25007_005E,1326.0,2023,acs/acs5,,South Lake,B25007_005E,acs/acs5,tract,Owner Occupied: Householder 35 To 44 Years
+4551,Tenure By Age Of Householder,B25007_010E,1361.0,2023,acs/acs5,,Basin,B25007_010E,acs/acs5,tract,Owner Occupied: Householder 75 To 84 Years
+4550,Tenure By Age Of Householder,B25007_008E,1368.0,2023,acs/acs5,,South Lake,B25007_008E,acs/acs5,tract,Owner Occupied: Householder 60 To 64 Years
+4546,Tenure By Age Of Householder,B25007_006E,1508.0,2023,acs/acs5,,South Lake,B25007_006E,acs/acs5,tract,Owner Occupied: Householder 45 To 54 Years
+4545,Tenure By Age Of Householder,B25007_015E,1522.0,2023,acs/acs5,,South Lake,B25007_015E,acs/acs5,tract,Renter Occupied: Householder 35 To 44 Years
+4544,Tenure By Age Of Householder,B25007_007E,1532.0,2023,acs/acs5,,Basin,B25007_007E,acs/acs5,tract,Owner Occupied: Householder 55 To 59 Years
+4542,Tenure By Age Of Householder,B25007_009E,1586.0,2023,acs/acs5,,North Lake,B25007_009E,acs/acs5,tract,Owner Occupied: Householder 65 To 74 Years
+4540,Tenure By Age Of Householder,B25007_014E,1622.0,2023,acs/acs5,,South Lake,B25007_014E,acs/acs5,tract,Renter Occupied: Householder 25 To 34 Years
+4534,Tenure By Age Of Householder,B25007_005E,2018.0,2023,acs/acs5,,Basin,B25007_005E,acs/acs5,tract,Owner Occupied: Householder 35 To 44 Years
+4533,Tenure By Age Of Householder,B25007_014E,2137.0,2023,acs/acs5,,Basin,B25007_014E,acs/acs5,tract,Renter Occupied: Householder 25 To 34 Years
+4532,Tenure By Age Of Householder,B25007_015E,2162.0,2023,acs/acs5,,Basin,B25007_015E,acs/acs5,tract,Renter Occupied: Householder 35 To 44 Years
+4531,Tenure By Age Of Householder,B25007_008E,2191.0,2023,acs/acs5,,Basin,B25007_008E,acs/acs5,tract,Owner Occupied: Householder 60 To 64 Years
+4530,Tenure By Age Of Householder,B25007_012E,2228.0,2023,acs/acs5,,North Lake,B25007_012E,acs/acs5,tract,Renter Occupied: Total
+4529,Tenure By Age Of Householder,B25007_009E,2492.0,2023,acs/acs5,,South Lake,B25007_009E,acs/acs5,tract,Owner Occupied: Householder 65 To 74 Years
+4528,Tenure By Age Of Householder,B25007_006E,2539.0,2023,acs/acs5,,Basin,B25007_006E,acs/acs5,tract,Owner Occupied: Householder 45 To 54 Years
+4524,Tenure By Age Of Householder,B25007_009E,4078.0,2023,acs/acs5,,Basin,B25007_009E,acs/acs5,tract,Owner Occupied: Householder 65 To 74 Years
+4520,Tenure By Age Of Householder,B25007_012E,6171.0,2023,acs/acs5,,South Lake,B25007_012E,acs/acs5,tract,Renter Occupied: Total
+4517,Tenure By Age Of Householder,B25007_012E,8399.0,2023,acs/acs5,,Basin,B25007_012E,acs/acs5,tract,Renter Occupied: Total
+5469,Tenure By Race Of Householder,B25003G_002E,1111.0,2023,acs/acs5,,Basin,B25003G_002E,acs/acs5,tract,Owner Occupied: Two Or More Races Householder
+5468,Tenure By Race Of Householder,B25003F_001E,1244.0,2023,acs/acs5,,Basin,B25003F_001E,acs/acs5,tract,Total: Some Other Race Alone Householder
+5466,Tenure By Race Of Householder,B25003G_001E,1395.0,2023,acs/acs5,,South Lake,B25003G_001E,acs/acs5,tract,Total: Two Or More Races Householder
+5464,Tenure By Race Of Householder,B25003A_003E,1695.0,2023,acs/acs5,,North Lake,B25003A_003E,acs/acs5,tract,Renter Occupied: White Alone Householder
+5462,Tenure By Race Of Householder,B25003G_001E,1904.0,2023,acs/acs5,,Basin,B25003G_001E,acs/acs5,tract,Total: Two Or More Races Householder
+5454,Tenure By Race Of Householder,B25003A_003E,4533.0,2023,acs/acs5,,South Lake,B25003A_003E,acs/acs5,tract,Renter Occupied: White Alone Householder
+5452,Tenure By Race Of Householder,B25003A_002E,4912.0,2023,acs/acs5,,North Lake,B25003A_002E,acs/acs5,tract,Owner Occupied: White Alone Householder
+5450,Tenure By Race Of Householder,B25003A_003E,6228.0,2023,acs/acs5,,Basin,B25003A_003E,acs/acs5,tract,Renter Occupied: White Alone Householder
+5448,Tenure By Race Of Householder,B25003A_001E,6607.0,2023,acs/acs5,,North Lake,B25003A_001E,acs/acs5,tract,Total: White Alone Householder
+5447,Tenure By Race Of Householder,B25003A_002E,8080.0,2023,acs/acs5,,South Lake,B25003A_002E,acs/acs5,tract,Owner Occupied: White Alone Householder
+5444,Tenure By Race Of Householder,B25003A_001E,12613.0,2023,acs/acs5,,South Lake,B25003A_001E,acs/acs5,tract,Total: White Alone Householder
+5443,Tenure By Race Of Householder,B25003A_002E,12992.0,2023,acs/acs5,,Basin,B25003A_002E,acs/acs5,tract,Owner Occupied: White Alone Householder
+5441,Tenure By Race Of Householder,B25003A_001E,19220.0,2023,acs/acs5,,Basin,B25003A_001E,acs/acs5,tract,Total: White Alone Householder
+5624,Tenure By Race Of Householder,B25003B_002E,0.0,2023,acs/acs5,,South Lake,B25003B_002E,acs/acs5,tract,Owner Occupied: Black Or African American Alone Householder
+5623,Tenure By Race Of Householder,B25003B_002E,0.0,2023,acs/acs5,,North Lake,B25003B_002E,acs/acs5,tract,Owner Occupied: Black Or African American Alone Householder
+5618,Tenure By Race Of Householder,B25003B_002E,0.0,2023,acs/acs5,,Basin,B25003B_002E,acs/acs5,tract,Owner Occupied: Black Or African American Alone Householder
+5609,Tenure By Race Of Householder,B25003C_003E,0.0,2023,acs/acs5,,North Lake,B25003C_003E,acs/acs5,tract,Renter Occupied: American Indian And Alaska Native Alone Householder
+5605,Tenure By Race Of Householder,B25003C_002E,0.0,2023,acs/acs5,,North Lake,B25003C_002E,acs/acs5,tract,Owner Occupied: American Indian And Alaska Native Alone Householder
+5601,Tenure By Race Of Householder,B25003C_001E,0.0,2023,acs/acs5,,North Lake,B25003C_001E,acs/acs5,tract,Total: American Indian And Alaska Native Alone Householder
+5592,Tenure By Race Of Householder,B25003E_002E,0.0,2023,acs/acs5,,South Lake,B25003E_002E,acs/acs5,tract,Owner Occupied: Native Hawaiian And Other Pacific Islander Alone Householder
+5591,Tenure By Race Of Householder,B25003E_002E,0.0,2023,acs/acs5,,North Lake,B25003E_002E,acs/acs5,tract,Owner Occupied: Native Hawaiian And Other Pacific Islander Alone Householder
+5586,Tenure By Race Of Householder,B25003E_002E,0.0,2023,acs/acs5,,Basin,B25003E_002E,acs/acs5,tract,Owner Occupied: Native Hawaiian And Other Pacific Islander Alone Householder
+5585,Tenure By Race Of Householder,B25003B_003E,11.0,2023,acs/acs5,,South Lake,B25003B_003E,acs/acs5,tract,Renter Occupied: Black Or African American Alone Householder
+5583,Tenure By Race Of Householder,B25003B_001E,11.0,2023,acs/acs5,,South Lake,B25003B_001E,acs/acs5,tract,Total: Black Or African American Alone Householder
+5578,Tenure By Race Of Householder,B25003D_003E,16.0,2023,acs/acs5,,North Lake,B25003D_003E,acs/acs5,tract,Renter Occupied: Asian Alone Householder
+5572,Tenure By Race Of Householder,B25003B_003E,18.0,2023,acs/acs5,,North Lake,B25003B_003E,acs/acs5,tract,Renter Occupied: Black Or African American Alone Householder
+5568,Tenure By Race Of Householder,B25003E_001E,18.0,2023,acs/acs5,,South Lake,B25003E_001E,acs/acs5,tract,Total: Native Hawaiian And Other Pacific Islander Alone Householder
+5567,Tenure By Race Of Householder,B25003E_001E,18.0,2023,acs/acs5,,North Lake,B25003E_001E,acs/acs5,tract,Total: Native Hawaiian And Other Pacific Islander Alone Householder
+5564,Tenure By Race Of Householder,B25003E_003E,18.0,2023,acs/acs5,,South Lake,B25003E_003E,acs/acs5,tract,Renter Occupied: Native Hawaiian And Other Pacific Islander Alone Householder
+5563,Tenure By Race Of Householder,B25003E_003E,18.0,2023,acs/acs5,,North Lake,B25003E_003E,acs/acs5,tract,Renter Occupied: Native Hawaiian And Other Pacific Islander Alone Householder
+5559,Tenure By Race Of Householder,B25003C_002E,21.0,2023,acs/acs5,,South Lake,B25003C_002E,acs/acs5,tract,Owner Occupied: American Indian And Alaska Native Alone Householder
+5557,Tenure By Race Of Householder,B25003C_002E,21.0,2023,acs/acs5,,Basin,B25003C_002E,acs/acs5,tract,Owner Occupied: American Indian And Alaska Native Alone Householder
+5555,Tenure By Race Of Householder,B25003B_003E,29.0,2023,acs/acs5,,Basin,B25003B_003E,acs/acs5,tract,Renter Occupied: Black Or African American Alone Householder
+5553,Tenure By Race Of Householder,B25003B_001E,29.0,2023,acs/acs5,,Basin,B25003B_001E,acs/acs5,tract,Total: Black Or African American Alone Householder
+5549,Tenure By Race Of Householder,B25003E_001E,36.0,2023,acs/acs5,,Basin,B25003E_001E,acs/acs5,tract,Total: Native Hawaiian And Other Pacific Islander Alone Householder
+5547,Tenure By Race Of Householder,B25003E_003E,36.0,2023,acs/acs5,,Basin,B25003E_003E,acs/acs5,tract,Renter Occupied: Native Hawaiian And Other Pacific Islander Alone Householder
+5536,Tenure By Race Of Householder,B25003D_002E,110.0,2023,acs/acs5,,North Lake,B25003D_002E,acs/acs5,tract,Owner Occupied: Asian Alone Householder
+5533,Tenure By Race Of Householder,B25003D_001E,126.0,2023,acs/acs5,,North Lake,B25003D_001E,acs/acs5,tract,Total: Asian Alone Householder
+5570,Tenure By Race Of Householder,B25003B_001E,18.0,2023,acs/acs5,,North Lake,B25003B_001E,acs/acs5,tract,Total: Black Or African American Alone Householder
+5528,Tenure By Race Of Householder,B25003F_002E,147.0,2023,acs/acs5,,North Lake,B25003F_002E,acs/acs5,tract,Owner Occupied: Some Other Race Alone Householder
+5527,Tenure By Race Of Householder,B25003C_003E,149.0,2023,acs/acs5,,South Lake,B25003C_003E,acs/acs5,tract,Renter Occupied: American Indian And Alaska Native Alone Householder
+5526,Tenure By Race Of Householder,B25003C_003E,149.0,2023,acs/acs5,,Basin,B25003C_003E,acs/acs5,tract,Renter Occupied: American Indian And Alaska Native Alone Householder
+5519,Tenure By Race Of Householder,B25003C_001E,170.0,2023,acs/acs5,,South Lake,B25003C_001E,acs/acs5,tract,Total: American Indian And Alaska Native Alone Householder
+5518,Tenure By Race Of Householder,B25003C_001E,170.0,2023,acs/acs5,,Basin,B25003C_001E,acs/acs5,tract,Total: American Indian And Alaska Native Alone Householder
+5516,Tenure By Race Of Householder,B25003F_002E,226.0,2023,acs/acs5,,South Lake,B25003F_002E,acs/acs5,tract,Owner Occupied: Some Other Race Alone Householder
+5514,Tenure By Race Of Householder,B25003G_003E,229.0,2023,acs/acs5,,North Lake,B25003G_003E,acs/acs5,tract,Renter Occupied: Two Or More Races Householder
+5511,Tenure By Race Of Householder,B25003F_003E,252.0,2023,acs/acs5,,North Lake,B25003F_003E,acs/acs5,tract,Renter Occupied: Some Other Race Alone Householder
+5508,Tenure By Race Of Householder,B25003D_003E,277.0,2023,acs/acs5,,South Lake,B25003D_003E,acs/acs5,tract,Renter Occupied: Asian Alone Householder
+5506,Tenure By Race Of Householder,B25003G_002E,280.0,2023,acs/acs5,,North Lake,B25003G_002E,acs/acs5,tract,Owner Occupied: Two Or More Races Householder
+5505,Tenure By Race Of Householder,B25003D_003E,293.0,2023,acs/acs5,,Basin,B25003D_003E,acs/acs5,tract,Renter Occupied: Asian Alone Householder
+5502,Tenure By Race Of Householder,B25003D_002E,325.0,2023,acs/acs5,,South Lake,B25003D_002E,acs/acs5,tract,Owner Occupied: Asian Alone Householder
+5497,Tenure By Race Of Householder,B25003F_002E,373.0,2023,acs/acs5,,Basin,B25003F_002E,acs/acs5,tract,Owner Occupied: Some Other Race Alone Householder
+5495,Tenure By Race Of Householder,B25003F_001E,399.0,2023,acs/acs5,,North Lake,B25003F_001E,acs/acs5,tract,Total: Some Other Race Alone Householder
+5492,Tenure By Race Of Householder,B25003D_002E,435.0,2023,acs/acs5,,Basin,B25003D_002E,acs/acs5,tract,Owner Occupied: Asian Alone Householder
+5490,Tenure By Race Of Householder,B25003G_001E,509.0,2023,acs/acs5,,North Lake,B25003G_001E,acs/acs5,tract,Total: Two Or More Races Householder
+5488,Tenure By Race Of Householder,B25003G_003E,564.0,2023,acs/acs5,,South Lake,B25003G_003E,acs/acs5,tract,Renter Occupied: Two Or More Races Householder
+5486,Tenure By Race Of Householder,B25003D_001E,602.0,2023,acs/acs5,,South Lake,B25003D_001E,acs/acs5,tract,Total: Asian Alone Householder
+5485,Tenure By Race Of Householder,B25003F_003E,619.0,2023,acs/acs5,,South Lake,B25003F_003E,acs/acs5,tract,Renter Occupied: Some Other Race Alone Householder
+5479,Tenure By Race Of Householder,B25003D_001E,728.0,2023,acs/acs5,,Basin,B25003D_001E,acs/acs5,tract,Total: Asian Alone Householder
+5476,Tenure By Race Of Householder,B25003G_003E,793.0,2023,acs/acs5,,Basin,B25003G_003E,acs/acs5,tract,Renter Occupied: Two Or More Races Householder
+5475,Tenure By Race Of Householder,B25003G_002E,831.0,2023,acs/acs5,,South Lake,B25003G_002E,acs/acs5,tract,Owner Occupied: Two Or More Races Householder
+5474,Tenure By Race Of Householder,B25003F_001E,845.0,2023,acs/acs5,,South Lake,B25003F_001E,acs/acs5,tract,Total: Some Other Race Alone Householder
+5473,Tenure By Race Of Householder,B25003F_003E,871.0,2023,acs/acs5,,Basin,B25003F_003E,acs/acs5,tract,Renter Occupied: Some Other Race Alone Householder
