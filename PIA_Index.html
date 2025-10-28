@@ -28,16 +28,19 @@
     .controls h3 { margin-top: 0; }
     .slider-group { margin-bottom: 10px; }
     input[type=range] { width: 100%; }
-    button {
-      background-color: #b22222;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
-    }
-    button:hover { background-color: #8b1a1a; }
+    .button {
+  background-color: #1a73e8; /* base blue */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #155ab6; /* darker blue on hover */
+}
     .legend {
       position: absolute;
       bottom: 20px;
@@ -49,17 +52,18 @@
       font-family: "Avenir Next", sans-serif;
       width: 220px;
     }
-    .color-bar {
-      height: 15px;
-      background: linear-gradient(to right,
-        rgba(255,200,0,0.4) 0%,
-        rgba(255,150,40,0.6) 25%,
-        rgba(255,100,40,0.75) 50%,
-        rgba(255,50,40,0.9) 75%,
-        rgba(255,0,0,1) 100%);
-      border-radius: 4px;
-      margin-bottom: 5px;
-    }
+.color-bar {
+  height: 15px;
+  background: linear-gradient(to right,
+    rgba(200,200,255,0.4) 0%,
+    rgba(150,150,255,0.6) 25%,
+    rgba(100,100,255,0.75) 50%,
+    rgba(50,50,255,0.9) 75%,
+    rgba(0,0,255,1) 100%);
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
     .legend-labels { display: flex; justify-content: space-between; font-size: 12px; }
   </style>
 </head>
@@ -179,12 +183,13 @@
               type: "color",
               valueExpression: expression,
               stops: [
-                { value: 0,    color: "rgba(255, 255, 255, 0.4)" },
-                { value: 0.25, color: "rgba(255,150,40,0.6)" },
-                { value: 0.5,  color: "rgba(255,100,40,0.75)" },
-                { value: 0.75, color: "rgba(255,50,40,0.9)" },
-                { value: 1,    color: "rgba(255,0,0,1)" }
-              ]
+  { value: 0,    color: "rgba(255, 255, 255, 0.4)" },  // keep light/transparent start
+  { value: 0.25, color: "rgba(150, 200, 255, 0.6)" },
+  { value: 0.5,  color: "rgba(100, 150, 255, 0.75)" },
+  { value: 0.75, color: "rgba(50, 100, 255, 0.9)" },
+  { value: 1,    color: "rgba(0, 0, 255, 1)" }        // deep solid blue
+]
+
             },
             {
               type: "opacity",

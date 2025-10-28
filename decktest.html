@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DeckGL HexLayer Overlay on MapLibre</title>
+
+<link href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script>
+
+<script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+
+<script type="module" src="https://js.arcgis.com/calcite-components/2.6.0/calcite.esm.js"></script>
+<link rel="stylesheet" href="https://js.arcgis.com/calcite-components/2.6.0/calcite.css" />
+
+<style>
+html, body, #map { margin:0; height:100%; width:100%; position:relative; }
+#deck-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2; }
+#controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255,255,255,0.95);
+  padding: 12px;
+  border-radius: 8px;
+  width: 280px;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+calcite-slider { width: 100%; margin-top: 4px; }
+calcite-button { margin-top: 8px; width: 100%; }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <calcite-label>Density <calcite-slider id="density" min="0" max="1" step="0.01" value="0.33"></calcite-slider></calcite-label>
+  <calcite-label>Active Transport <calcite-slider id="active" min="0" max="1" step="0.01" value="0.33"></calcite-slider></calcite-label>
+  <calcite-label>Transit <calcite-slider id="transit" min="0" max="1" step="0.01" value="0.34"></calcite-slider></calcite-label>
+  <calcite-button id="reset" appearance="solid" color="red">Reset Equal Weights</calcite-button>
+  <calcite-label>Hex Height <calcite-slider id="hexHeight" min="10" max="500" step="10" value="50"></calcite-slider></calcite-label>
+  <div id="status" style="margin-top:6px; font-size:12px; color:#333;">Loading data...</div>
+</div>
+
+<div id="map"></div>
+<canvas id="deck-canvas"></canvas>
+
+<script>
+(async function(){
+  const serviceUrl = "https://services5.arcgis.com/fXXSUzHD5JjcOt1v/arcgis/rest/services/PIA_Index/FeatureServer/1/query";
+  const outFields = ["density_index_preprocessed","bike_ped_index_preprocessed","Transit_Index_PREPROCESSED","latitude","longitude"];
+  const pageSize = 1000;
+  let allPoints = [];
+
+  const densitySlider = document.getElementById("density");
+  const activeSlider  = document.getElementById("active");
+  const transitSlider = document.getElementById("transit");
+  const resetBtn = document.getElementById("reset");
+  const hexHeightSlider = document.getElementById("hexHeight");
+  const status = document.getElementById("status");
+
+  let weights = {density:0.33, active:0.33, transit:0.34};
+  let elevationScale = parseFloat(hexHeightSlider.value);
+
+  const stops = [
+    {v:0, rgba:[255,200,0,102]},
+    {v:0.25, rgba:[255,150,40,153]},
+    {v:0.5, rgba:[255,100,40,191]},
+    {v:0.75, rgba:[255,50,40,230]},
+    {v:1, rgba:[255,0,0,255]}
+  ];
+
+  function interpColor(v){
+    v = Math.max(0, Math.min(1, v));
+    let lo=stops[0], hi=stops[stops.length-1];
+    for(let i=0;i<stops.length-1;i++){
+      if(v >= stops[i].v && v <= stops[i+1].v){ lo=stops[i]; hi=stops[i+1]; break; }
+    }
+    const t=(v-lo.v)/(hi.v-lo.v||1);
+    return lo.rgba.map((c,i)=>Math.round(c*(1-t) + hi.rgba[i]*t));
+  }
+
+  status.innerText = "Fetching data...";
+
+  async function fetchAllFeatures(){
+    let offset = 0;
+    let fetched = [];
+    while(true){
+      const url = `${serviceUrl}?where=1=1&outFields=${outFields.join()}&outSR=4326&f=geojson&resultOffset=${offset}&resultRecordCount=${pageSize}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(!data.features || data.features.length === 0) break;
+      fetched = fetched.concat(data.features);
+      offset += data.features.length;
+      status.innerText = `Loaded ${offset} records...`;
+    }
+    return fetched;
+  }
+
+  try{
+    const features = await fetchAllFeatures();
+    allPoints = features.map(f => ({
+      position: [
+        parseFloat(f.properties.longitude),
+        parseFloat(f.properties.latitude)
+      ],
+      density: f.properties.density_index_preprocessed,
+      active: f.properties.bike_ped_index_preprocessed,
+      transit: f.properties.Transit_Index_PREPROCESSED
+    })).filter(p => !isNaN(p.position[0]) && !isNaN(p.position[1]));
+    status.innerText = `Loaded ${allPoints.length} points.`;
+  }catch(err){
+    console.error(err);
+    status.innerText = "Failed to fetch data.";
+    return;
+  }
+
+  function normalizePoints(){
+    const maxD = Math.max(...allPoints.map(p=>p.density));
+    const maxA = Math.max(...allPoints.map(p=>p.active));
+    const maxT = Math.max(...allPoints.map(p=>p.transit));
+    return allPoints.map(p=>({
+      ...p,
+      normDensity: maxD ? p.density/maxD : 0,
+      normActive: maxA ? p.active/maxA : 0,
+      normTransit: maxT ? p.transit/maxT : 0
+    }));
+  }
+
+  const map = new maplibregl.Map({
+    container:'map',
+    style:'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    center:[-120,39.1],
+    zoom:8,
+    pitch:30,
+    bearing:0
+  });
+
+  const deckgl = new deck.DeckGL({
+    canvas:'deck-canvas',
+    width:'100%',
+    height:'100%',
+    controller:false,
+    layers:[]
+  });
+
+  function renderHex(){
+    const points = normalizePoints();
+    const layer = new deck.HexagonLayer({
+      id:'hex-layer',
+      data: points,
+      getPosition:d=>d.position,
+      radius:1000,
+      extruded:true,
+      elevationScale:elevationScale,
+      getElevationWeight: d => d.normDensity*weights.density + d.normActive*weights.active + d.normTransit*weights.transit,
+      elevationAggregation:'MEAN',
+      getColorWeight: d => d.normDensity*weights.density + d.normActive*weights.active + d.normTransit*weights.transit,
+      colorAggregation:'MEAN',
+      getFillColor:w => interpColor(w),
+      pickable:true
+    });
+    deckgl.setProps({layers:[layer]});
+  }
+
+  function updateWeights(){
+    const total = parseFloat(densitySlider.value) + parseFloat(activeSlider.value) + parseFloat(transitSlider.value);
+    weights.density = parseFloat(densitySlider.value)/total;
+    weights.active  = parseFloat(activeSlider.value)/total;
+    weights.transit = parseFloat(transitSlider.value)/total;
+    renderHex();
+  }
+
+  function normalizeSliders(changed){
+    let value = parseFloat(changed.value);
+    let others = [densitySlider, activeSlider, transitSlider].filter(s => s !== changed);
+    const remaining = 1 - value;
+    const sumOthers = parseFloat(others[0].value) + parseFloat(others[1].value);
+    if(sumOthers === 0){
+      others[0].value = others[1].value = remaining/2;
+    } else {
+      others[0].value = parseFloat(others[0].value)/sumOthers * remaining;
+      others[1].value = parseFloat(others[1].value)/sumOthers * remaining;
+    }
+  }
+
+  [densitySlider, activeSlider, transitSlider].forEach(s => s.addEventListener("calciteSliderInput", ()=>{
+    normalizeSliders(s);
+    updateWeights();
+  }));
+
+  resetBtn.addEventListener("click", ()=>{
+    densitySlider.value = activeSlider.value = transitSlider.value = 0.33;
+    updateWeights();
+  });
+
+  hexHeightSlider.addEventListener("calciteSliderInput", ()=>{
+    elevationScale = parseFloat(hexHeightSlider.value);
+    renderHex();
+  });
+
+  // Sync DeckGL view to MapLibre without blocking interactions
+  function syncDeck(){
+    deckgl.setProps({
+      viewState:{
+        longitude: map.getCenter().lng,
+        latitude: map.getCenter().lat,
+        zoom: map.getZoom(),
+        pitch: map.getPitch(),
+        bearing: map.getBearing()
+      }
+    });
+  }
+
+  map.on('move', syncDeck);
+  map.on('zoom', syncDeck);
+  map.on('pitch', syncDeck);
+
+  // Initial render
+  renderHex();
+})();
+</script>
+</body>
+</html>
