@@ -1,222 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>DeckGL HexLayer Overlay on MapLibre</title>
-
-<link href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css" rel="stylesheet">
-<script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script>
-
+<meta charset="utf-8" />
+<title>DeckGL HexLayer + OSM TileLayer (Blue, Auto-Rebalance Sliders)</title>
 <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
-
 <script type="module" src="https://js.arcgis.com/calcite-components/2.6.0/calcite.esm.js"></script>
 <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/2.6.0/calcite.css" />
-
 <style>
-html, body, #map { margin:0; height:100%; width:100%; position:relative; }
-#deck-canvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2; }
-#controls {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(255,255,255,0.95);
-  padding: 12px;
-  border-radius: 8px;
-  width: 280px;
-  z-index: 10;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-calcite-slider { width: 100%; margin-top: 4px; }
-calcite-button { margin-top: 8px; width: 100%; }
+  html, body, #map { margin:0; height:100%; width:100%; }
+  #controls {
+    position:absolute; top:10px; left:10px;
+    background:rgba(255,255,255,0.95);
+    padding:12px; border-radius:8px; width:300px; z-index:999;
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);
+    font-family:Arial,sans-serif;
+  }
+  calcite-slider { width:100%; margin-top:6px; }
+  calcite-button { margin-top:8px; width:100%; }
+  #status { margin-top:8px; font-size:13px; color:#333; }
 </style>
 </head>
 <body>
-
 <div id="controls">
+  <div><strong>Weights (auto-rebalance)</strong></div>
   <calcite-label>Density <calcite-slider id="density" min="0" max="1" step="0.01" value="0.33"></calcite-slider></calcite-label>
-  <calcite-label>Active Transport <calcite-slider id="active" min="0" max="1" step="0.01" value="0.33"></calcite-slider></calcite-label>
+  <calcite-label>Active <calcite-slider id="active" min="0" max="1" step="0.01" value="0.33"></calcite-slider></calcite-label>
   <calcite-label>Transit <calcite-slider id="transit" min="0" max="1" step="0.01" value="0.34"></calcite-slider></calcite-label>
-  <calcite-button id="reset" appearance="solid" color="red">Reset Equal Weights</calcite-button>
-  <calcite-label>Hex Height <calcite-slider id="hexHeight" min="10" max="500" step="10" value="50"></calcite-slider></calcite-label>
-  <div id="status" style="margin-top:6px; font-size:12px; color:#333;">Loading data...</div>
+  <calcite-button id="reset" appearance="solid" color="red">Reset Equal</calcite-button>
+  <div style="height:8px"></div>
+  <calcite-label>Hex Height <calcite-slider id="hexHeight" min="1" max="50" step=".5" value="20"></calcite-slider></calcite-label>
+  <div id="status">Loading points...</div>
 </div>
 
 <div id="map"></div>
-<canvas id="deck-canvas"></canvas>
 
 <script>
 (async function(){
   const serviceUrl = "https://services5.arcgis.com/fXXSUzHD5JjcOt1v/arcgis/rest/services/PIA_Index/FeatureServer/1/query";
   const outFields = ["density_index_preprocessed","bike_ped_index_preprocessed","Transit_Index_PREPROCESSED","latitude","longitude"];
   const pageSize = 1000;
-  let allPoints = [];
 
-  const densitySlider = document.getElementById("density");
-  const activeSlider  = document.getElementById("active");
-  const transitSlider = document.getElementById("transit");
-  const resetBtn = document.getElementById("reset");
-  const hexHeightSlider = document.getElementById("hexHeight");
-  const status = document.getElementById("status");
+  const status=document.getElementById('status');
+  const densityEl=document.getElementById('density');
+  const activeEl=document.getElementById('active');
+  const transitEl=document.getElementById('transit');
+  const hexHeightEl=document.getElementById('hexHeight');
+  const resetBtn=document.getElementById('reset');
 
-  let weights = {density:0.33, active:0.33, transit:0.34};
-  let elevationScale = parseFloat(hexHeightSlider.value);
+  let weights={density:0.33,active:0.33,transit:0.34};
+  let elevationScale=25;
 
-  const stops = [
-    {v:0, rgba:[255,200,0,102]},
-    {v:0.25, rgba:[255,150,40,153]},
-    {v:0.5, rgba:[255,100,40,191]},
-    {v:0.75, rgba:[255,50,40,230]},
-    {v:1, rgba:[255,0,0,255]}
+  const stops=[
+    {v:0,rgba:[220,240,255,120]},
+    {v:0.25,rgba:[160,210,255,160]},
+    {v:0.5,rgba:[100,170,255,200]},
+    {v:0.75,rgba:[40,130,255,230]},
+    {v:1,rgba:[0,80,255,255]}
   ];
-
   function interpColor(v){
-    v = Math.max(0, Math.min(1, v));
-    let lo=stops[0], hi=stops[stops.length-1];
+    v=Math.max(0,Math.min(1,v));
+    let lo=stops[0],hi=stops[stops.length-1];
     for(let i=0;i<stops.length-1;i++){
-      if(v >= stops[i].v && v <= stops[i+1].v){ lo=stops[i]; hi=stops[i+1]; break; }
+      if(v>=stops[i].v && v<=stops[i+1].v){lo=stops[i];hi=stops[i+1];break;}
     }
     const t=(v-lo.v)/(hi.v-lo.v||1);
-    return lo.rgba.map((c,i)=>Math.round(c*(1-t) + hi.rgba[i]*t));
+    return lo.rgba.map((c,i)=>Math.round(c*(1-t)+hi.rgba[i]*t));
   }
 
-  status.innerText = "Fetching data...";
-
-  async function fetchAllFeatures(){
-    let offset = 0;
-    let fetched = [];
+  status.textContent='Fetching features...';
+  async function fetchAll(){
+    let offset=0,all=[];
     while(true){
-      const url = `${serviceUrl}?where=1=1&outFields=${outFields.join()}&outSR=4326&f=geojson&resultOffset=${offset}&resultRecordCount=${pageSize}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if(!data.features || data.features.length === 0) break;
-      fetched = fetched.concat(data.features);
-      offset += data.features.length;
-      status.innerText = `Loaded ${offset} records...`;
+      const url=`${serviceUrl}?where=1=1&outFields=${outFields.join()}&outSR=4326&f=geojson&resultOffset=${offset}&resultRecordCount=${pageSize}`;
+      const r=await fetch(url); if(!r.ok)throw new Error('Fetch failed');
+      const json=await r.json();
+      if(!json.features||json.features.length===0)break;
+      all=all.concat(json.features); offset+=json.features.length;
+      status.textContent=`Loaded ${offset} records...`;
+      if(offset>200000)break;
     }
-    return fetched;
+    return all;
   }
 
-  try{
-    const features = await fetchAllFeatures();
-    allPoints = features.map(f => ({
-      position: [
-        parseFloat(f.properties.longitude),
-        parseFloat(f.properties.latitude)
-      ],
-      density: f.properties.density_index_preprocessed,
-      active: f.properties.bike_ped_index_preprocessed,
-      transit: f.properties.Transit_Index_PREPROCESSED
-    })).filter(p => !isNaN(p.position[0]) && !isNaN(p.position[1]));
-    status.innerText = `Loaded ${allPoints.length} points.`;
-  }catch(err){
-    console.error(err);
-    status.innerText = "Failed to fetch data.";
-    return;
+  let features;
+  try{features=await fetchAll();}
+  catch(e){
+    console.warn(e);
+    features=[];
+    for(let i=0;i<800;i++)
+      features.push({properties:{latitude:38+Math.random()*4,longitude:-121+Math.random()*4,density_index_preprocessed:Math.random(),bike_ped_index_preprocessed:Math.random(),Transit_Index_PREPROCESSED:Math.random()}});
+    status.textContent='Using fallback sample data.';
   }
 
-  function normalizePoints(){
-    const maxD = Math.max(...allPoints.map(p=>p.density));
-    const maxA = Math.max(...allPoints.map(p=>p.active));
-    const maxT = Math.max(...allPoints.map(p=>p.transit));
-    return allPoints.map(p=>({
-      ...p,
-      normDensity: maxD ? p.density/maxD : 0,
-      normActive: maxA ? p.active/maxA : 0,
-      normTransit: maxT ? p.transit/maxT : 0
-    }));
-  }
+  const pts=features.map(f=>{
+    const p=f.properties||f;
+    return {position:[+p.longitude,+p.latitude],density:+p.density_index_preprocessed||0,active:+p.bike_ped_index_preprocessed||0,transit:+p.Transit_Index_PREPROCESSED||0};
+  }).filter(p=>Number.isFinite(p.position[0])&&Number.isFinite(p.position[1]));
 
-  const map = new maplibregl.Map({
-    container:'map',
-    style:'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-    center:[-120,39.1],
-    zoom:8,
-    pitch:30,
-    bearing:0
+  const maxD=Math.max(...pts.map(p=>p.density));
+  const maxA=Math.max(...pts.map(p=>p.active));
+  const maxT=Math.max(...pts.map(p=>p.transit));
+  const normalizedPoints=pts.map(p=>({...p,normDensity:maxD?p.density/maxD:0,normActive:maxA?p.active/maxA:0,normTransit:maxT?p.transit/maxT:0}));
+
+  const tileLayer=new deck.TileLayer({
+    id:'pos', 
+    // switched to Carto Positron raster tiles:
+    data:'https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png',
+    minZoom:0,maxZoom:19,tileSize:256,
+    renderSubLayers:props=>{const {bbox:{west,south,east,north}}=props.tile;return new deck.BitmapLayer(props,{data:null,image:props.data,bounds:[west,south,east,north]});}
   });
+  const initialViewState={longitude:-120,latitude:39,zoom:10,pitch:40,bearing:0};
+  const deckgl=new deck.DeckGL({container:'map',initialViewState,controller:true,layers:[tileLayer]});
 
-  const deckgl = new deck.DeckGL({
-    canvas:'deck-canvas',
-    width:'100%',
-    height:'100%',
-    controller:false,
-    layers:[]
-  });
+  function makeHexLayer() {
+  return new deck.HexagonLayer({
+    id: 'hex',
+    data: normalizedPoints,
+    getPosition: d => d.position,
+    radius: 200,
+    extruded: true,
+    elevationScale: elevationScale,
+    getElevationWeight: d => (
+      d.normDensity * weights.density +
+      d.normActive  * weights.active +
+      d.normTransit * weights.transit
+    ),
+    elevationAggregation: 'MEAN',
 
-  function renderHex(){
-    const points = normalizePoints();
-    const layer = new deck.HexagonLayer({
-      id:'hex-layer',
-      data: points,
-      getPosition:d=>d.position,
-      radius:1000,
-      extruded:true,
-      elevationScale:elevationScale,
-      getElevationWeight: d => d.normDensity*weights.density + d.normActive*weights.active + d.normTransit*weights.transit,
-      elevationAggregation:'MEAN',
-      getColorWeight: d => d.normDensity*weights.density + d.normActive*weights.active + d.normTransit*weights.transit,
-      colorAggregation:'MEAN',
-      getFillColor:w => interpColor(w),
-      pickable:true
-    });
-    deckgl.setProps({layers:[layer]});
-  }
+    // color weight and aggregation
+    getColorWeight: d => (
+      d.normDensity * weights.density +
+      d.normActive  * weights.active +
+      d.normTransit * weights.transit
+    ),
+    colorAggregation: 'MEAN',
 
-  function updateWeights(){
-    const total = parseFloat(densitySlider.value) + parseFloat(activeSlider.value) + parseFloat(transitSlider.value);
-    weights.density = parseFloat(densitySlider.value)/total;
-    weights.active  = parseFloat(activeSlider.value)/total;
-    weights.transit = parseFloat(transitSlider.value)/total;
-    renderHex();
-  }
+    // Blue gradient using DeckGL colorRange
+    colorRange: [
+      [220,240,255],
+      [160,210,255],
+      [100,170,255],
+      [40,130,255],
+      [0,80,255]
+    ],
 
-  function normalizeSliders(changed){
-    let value = parseFloat(changed.value);
-    let others = [densitySlider, activeSlider, transitSlider].filter(s => s !== changed);
-    const remaining = 1 - value;
-    const sumOthers = parseFloat(others[0].value) + parseFloat(others[1].value);
-    if(sumOthers === 0){
-      others[0].value = others[1].value = remaining/2;
-    } else {
-      others[0].value = parseFloat(others[0].value)/sumOthers * remaining;
-      others[1].value = parseFloat(others[1].value)/sumOthers * remaining;
-    }
-  }
-
-  [densitySlider, activeSlider, transitSlider].forEach(s => s.addEventListener("calciteSliderInput", ()=>{
-    normalizeSliders(s);
-    updateWeights();
-  }));
-
-  resetBtn.addEventListener("click", ()=>{
-    densitySlider.value = activeSlider.value = transitSlider.value = 0.33;
-    updateWeights();
-  });
-
-  hexHeightSlider.addEventListener("calciteSliderInput", ()=>{
-    elevationScale = parseFloat(hexHeightSlider.value);
-    renderHex();
-  });
-
-  // Sync DeckGL view to MapLibre without blocking interactions
-  function syncDeck(){
-    deckgl.setProps({
-      viewState:{
-        longitude: map.getCenter().lng,
-        latitude: map.getCenter().lat,
-        zoom: map.getZoom(),
-        pitch: map.getPitch(),
-        bearing: map.getBearing()
+    pickable: true,
+    onHover: info => {
+      if(info.object){
+        const val = (info.object.colorValue || 0).toFixed(2);
+        const count = (info.object.points?.length || 0);
+        status.textContent = `Hex mean: ${val} · pts: ${count}`;
       }
-    });
+    },
+
+    updateTriggers: {
+      getColorWeight: [weights.density, weights.active, weights.transit],
+      getElevationWeight: [weights.density, weights.active, weights.transit],
+      elevationScale: [elevationScale]
+    }
+  });
+}
+
+
+
+  deckgl.setProps({layers:[tileLayer,makeHexLayer()]});
+  status.textContent='Ready — auto-rebalance sliders enabled.';
+
+  // --- AUTO-REBALANCE LOGIC ---
+  function rebalance(changed){
+    const sliders=[densityEl,activeEl,transitEl];
+    let others=sliders.filter(s=>s!==changed);
+    let val=parseFloat(changed.value);
+    val=Math.min(Math.max(val,0),1);
+    changed.value=val;
+    let remaining=1-val;
+    let sumOthers=others.reduce((s,sli)=>s+parseFloat(sli.value),0);
+    if(sumOthers>0){
+      others.forEach(sli=>sli.value=(parseFloat(sli.value)/sumOthers)*remaining);
+    } else { others.forEach(sli=>sli.value=remaining/others.length); }
+    // update weights
+    weights={density:parseFloat(densityEl.value),active:parseFloat(activeEl.value),transit:parseFloat(transitEl.value)};
   }
 
-  map.on('move', syncDeck);
-  map.on('zoom', syncDeck);
-  map.on('pitch', syncDeck);
+  function updateHexProps(e) {
+  // Only rebalance weights for weight sliders
+  if (e && e.target.id !== 'hexHeight') {
+    rebalance(e.target);
+  }
 
-  // Initial render
-  renderHex();
+  // Update elevation scale safely
+  const newScale = parseFloat(hexHeightEl.value);
+  if (!isNaN(newScale) && newScale > 0) {
+    elevationScale = newScale;
+  }
+
+  deckgl.setProps({
+    layers: [tileLayer, makeHexLayer()]
+  });
+
+  status.textContent = `Weights: D=${weights.density.toFixed(2)}, A=${weights.active.toFixed(2)}, T=${weights.transit.toFixed(2)} | Height=${elevationScale}`;
+}
+
+// Listeners
+['input','change','calciteSliderInput','calciteSliderChange'].forEach(evt=>{
+  densityEl.addEventListener(evt, updateHexProps);
+  activeEl.addEventListener(evt, updateHexProps);
+  transitEl.addEventListener(evt, updateHexProps);
+  hexHeightEl.addEventListener(evt, updateHexProps);
+});
+
+resetBtn.addEventListener('click', () => {
+  densityEl.value = activeEl.value = transitEl.value = 0.33;
+  elevationScale = 25;
+  hexHeightEl.value = 20;
+  updateHexProps();
+});
+
 })();
 </script>
 </body>
