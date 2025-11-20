@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Interactive Weighted PIA Index Map - Red Scale</title>
+  <title>Interactive Weighted PIA Index Map</title>
   <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
   <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
   <script src="https://js.arcgis.com/4.30/"></script>
@@ -131,7 +131,7 @@
       });
 
       const map = new Map({
-        basemap: "gray-vector",
+        basemap: "dark-gray-vector",
         layers: [layer]
       });
 
@@ -139,7 +139,10 @@
         container: "viewDiv",
         map: map,
         center: [-120, 39.1],
-        zoom: 10
+        zoom: 10,
+  popup: {
+    defaultPopupTemplateEnabled: false  // disables the default "Zoom to"
+  }
       });
 
       // --- Get max values for normalization ---
@@ -205,36 +208,39 @@
       }
 
       // --- Update Popup Template ---
-      function updatePopup() {
-        const arcadeExpr = `
-          var d = $feature.density_index_preprocessed / ${maxValues.density};
-          var a = $feature.bike_ped_index_preprocessed / ${maxValues.active};
-          var t = $feature.Transit_Index_PREPROCESSED / ${maxValues.transit};
-          var value = (d * ${weights.density}) + (a * ${weights.active}) + (t * ${weights.transit});
-          return Round(value, 2);
-        `;
+function updatePopup() {
+  const arcadeExpr = `
+    var d = $feature.density_index_preprocessed / ${maxValues.density};
+    var a = $feature.bike_ped_index_preprocessed / ${maxValues.active};
+    var t = $feature.Transit_Index_PREPROCESSED / ${maxValues.transit};
+    var v = (d * ${weights.density}) + (a * ${weights.active}) + (t * ${weights.transit});
 
-        layer.popupTemplate = {
-          title: "{NAME}",
-          content: [
-            {
-              type: "fields",
-              fieldInfos: [
-                { fieldName: "density_index_preprocessed", label: "Density", format: { digitSeparator: true, places: 2 } },
-                { fieldName: "bike_ped_index_preprocessed", label: "Active Transport", format: { digitSeparator: true, places: 2 } },
-                { fieldName: "Transit_Index_PREPROCESSED", label: "Transit", format: { digitSeparator: true, places: 2 } }
-              ]
-            },
-            {
-              type: "text",
-              text: "<b>Weighted Combined Index:</b> {expression/weightedIndex}"
-            }
-          ],
-          expressionInfos: [
-            { name: "weightedIndex", title: "Weighted Index", expression: arcadeExpr, returnType: "number" }
-          ]
-        };
+    return "Overall Index score: " + Round(v,2) + TextFormatting.NewLine +
+           "Density score: " + Text($feature.density_index_preprocessed, '#,###.##') + TextFormatting.NewLine +
+           "Active Transportation Score: " + Text($feature.bike_ped_index_preprocessed, '#,###.##') + TextFormatting.NewLine +
+           "Transit Index Score: " + Text($feature.Transit_Index_PREPROCESSED, '#,###.##');
+  `;
+
+  layer.popupTemplate = {
+    title: "{NAME}",
+    content: [
+      {
+        type: "text",
+        text: "{expression/weightedIndexText}"
       }
+    ],
+    expressionInfos: [
+      {
+        name: "weightedIndexText",
+        title: "Weighted Index Text",
+        expression: arcadeExpr,
+        returnType: "string"
+      }
+    ],
+    actions:[]
+  };
+}
+
 
       // --- Slider Handling (keeps total = 1) ---
       function onSliderChange(changed) {
