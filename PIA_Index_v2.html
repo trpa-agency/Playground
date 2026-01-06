@@ -124,9 +124,9 @@
         url: layerURL,
         outFields: [
           "NAME",
-          "density_index_preprocessed",
-          "bike_ped_index_preprocessed",
-          "Transit_Index_PREPROCESSED"
+          "density_index_preprocessed_NORM",
+          "bike_ped_index_preprocessed_NORM",
+          "Transit_Index_PREPROCESSED_NORM"
         ],
         definitionExpression: "density_index_preprocessed IS NOT NULL AND bike_ped_index_preprocessed IS NOT NULL AND Transit_Index_PREPROCESSED IS NOT NULL"
       });
@@ -150,9 +150,9 @@
       layer.queryFeatures({
         where: "1=1",
         outStatistics: [
-          { onStatisticField: "density_index_preprocessed", outStatisticFieldName: "max_density", statisticType: "max" },
-          { onStatisticField: "bike_ped_index_preprocessed", outStatisticFieldName: "max_active", statisticType: "max" },
-          { onStatisticField: "Transit_Index_PREPROCESSED", outStatisticFieldName: "max_transit", statisticType: "max" }
+          { onStatisticField: "density_index_preprocessed_NORM", outStatisticFieldName: "max_density", statisticType: "max" },
+          { onStatisticField: "bike_ped_index_preprocessed_NORM", outStatisticFieldName: "max_active", statisticType: "max" },
+          { onStatisticField: "Transit_Index_PREPROCESSED_NORM", outStatisticFieldName: "max_transit", statisticType: "max" }
         ],
         returnGeometry: false
       }).then(result => {
@@ -173,9 +173,9 @@
       // --- Update Renderer ---
       function updateRenderer() {
         const expression = `
-          var d = $feature.density_index_preprocessed / ${maxValues.density};
-          var a = $feature.bike_ped_index_preprocessed / ${maxValues.active};
-          var t = $feature.Transit_Index_PREPROCESSED / ${maxValues.transit};
+          var d = $feature.density_index_preprocessed_NORM / ${maxValues.density};
+          var a = $feature.bike_ped_index_preprocessed_NORM / ${maxValues.active};
+          var t = $feature.Transit_Index_PREPROCESSED_NORM / ${maxValues.transit};
           return (d * ${weights.density}) + (a * ${weights.active}) + (t * ${weights.transit});
         `;
 
@@ -211,15 +211,15 @@
       // --- Update Popup Template ---
 function updatePopup() {
   const arcadeExpr = `
-    var d = $feature.density_index_preprocessed / ${maxValues.density};
-    var a = $feature.bike_ped_index_preprocessed / ${maxValues.active};
-    var t = $feature.Transit_Index_PREPROCESSED / ${maxValues.transit};
+    var d = $feature.density_index_preprocessed_NORM / ${maxValues.density};
+    var a = $feature.bike_ped_index_preprocessed_NORM / ${maxValues.active};
+    var t = $feature.Transit_Index_PREPROCESSED_NORM / ${maxValues.transit};
     var v = (d * ${weights.density}) + (a * ${weights.active}) + (t * ${weights.transit});
 
     return "Overall Index score: " + Round(v,2) + TextFormatting.NewLine +
-           "Density score: " + Text($feature.density_index_preprocessed, '#,###.##') + TextFormatting.NewLine +
-           "Active Transportation Score: " + Text($feature.bike_ped_index_preprocessed, '#,###.##') + TextFormatting.NewLine +
-           "Transit Index Score: " + Text($feature.Transit_Index_PREPROCESSED, '#,###.##');
+           "Density score: " + Text($feature.density_index_preprocessed_NORM, '#,###.##') + TextFormatting.NewLine +
+           "Active Transportation Score: " + Text($feature.bike_ped_index_preprocessed_NORM, '#,###.##') + TextFormatting.NewLine +
+           "Transit Index Score: " + Text($feature.Transit_Index_PREPROCESSED_NORM, '#,###.##');
   `;
 
   layer.popupTemplate = {
