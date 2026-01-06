@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Interactive Weighted PIA Index Map</title>
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    html, body, #viewDiv {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 12px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-family: "Avenir Next", sans-serif;
+      width: 280px;
+      z-index: 99;
+    }
+    .controls h3 { margin-top: 0; }
+    .slider-group { margin-bottom: 10px; }
+    input[type=range] { width: 100%; }
+    .button {
+  background-color: #1a73e8; /* base blue */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #155ab6; /* darker blue on hover */
+}
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-family: "Avenir Next", sans-serif;
+      width: 220px;
+    }
+.color-bar {
+  height: 15px;
+  background: linear-gradient(to right,
+    rgba(255, 255, 255, 0.2) 0%,       /* very low, subtle */
+    rgba(0, 120, 255, 0.95) 25%,       /* 25% - pops */
+    rgba(0, 90, 255, 0.97) 50%,        /* 50% - stronger */
+    rgba(0, 60, 255, 0.99) 75%,        /* 75% - very strong */
+    rgba(0, 0, 255, 1) 100%             /* high, full blue */
+  );
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+    .legend-labels { display: flex; justify-content: space-between; font-size: 12px; }
+  </style>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+
+  <div class="controls">
+    <h3>Weighted Symbology</h3>
+
+    <div class="slider-group">
+      <label>Density: <span id="densityVal">0.33</span></label>
+      <input type="range" id="density" min="0" max="1" step="0.01" value="0.33">
+    </div>
+
+    <div class="slider-group">
+      <label>Active Transport: <span id="activeVal">0.33</span></label>
+      <input type="range" id="active" min="0" max="1" step="0.01" value="0.33">
+    </div>
+
+    <div class="slider-group">
+      <label>Transit: <span id="transitVal">0.34</span></label>
+      <input type="range" id="transit" min="0" max="1" step="0.01" value="0.34">
+    </div>
+
+    <button id="resetBtn">Reset Equal Weights</button>
+  </div>
+
+  <div class="legend">
+    <div class="color-bar"></div>
+    <div class="legend-labels">
+      <span>Low</span>
+      <span>High</span>
+    </div>
+  </div>
+
+  <script>
+    require(["esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer"], (
+      Map, MapView, FeatureLayer
+    ) => {
+
+      const layerURL = "https://services5.arcgis.com/fXXSUzHD5JjcOt1v/arcgis/rest/services/PIA_Index_v2/FeatureServer/1";
+
+      let weights = {
+        density: 0.33,
+        active: 0.33,
+        transit: 0.34
+      };
+
+      let maxValues = {
+        density: 1,
+        active: 1,
+        transit: 1
+      };
+
+      const layer = new FeatureLayer({
+        url: layerURL,
+        outFields: [
+          "NAME",
+          "density_index_preprocessed",
+          "bike_ped_index_preprocessed",
+          "Transit_Index_PREPROCESSED"
+        ],
+        definitionExpression: "density_index_preprocessed IS NOT NULL AND bike_ped_index_preprocessed IS NOT NULL AND Transit_Index_PREPROCESSED IS NOT NULL"
+      });
+
+      const map = new Map({
+        basemap: "dark-gray-vector",
+        layers: [layer]
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-120, 39.1],
+        zoom: 10,
+  popup: {
+    defaultPopupTemplateEnabled: false  // disables the default "Zoom to"
+  }
+      });
+
+      // --- Get max values for normalization ---
+      layer.queryFeatures({
+        where: "1=1",
+        outStatistics: [
+          { onStatisticField: "density_index_preprocessed", outStatisticFieldName: "max_density", statisticType: "max" },
+          { onStatisticField: "bike_ped_index_preprocessed", outStatisticFieldName: "max_active", statisticType: "max" },
+          { onStatisticField: "Transit_Index_PREPROCESSED", outStatisticFieldName: "max_transit", statisticType: "max" }
+        ],
+        returnGeometry: false
+      }).then(result => {
+        const stats = result.features[0].attributes;
+        maxValues = {
+          density: stats.max_density || 1,
+          active: stats.max_active || 1,
+          transit: stats.max_transit || 1
+        };
+        updateRenderer();
+        updatePopup();
+      }).catch(err => {
+        console.error("Error querying stats:", err);
+        updateRenderer();
+        updatePopup();
+      });
+
+      // --- Update Renderer ---
+      function updateRenderer() {
+        const expression = `
+          var d = $feature.density_index_preprocessed / ${maxValues.density};
+          var a = $feature.bike_ped_index_preprocessed / ${maxValues.active};
+          var t = $feature.Transit_Index_PREPROCESSED / ${maxValues.transit};
+          return (d * ${weights.density}) + (a * ${weights.active}) + (t * ${weights.transit});
+        `;
+
+        const renderer = {
+          type: "simple",
+          symbol: { type: "simple-fill", outline: null },
+          visualVariables: [
+            {
+              type: "color",
+              valueExpression: expression,
+              stops: [
+  { value: 0,    color: "rgba(255, 255, 255, 0.2)" },  // very subtle low
+  { value: 0.25, color: "rgba(0, 120, 255, 0.95)" },   // much more visible
+  { value: 0.5,  color: "rgba(0, 90, 255, 0.97)" },    // strong mid
+  { value: 0.75, color: "rgba(0, 60, 255, 0.99)" },    // very strong
+  { value: 1,    color: "rgba(0, 0, 255, 1)" }         // full high
+]
+
+            },
+            {
+              type: "opacity",
+              valueExpression: expression,
+              stops: [
+                { value: 0, opacity: 0.5 },
+                { value: 1, opacity: 1.0 }
+              ]
+            }
+          ]
+        };
+        layer.renderer = renderer;
+      }
+
+      // --- Update Popup Template ---
+function updatePopup() {
+  const arcadeExpr = `
+    var d = $feature.density_index_preprocessed / ${maxValues.density};
+    var a = $feature.bike_ped_index_preprocessed / ${maxValues.active};
+    var t = $feature.Transit_Index_PREPROCESSED / ${maxValues.transit};
+    var v = (d * ${weights.density}) + (a * ${weights.active}) + (t * ${weights.transit});
+
+    return "Overall Index score: " + Round(v,2) + TextFormatting.NewLine +
+           "Density score: " + Text($feature.density_index_preprocessed, '#,###.##') + TextFormatting.NewLine +
+           "Active Transportation Score: " + Text($feature.bike_ped_index_preprocessed, '#,###.##') + TextFormatting.NewLine +
+           "Transit Index Score: " + Text($feature.Transit_Index_PREPROCESSED, '#,###.##');
+  `;
+
+  layer.popupTemplate = {
+    title: "{NAME}",
+    content: [
+      {
+        type: "text",
+        text: "{expression/weightedIndexText}"
+      }
+    ],
+    expressionInfos: [
+      {
+        name: "weightedIndexText",
+        title: "Weighted Index Text",
+        expression: arcadeExpr,
+        returnType: "string"
+      }
+    ],
+    actions:[]
+  };
+}
+
+
+      // --- Slider Handling (keeps total = 1) ---
+      function onSliderChange(changed) {
+        const newValue = parseFloat(document.getElementById(changed).value);
+        const remainingKeys = ["density","active","transit"].filter(k => k !== changed);
+        const totalOther = weights[remainingKeys[0]] + weights[remainingKeys[1]];
+
+        if (totalOther === 0) {
+          weights[remainingKeys[0]] = (1 - newValue) / 2;
+          weights[remainingKeys[1]] = (1 - newValue) / 2;
+        } else {
+          const scale = (1 - newValue) / totalOther;
+          remainingKeys.forEach(k => weights[k] = weights[k] * scale);
+        }
+
+        weights[changed] = newValue;
+
+        ["density","active","transit"].forEach(k => {
+          document.getElementById(k).value = weights[k].toFixed(2);
+          document.getElementById(k + "Val").textContent = weights[k].toFixed(2);
+        });
+
+        updateRenderer();
+        updatePopup();
+      }
+
+      ["density","active","transit"].forEach(id => {
+        document.getElementById(id).addEventListener("input", () => onSliderChange(id));
+      });
+
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        weights = { density: 1/3, active: 1/3, transit: 1/3 };
+        ["density","active","transit"].forEach(k => {
+          document.getElementById(k).value = weights[k].toFixed(2);
+          document.getElementById(k + "Val").textContent = weights[k].toFixed(2);
+        });
+        updateRenderer();
+        updatePopup();
+      });
+
+    });
+  </script>
+</body>
+</html>
