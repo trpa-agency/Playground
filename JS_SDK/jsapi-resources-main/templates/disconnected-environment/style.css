@@ -1,0 +1,35 @@
+html,
+body {
+  background-color: var(--calcite-ui-foreground-2);
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.container {
+  height: 100%;
+}
+
+.editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  height: 40%;
+  min-height: 400px;
+}
+
+arcgis-arcade-editor {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+arcgis-map {
+  height: 55%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 10px 0 10px;
+}
