@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Permit Commitment Tracker · TRPA</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    :root {
+      --navy:   #0b1f41;
+      --green:  #6ebe44;
+      --blue:   #007dc3;
+      --orange: #f16022;
+      --purple: #7b4f9e;
+      --yellow: #e8c014;
+      --red:    #c0392b;
+      --bg:     #f4f6f9;
+      --surface:#ffffff;
+      --border: #d5dde8;
+      --text-dark:  #0b1f41;
+      --text-mid:   #4a5b73;
+      --text-light: #8a9bb2;
+      --shadow: 0 2px 16px rgba(11,31,65,0.09);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lexend Deca', sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+
+    /* ── HEADER ── */
+    .app-header { background: var(--navy); color: #fff; display: flex; align-items: stretch; flex-shrink: 0; }
+    .hdr-accent { width: 7px; flex-shrink: 0; background: linear-gradient(180deg, var(--green) 0%, var(--blue) 50%, var(--orange) 100%); }
+    .hdr-content { padding: 13px 22px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex: 1; }
+    .hdr-eyebrow { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 3px; }
+    .hdr-title { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+    .hdr-title span { color: var(--blue); }
+    .hdr-sub { font-size: 0.72rem; color: #8a9bb2; margin-top: 3px; }
+    .hdr-actions { display: flex; align-items: center; gap: 8px; }
+    .hdr-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: 1px solid rgba(255,255,255,0.25); border-radius: 4px;
+      padding: 6px 12px; font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background .15s;
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,0.2); }
+    .hdr-btn.accent { background: var(--orange); border-color: var(--orange); }
+    .hdr-btn.accent:hover { background: #d4521e; }
+
+    /* ── LAYOUT ── */
+    .app-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    .app-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 295px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* KPI strip */
+    .kpi-strip { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .kpi-tile { padding: 10px 14px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; }
+    .kpi-tile:nth-child(even) { border-right: none; }
+    .kpi-tile:nth-child(3), .kpi-tile:nth-child(4) { border-bottom: none; }
+    .kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 1px 1px 0 0; }
+    .kpi-val { font-size: 1.5rem; font-weight: 700; line-height: 1; margin-bottom: 2px; color: var(--navy); }
+    .kpi-lbl { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); }
+
+    /* Filters */
+    .filter-sec { padding: 13px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sec-lbl { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); margin-bottom: 9px; }
+    .f-row { margin-bottom: 6px; }
+    .f-lbl { font-size: 0.67rem; font-weight: 600; color: var(--text-mid); margin-bottom: 3px; }
+    .f-inp {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 4px;
+      color: var(--text-dark); font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.75rem; padding: 5px 9px; outline: none;
+      background: #fff; transition: border-color .15s;
+    }
+    .f-inp:focus { border-color: var(--blue); }
+    .f-btns { display: flex; gap: 7px; margin-top: 9px; }
+    .btn {
+      flex: 1; padding: 6px; border-radius: 4px;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .btn-p { background: var(--navy); color: #fff; }
+    .btn-p:hover { background: #0f2d5c; }
+    .btn-g { background: #fff; border: 1.5px solid var(--border); color: var(--text-mid); }
+    .btn-g:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* Status legend */
+    .status-legend { padding: 12px 14px; flex-shrink: 0; overflow-y: auto; }
+    .sl-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+    .sl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .sl-lbl { font-size: 0.72rem; color: var(--text-mid); flex: 1; }
+    .sl-cnt { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
+
+    /* ── TABS ── */
+    .tab-nav {
+      background: var(--surface); border-bottom: 2px solid var(--border);
+      padding: 0 14px; display: flex; flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 8px 16px; border: none; background: none;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 600;
+      color: var(--text-light); cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); }
+    .tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .tab-panel.active { display: flex; }
+
+    /* ── MAIN ── */
+    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── OVERVIEW TAB ── */
+    .overview-inner { flex: 1; overflow-y: auto; padding: 13px 14px; }
+    .overview-inner::-webkit-scrollbar { width: 4px; }
+    .overview-inner::-webkit-scrollbar-thumb { background: var(--border); }
+    .due-alert {
+      background: rgba(241,96,34,0.07); border: 1px solid rgba(241,96,34,0.25);
+      border-radius: 6px; padding: 9px 12px; margin-bottom: 12px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .due-alert-badge { font-size: 0.6rem; font-weight: 700; background: var(--orange); color: #fff; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; white-space: nowrap; line-height: 1.6; }
+    .due-alert-body { flex: 1; }
+    .due-alert-title { font-size: 0.7rem; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+    .due-alert-item { font-size: 0.68rem; color: var(--text-mid); margin-bottom: 2px; cursor: pointer; transition: color .1s; }
+    .due-alert-item:hover { color: var(--navy); text-decoration: underline; }
+    .permit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    .permit-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px; cursor: pointer;
+      transition: all .15s; box-shadow: 0 1px 4px rgba(11,31,65,0.05);
+    }
+    .permit-card:hover { border-color: var(--blue); box-shadow: var(--shadow); transform: translateY(-1px); }
+    .permit-card.sel { border-color: var(--navy); }
+    .pc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+    .pc-accela { font-size: 0.8rem; font-weight: 700; color: var(--navy); }
+    .pc-type { font-size: 0.6rem; font-weight: 700; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; color: var(--text-mid); }
+    .pc-name { font-size: 0.75rem; font-weight: 500; color: var(--text-dark); margin-bottom: 1px; }
+    .pc-sub { font-size: 0.65rem; color: var(--text-light); margin-bottom: 9px; }
+    .pp-bar { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 3px; }
+    .pp-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width .6s; }
+    .pp-lbl { font-size: 0.62rem; color: var(--text-light); margin-bottom: 7px; }
+    .pc-strips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .pcs { display: flex; align-items: center; gap: 3px; font-size: 0.62rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+
+    /* ── CONDITIONS TABLE TAB ── */
+    .table-wrap { flex: 1; overflow: auto; }
+    .table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: var(--border); }
+    .cond-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    .cond-table thead th {
+      background: var(--bg); padding: 7px 11px; text-align: left;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light);
+      border-bottom: 2px solid var(--border); white-space: nowrap;
+      position: sticky; top: 0; z-index: 10;
+      cursor: pointer; user-select: none; transition: color .1s;
+    }
+    .cond-table thead th:hover { color: var(--navy); }
+    .cond-table thead th.sorted-asc::after  { content: ' ▲'; font-size: 0.55rem; }
+    .cond-table thead th.sorted-desc::after { content: ' ▼'; font-size: 0.55rem; }
+    .cond-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+    .cond-table tbody tr:hover { background: rgba(0,125,195,0.04); }
+    .cond-table tbody tr.sel { background: rgba(11,31,65,0.04); }
+    .cond-table td { padding: 6px 11px; vertical-align: middle; }
+    .td-permit { font-size: 0.7rem; font-weight: 700; color: var(--navy); white-space: nowrap; }
+    .td-num { color: var(--text-mid); font-size: 0.68rem; }
+    .td-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; display: block; }
+    .td-days-ok   { color: #22a855; font-weight: 700; font-size: 0.7rem; }
+    .td-days-soon { color: #c89c00; font-weight: 700; font-size: 0.7rem; }
+    .td-days-near { color: #d45a10; font-weight: 700; font-size: 0.7rem; }
+    .td-days-over { color: var(--red); font-weight: 700; font-size: 0.7rem; }
+    .td-days-done { color: var(--text-light); font-size: 0.7rem; }
+
+    /* ── TIMELINE TAB ── */
+    .timeline-inner { flex: 1; overflow-y: auto; padding: 14px 16px; }
+    .timeline-inner::-webkit-scrollbar { width: 4px; }
+    .timeline-inner::-webkit-scrollbar-thumb { background: var(--border); }
+    .tl-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .tl-header-label { width: 220px; flex-shrink: 0; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); }
+    .tl-header-bar { flex: 1; font-size: 0.6rem; color: var(--text-light); display: flex; justify-content: space-between; }
+    .tl-header-due { width: 72px; flex-shrink: 0; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); text-align: right; }
+    .tl-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 5px; cursor: pointer; padding: 3px 5px;
+      border-radius: 4px; transition: background .1s;
+    }
+    .tl-row:hover { background: rgba(0,125,195,0.05); }
+    .tl-row.sel { background: rgba(11,31,65,0.04); }
+    .tl-label { width: 220px; flex-shrink: 0; }
+    .tl-permit-id { font-size: 0.6rem; color: var(--text-light); }
+    .tl-name { font-size: 0.7rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tl-track { flex: 1; height: 12px; background: var(--bg); border-radius: 3px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .tl-fill { height: 100%; border-radius: 2px; position: absolute; top: 0; left: 0; transition: width .4s; }
+    .tl-today { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--orange); border-radius: 1px; z-index: 2; }
+    .tl-due-date { width: 72px; flex-shrink: 0; font-size: 0.65rem; text-align: right; white-space: nowrap; }
+
+    /* ── MAP TAB ── */
+    #mapDiv { flex: 1; min-height: 0; }
+    .loading-overlay {
+      position: absolute; inset: 0; background: rgba(244,246,249,0.88);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px; z-index: 100;
+    }
+    .loading-card { background: #fff; border-radius: 8px; padding: 28px 40px; text-align: center; box-shadow: var(--shadow); }
+    .loading-card h3 { font-size: 0.85rem; color: var(--navy); margin-bottom: 16px; }
+    .lb-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; width: 160px; }
+    .spinner { height: 100%; width: 40%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 2px; animation: slide 1.2s ease-in-out infinite; }
+    @keyframes slide { 0%{margin-left:0;width:30%} 50%{margin-left:40%;width:60%} 100%{margin-left:100%;width:0} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      width: 340px; flex-shrink: 0; background: var(--surface);
+      border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .rp-hdr {
+      padding: 9px 12px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .rp-hdr-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); flex: 1; }
+    .rp-search { padding: 7px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .rp-search input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 4px;
+      padding: 5px 9px; font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem;
+      outline: none; background: var(--bg); transition: border-color .15s, background .15s;
+    }
+    .rp-search input:focus { border-color: var(--blue); background: #fff; }
+    .cond-list { flex: 1; overflow-y: auto; padding: 7px; }
+    .cond-list::-webkit-scrollbar { width: 4px; }
+    .cond-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .cond-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px 8px 14px; margin-bottom: 5px; cursor: pointer;
+      transition: all .15s; position: relative; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(11,31,65,0.05);
+    }
+    .cond-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--card-color, var(--border));
+    }
+    .cond-card:hover { border-color: var(--blue); box-shadow: var(--shadow); transform: translateX(1px); }
+    .cond-card.sel { border-color: var(--navy); background: rgba(11,31,65,.03); }
+    .cc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+    .cc-id { font-size: 0.65rem; color: var(--text-light); }
+    .cc-title { font-size: 0.73rem; font-weight: 600; color: var(--navy); margin-bottom: 5px; line-height: 1.3; }
+    .cc-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+    .cc-footer { display: flex; justify-content: space-between; align-items: center; }
+    .cc-staff { font-size: 0.65rem; color: var(--text-light); }
+
+    /* ── PILLS ── */
+    .sp {
+      display: inline-flex; align-items: center;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: .2px;
+      padding: 2px 7px; border-radius: 10px; border: 1px solid; white-space: nowrap;
+    }
+    .cat-pill {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 0.6rem; font-weight: 600;
+      padding: 1px 6px; border-radius: 3px; white-space: nowrap;
+    }
+    .due-pill { font-size: 0.62rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+    .due-ok   { background: rgba(34,168,85,0.10);  color: #22a855; }
+    .due-soon { background: rgba(200,156,0,0.12);  color: #c89c00; }
+    .due-near { background: rgba(212,90,16,0.12);  color: #d45a10; }
+    .due-over { background: rgba(192,57,43,0.12);  color: var(--red); }
+    .due-done { background: rgba(34,168,85,0.10);  color: #22a855; opacity: .65; }
+    .due-none { background: var(--bg); color: var(--text-light); border: 1px solid var(--border); }
+
+    /* ── DETAIL PANEL ── */
+    .detail-panel {
+      height: 300px; flex-shrink: 0; background: var(--surface);
+      border-top: 2px solid var(--border); display: flex; overflow: hidden;
+    }
+    .d-empty {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px; color: var(--text-light); font-size: 0.72rem;
+    }
+    .d-empty-icon { font-size: 24px; opacity: .2; }
+    .d-pane { flex: 1; display: flex; overflow: hidden; }
+    .d-info { width: 340px; flex-shrink: 0; padding: 13px 16px; overflow-y: auto; border-right: 1px solid var(--border); }
+    .d-info::-webkit-scrollbar { width: 4px; }
+    .d-info::-webkit-scrollbar-thumb { background: var(--border); }
+    .d-log-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .d-log-hdr {
+      padding: 9px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .d-log-hdr-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); }
+    .log-add-btn {
+      background: var(--navy); color: #fff; border: none; border-radius: 4px;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.67rem; font-weight: 600;
+      padding: 4px 10px; cursor: pointer; transition: background .15s;
+    }
+    .log-add-btn:hover { background: #0f2d5c; }
+    .d-log-body { flex: 1; overflow-y: auto; }
+    .d-log-body::-webkit-scrollbar { width: 4px; }
+    .d-log-body::-webkit-scrollbar-thumb { background: var(--border); }
+    .log-list { padding: 10px 14px; }
+    .log-empty { padding: 20px 14px; text-align: center; color: var(--text-light); font-size: 0.72rem; }
+    .log-entry { display: flex; gap: 10px; margin-bottom: 14px; position: relative; }
+    .log-entry::before { content: ''; position: absolute; left: 9px; top: 20px; bottom: -14px; width: 1.5px; background: var(--border); }
+    .log-entry:last-child::before { display: none; }
+    .le-dot {
+      width: 20px; height: 20px; border-radius: 50%; border: 2px solid;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 9px; background: #fff; z-index: 1;
+    }
+    .le-body { flex: 1; }
+    .le-action { font-size: 0.73rem; font-weight: 600; color: var(--navy); margin-bottom: 1px; }
+    .le-meta { font-size: 0.63rem; color: var(--text-light); margin-bottom: 4px; }
+    .le-note {
+      font-size: 0.7rem; color: var(--text-mid); line-height: 1.4;
+      background: var(--bg); border-radius: 3px; padding: 5px 8px;
+      border-left: 3px solid var(--border);
+    }
+
+    /* Log add form (inline, slides in) */
+    .log-add-form {
+      padding: 10px 14px; border-top: 1px solid var(--border);
+      background: rgba(11,31,65,0.025); flex-shrink: 0;
+      display: none;
+    }
+    .log-add-form.open { display: block; }
+    .laf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+    .laf-row { margin-bottom: 6px; }
+    .laf-lbl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-bottom: 3px; }
+    .laf-inp {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 4px;
+      color: var(--text-dark); font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.72rem; padding: 5px 8px; outline: none;
+      background: #fff; transition: border-color .15s;
+    }
+    .laf-inp:focus { border-color: var(--blue); }
+    textarea.laf-inp { resize: none; height: 45px; }
+    .laf-btns { display: flex; gap: 6px; }
+    .laf-btns .btn { flex: none; padding: 5px 12px; font-size: 0.72rem; }
+
+    /* Detail info styles */
+    .d-title { font-size: 0.88rem; font-weight: 700; color: var(--navy); margin-bottom: 6px; line-height: 1.3; }
+    .d-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+    .d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .d-lbl { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-bottom: 2px; }
+    .d-val { font-size: 0.73rem; color: var(--text-dark); }
+    .d-desc { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 7px 9px; font-size: 0.7rem; line-height: 1.5; color: var(--text-mid); margin-top: 9px; max-height: 78px; overflow-y: auto; }
+    .d-desc::-webkit-scrollbar { width: 3px; }
+    .d-desc::-webkit-scrollbar-thumb { background: var(--border); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(11,31,65,0.55);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 10px; width: 540px;
+      max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(11,31,65,0.25);
+    }
+    .modal-hdr { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .modal-hdr h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 1.1rem; color: var(--text-light); cursor: pointer; padding: 0 4px; line-height: 1; }
+    .modal-close:hover { color: var(--navy); }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+    .modal-body::-webkit-scrollbar { width: 4px; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-row { margin-bottom: 0; }
+    .modal-row.full { grid-column: 1 / -1; }
+    .modal-lbl { font-size: 0.67rem; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; }
+    .modal-inp {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 4px;
+      color: var(--text-dark); font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.78rem; padding: 7px 10px; outline: none;
+      background: #fff; transition: border-color .15s;
+    }
+    .modal-inp:focus { border-color: var(--blue); }
+    textarea.modal-inp { resize: vertical; min-height: 70px; }
+    .modal-ftr { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
+    .modal-ftr .btn { flex: none; padding: 7px 18px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="hdr-accent"></div>
+  <div class="hdr-content">
+    <div>
+      <div class="hdr-eyebrow">Tahoe Regional Planning Agency</div>
+      <div class="hdr-title">Permit Condition <span>Commitment</span> Tracker</div>
+      <div class="hdr-sub">Mitigation &amp; Compliance Management</div>
+    </div>
+    <div class="hdr-actions">
+      <button class="hdr-btn" onclick="openModal('permit')">+ New Permit</button>
+      <button class="hdr-btn accent" onclick="openModal('condition')">+ New Condition</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-wrapper">
+  <div class="app-body">
+
+    <!-- LEFT PANEL -->
+    <aside class="left-panel">
+      <div class="kpi-strip">
+        <div class="kpi-tile">
+          <div class="kpi-accent" style="background:var(--navy)"></div>
+          <div class="kpi-val" id="kpi-total">—</div>
+          <div class="kpi-lbl">Conditions</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-accent" style="background:#22a855"></div>
+          <div class="kpi-val" id="kpi-fulfilled">—</div>
+          <div class="kpi-lbl">Fulfilled</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-accent" style="background:var(--red)"></div>
+          <div class="kpi-val" id="kpi-overdue">—</div>
+          <div class="kpi-lbl">Overdue</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-accent" style="background:var(--orange)"></div>
+          <div class="kpi-val" id="kpi-due-soon">—</div>
+          <div class="kpi-lbl">Due ≤30d</div>
+        </div>
+      </div>
+
+      <div class="filter-sec">
+        <div class="sec-lbl">Filters</div>
+        <div class="f-row">
+          <div class="f-lbl">Permit</div>
+          <select id="f-permit" class="f-inp" onchange="applyFilters()"><option value="">All Permits</option></select>
+        </div>
+        <div class="f-row">
+          <div class="f-lbl">Category</div>
+          <select id="f-cat" class="f-inp" onchange="applyFilters()"><option value="">All Categories</option></select>
+        </div>
+        <div class="f-row">
+          <div class="f-lbl">Status</div>
+          <select id="f-status" class="f-inp" onchange="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="not-started">Not Started</option>
+            <option value="in-progress">In Progress</option>
+            <option value="submitted">Submitted</option>
+            <option value="fulfilled">Fulfilled</option>
+            <option value="overdue">Overdue</option>
+            <option value="extended">Extended</option>
+            <option value="waived">Waived</option>
+          </select>
+        </div>
+        <div class="f-row">
+          <div class="f-lbl">Assigned Staff</div>
+          <select id="f-staff" class="f-inp" onchange="applyFilters()"><option value="">All Staff</option></select>
+        </div>
+        <div class="f-btns">
+          <button class="btn btn-p" onclick="applyFilters()">Apply</button>
+          <button class="btn btn-g" onclick="clearFilters()">Clear</button>
+        </div>
+      </div>
+
+      <div class="status-legend">
+        <div class="sec-lbl" style="margin-bottom:8px">Status Breakdown</div>
+        <div id="status-legend-rows"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="main-area">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+        <button class="tab-btn"        onclick="switchTab('conditions',this)">Conditions</button>
+        <button class="tab-btn"        onclick="switchTab('timeline',this)">Timeline</button>
+        <button class="tab-btn"        onclick="switchTab('map',this)">Map</button>
+      </div>
+
+      <!-- Overview Tab -->
+      <div class="tab-panel active" id="tab-overview">
+        <div class="overview-inner">
+          <div id="due-alert-strip"></div>
+          <div class="permit-grid" id="permit-grid"></div>
+        </div>
+      </div>
+
+      <!-- Conditions Table Tab -->
+      <div class="tab-panel" id="tab-conditions">
+        <div class="table-wrap">
+          <table class="cond-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('permitId')">Permit</th>
+                <th onclick="sortTable('conditionNumber')">#</th>
+                <th onclick="sortTable('category')">Category</th>
+                <th onclick="sortTable('title')">Condition</th>
+                <th onclick="sortTable('status')">Status</th>
+                <th onclick="sortTable('dueDate')">Due Date</th>
+                <th onclick="sortTable('daysUntil')">Days</th>
+                <th onclick="sortTable('assignedTo')">Staff</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Timeline Tab -->
+      <div class="tab-panel" id="tab-timeline">
+        <div class="timeline-inner" id="timeline-inner"></div>
+      </div>
+
+      <!-- Map Tab -->
+      <div class="tab-panel" id="tab-map" style="position:relative">
+        <div id="mapDiv"></div>
+        <div class="loading-overlay" id="loading-overlay">
+          <div class="loading-card">
+            <h3>Loading Map</h3>
+            <div class="lb-bg"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT PANEL -->
+    <aside class="right-panel">
+      <div class="rp-hdr">
+        <div class="rp-hdr-title">Conditions <span id="cond-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-light)"></span></div>
+      </div>
+      <div class="rp-search">
+        <input type="text" id="rp-search" placeholder="Search conditions..." oninput="searchConditions(this.value)"/>
+      </div>
+      <div class="cond-list" id="cond-list"></div>
+    </aside>
+
+  </div><!-- /.app-body -->
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="d-empty" id="d-empty">
+      <div class="d-empty-icon">◈</div>
+      <span>Select a condition to view details and log activity</span>
+    </div>
+    <div class="d-pane" id="d-pane" style="display:none">
+      <!-- Condition Info (left) -->
+      <div class="d-info" id="d-info"></div>
+      <!-- Commitment Log (right) -->
+      <div class="d-log-section">
+        <div class="d-log-hdr">
+          <div class="d-log-hdr-title">Commitment Log</div>
+          <button class="log-add-btn" onclick="toggleLogForm()">+ Log Activity</button>
+        </div>
+        <div class="d-log-body" id="d-log-body">
+          <div class="log-list" id="log-list"></div>
+        </div>
+        <div class="log-add-form" id="log-add-form">
+          <div class="laf-grid">
+            <div>
+              <div class="laf-lbl">New Status</div>
+              <select id="laf-status" class="laf-inp">
+                <option value="">— Keep Current —</option>
+                <option value="not-started">Not Started</option>
+                <option value="in-progress">In Progress</option>
+                <option value="submitted">Submitted</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="overdue">Overdue</option>
+                <option value="extended">Extended</option>
+                <option value="waived">Waived</option>
+              </select>
+            </div>
+            <div>
+              <div class="laf-lbl">Action Type</div>
+              <select id="laf-action" class="laf-inp">
+                <option value="Notice Issued">Notice Issued</option>
+                <option value="Pre-Con Meeting">Pre-Con Meeting</option>
+                <option value="Plan Submitted">Plan Submitted</option>
+                <option value="Plan Approved">Plan Approved</option>
+                <option value="Work Commenced">Work Commenced</option>
+                <option value="Site Inspection">Site Inspection</option>
+                <option value="Work Completed">Work Completed</option>
+                <option value="Report Submitted">Report Submitted</option>
+                <option value="Report Approved">Report Approved</option>
+                <option value="Extension Requested">Extension Requested</option>
+                <option value="Extension Granted">Extension Granted</option>
+                <option value="Follow-up Notice">Follow-up Notice</option>
+                <option value="Condition Fulfilled">Condition Fulfilled</option>
+                <option value="Condition Waived">Condition Waived</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <div class="laf-lbl">Date</div>
+              <input type="date" id="laf-date" class="laf-inp"/>
+            </div>
+            <div>
+              <div class="laf-lbl">Verified By</div>
+              <input type="text" id="laf-verified" class="laf-inp" placeholder="Staff name (optional)"/>
+            </div>
+          </div>
+          <div class="laf-row">
+            <div class="laf-lbl">Notes</div>
+            <textarea id="laf-notes" class="laf-inp" placeholder="Describe the action taken, observations, or next steps…"></textarea>
+          </div>
+          <div class="laf-btns">
+            <button class="btn btn-p" onclick="submitLogEntry()">Save Entry</button>
+            <button class="btn btn-g" onclick="toggleLogForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app-wrapper -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modal-title">Add New Permit</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-ftr">
+      <button class="btn btn-g" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-p" onclick="submitModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+require(["esri/Map","esri/views/MapView","esri/layers/FeatureLayer"],
+function(Map, MapView, FeatureLayer) {
+
+// ── Constants ──────────────────────────────────
+const NOW  = Date.now();
+const MS   = 86400000;
+const TODAY_ISO = new Date().toISOString().split('T')[0];
+
+// ── Status Configuration ───────────────────────
+const STATUS = {
+  'not-started': { label:'Not Started', color:'#8a9ab0', bg:'rgba(138,154,176,0.12)', border:'rgba(138,154,176,0.3)',  icon:'○' },
+  'in-progress':  { label:'In Progress', color:'#007dc3', bg:'rgba(0,125,195,0.12)',   border:'rgba(0,125,195,0.3)',   icon:'◑' },
+  'submitted':    { label:'Submitted',   color:'#7b4f9e', bg:'rgba(123,79,158,0.12)',  border:'rgba(123,79,158,0.3)',  icon:'◈' },
+  'fulfilled':    { label:'Fulfilled',   color:'#22a855', bg:'rgba(34,168,85,0.12)',   border:'rgba(34,168,85,0.3)',   icon:'●' },
+  'overdue':      { label:'Overdue',     color:'#c0392b', bg:'rgba(192,57,43,0.12)',   border:'rgba(192,57,43,0.3)',   icon:'!' },
+  'extended':     { label:'Extended',    color:'#c89c00', bg:'rgba(200,156,0,0.12)',   border:'rgba(200,156,0,0.3)',   icon:'↺' },
+  'waived':       { label:'Waived',      color:'#6b3f8a', bg:'rgba(107,63,138,0.12)',  border:'rgba(107,63,138,0.3)',  icon:'—' }
+};
+
+// ── Category Configuration ─────────────────────
+const CAT = {
+  'Erosion Control':    { color:'#d45a10', bg:'rgba(212,90,16,0.10)'    },
+  'Water Quality':      { color:'#007dc3', bg:'rgba(0,125,195,0.10)'    },
+  'Revegetation':       { color:'#3a9e4f', bg:'rgba(58,158,79,0.10)'    },
+  'Wildlife':           { color:'#7b4f9e', bg:'rgba(123,79,158,0.10)'   },
+  'Air Quality':        { color:'#0097a7', bg:'rgba(0,151,167,0.10)'    },
+  'Monitoring':         { color:'#4a5b73', bg:'rgba(74,91,115,0.10)'    },
+  'Coverage':           { color:'#c89c00', bg:'rgba(200,156,0,0.10)'    },
+  'Cultural Resources': { color:'#c0392b', bg:'rgba(192,57,43,0.10)'    },
+  'Other':              { color:'#8a9ab0', bg:'rgba(138,154,176,0.10)'  }
+};
+
+// ── Seed Data ──────────────────────────────────
+const SEED_PERMITS = [
+  { id:'P-001', accelaId:'BLD23-004521', apn:'019-020-034', projectName:'Schmidt Residential Addition', applicant:'Robert Schmidt', permitType:'Building/Residential', issueDate:'2023-04-12' },
+  { id:'P-002', accelaId:'EIP22-001887', apn:'031-041-012', projectName:'Upper Trout Creek Restoration', applicant:'South Lake Tahoe City', permitType:'EIP Construction', issueDate:'2022-09-08' },
+  { id:'P-003', accelaId:'CONS24-000332', apn:'023-015-007', projectName:'Kings Beach Commercial Rebuild', applicant:'Tahoe Sierra Properties LLC', permitType:'Building/Commercial', issueDate:'2024-01-22' }
+];
+
+const SEED_CONDITIONS = [
+  { id:'C-001', permitId:'P-001', conditionNumber:'1', category:'Erosion Control',    title:'BMP Installation Prior to Grading',       description:'Permittee shall install all erosion and sediment control Best Management Practices (BMPs) as shown on the approved grading plan prior to initiating any land disturbance activities.',                                          dueDate:'2023-06-01', assignedTo:'T. Navarro',  status:'fulfilled',   completedDate:'2023-05-28', history:[{date:'2023-05-10',action:'Notice Issued',by:'T. Navarro',note:'Condition requirements communicated at pre-construction meeting.'},{date:'2023-05-28',action:'Site Inspection',by:'T. Navarro',note:'BMPs installed per grading plan. Silt fencing and fiber rolls in place along downslope perimeter.'},{date:'2023-05-28',action:'Condition Fulfilled',by:'T. Navarro',note:'All BMPs verified installed and functioning.'}] },
+  { id:'C-002', permitId:'P-001', conditionNumber:'2', category:'Water Quality',      title:'SWPPP Submittal and Approval',            description:'A Stormwater Pollution Prevention Plan (SWPPP) must be submitted to TRPA and approved prior to construction commencement.',                                                                                         dueDate:'2023-05-15', assignedTo:'T. Navarro',  status:'fulfilled',   completedDate:'2023-05-12', history:[{date:'2023-05-01',action:'Plan Submitted',by:'R. Schmidt',note:'SWPPP submitted via Accela portal.'},{date:'2023-05-12',action:'Plan Approved',by:'T. Navarro',note:'SWPPP reviewed and approved. Minor comments addressed in resubmittal.'}] },
+  { id:'C-003', permitId:'P-001', conditionNumber:'3', category:'Revegetation',       title:'Post-Construction Native Revegetation',   description:'All disturbed areas not covered by impervious surface shall be revegetated with native species within 30 days of project completion or by November 1st, whichever is earlier.',                         dueDate:'2023-10-15', assignedTo:'K. Flores',   status:'fulfilled',   completedDate:'2023-10-10', history:[{date:'2023-09-15',action:'Plan Submitted',by:'R. Schmidt',note:'Revegetation plan submitted showing 18 native species mix.'},{date:'2023-10-02',action:'Work Commenced',by:'K. Flores',note:'Plants delivered on site. Planting in progress.'},{date:'2023-10-10',action:'Condition Fulfilled',by:'K. Flores',note:'All disturbed areas revegetated with approved native species. Photo documentation on file.'}] },
+  { id:'C-004', permitId:'P-001', conditionNumber:'4', category:'Coverage',           title:'Final Land Coverage Survey',             description:'Final land coverage calculation must be submitted within 30 days of construction completion, certified by a licensed surveyor.',                                                                           dueDate:'2023-11-30', assignedTo:'T. Navarro',  status:'overdue',     completedDate:null,         history:[{date:'2023-11-15',action:'Notice Issued',by:'T. Navarro',note:'Email sent to R. Schmidt requesting survey submission.'},{date:'2023-12-05',action:'Follow-up Notice',by:'T. Navarro',note:'Second notice sent. Permittee cited surveyor scheduling delays.'},{date:'2024-01-10',action:'Follow-up Notice',by:'T. Navarro',note:'Third notice sent. Formal NOV may be required if not resolved.'}] },
+  { id:'C-005', permitId:'P-002', conditionNumber:'1', category:'Wildlife',           title:'Pre-Construction Wildlife Survey',        description:'A qualified biologist shall conduct a pre-construction survey for special-status species within the project footprint no more than 14 days prior to ground disturbance.',                        dueDate:'2022-10-01', assignedTo:'M. Castillo', status:'fulfilled',   completedDate:'2022-09-20', history:[{date:'2022-09-20',action:'Report Submitted',by:'Ascent Environmental',note:'Biological survey report submitted. No impacts to special-status species detected within 200-ft buffer.'}] },
+  { id:'C-006', permitId:'P-002', conditionNumber:'2', category:'Water Quality',      title:'In-Stream Work Window Compliance',        description:'All in-stream work shall be conducted only during the approved work window (July 1 – September 30) to protect fish migration and spawning.',                                                        dueDate:'2022-09-30', assignedTo:'M. Castillo', status:'fulfilled',   completedDate:'2022-09-28', history:[{date:'2022-07-05',action:'Work Commenced',by:'M. Castillo',note:'In-stream work started July 5th within approved window.'},{date:'2022-09-28',action:'Condition Fulfilled',by:'M. Castillo',note:'All in-stream activities complete. Channel secured before window closure.'}] },
+  { id:'C-007', permitId:'P-002', conditionNumber:'3', category:'Monitoring',         title:'Annual Monitoring Report — Year 1',      description:'A monitoring report documenting vegetation establishment, channel morphology, and water quality shall be submitted annually for 5 years following project completion.',                       dueDate:'2023-12-31', assignedTo:'K. Flores',   status:'fulfilled',   completedDate:'2023-12-15', history:[{date:'2023-08-15',action:'Site Inspection',by:'K. Flores',note:'Annual vegetation and channel morphology survey completed.'},{date:'2023-12-01',action:'Report Submitted',by:'K. Flores',note:'Year 1 annual monitoring report submitted.'},{date:'2023-12-15',action:'Report Approved',by:'K. Flores',note:'Year 1 report accepted. Vegetation establishment at 78%, on track.'}] },
+  { id:'C-008', permitId:'P-002', conditionNumber:'4', category:'Erosion Control',    title:'Temporary Stream Diversion',             description:'Temporary stream diversion shall be installed and maintained to prevent turbidity exceedances during in-stream construction activities.',                                                         dueDate:'2022-09-30', assignedTo:'M. Castillo', status:'fulfilled',   completedDate:'2022-09-28', history:[{date:'2022-07-05',action:'Work Commenced',by:'M. Castillo',note:'Stream diversion pump system operational. Turbidity monitoring initiated.'},{date:'2022-09-28',action:'Condition Fulfilled',by:'M. Castillo',note:'Diversion removed, channel restored. No turbidity exceedances recorded.'}] },
+  { id:'C-009', permitId:'P-002', conditionNumber:'5', category:'Revegetation',       title:'Native Riparian Planting (3:1 Ratio)',   description:'Native riparian vegetation shall be planted at a minimum 3:1 replacement ratio for any vegetation removed during construction.',                                                                   dueDate:'2022-11-01', assignedTo:'K. Flores',   status:'fulfilled',   completedDate:'2022-10-25', history:[{date:'2022-10-15',action:'Work Commenced',by:'K. Flores',note:'Native planting crews on site.'},{date:'2022-10-25',action:'Condition Fulfilled',by:'K. Flores',note:'All 847 plants installed. 3:1 ratio achieved across 0.4 acres. Photo documentation submitted.'}] },
+  { id:'C-010', permitId:'P-002', conditionNumber:'6', category:'Monitoring',         title:'Annual Monitoring Report — Year 2',      description:'Year 2 annual monitoring report documenting vegetation establishment, channel morphology, and water quality per approved monitoring plan.',                                                        dueDate:'2024-12-31', assignedTo:'K. Flores',   status:'in-progress', completedDate:null,         history:[{date:'2024-08-20',action:'Site Inspection',by:'K. Flores',note:'Year 2 field survey completed. Vegetation at 89% cover. Channel stable.'},{date:'2024-11-01',action:'Report Submitted',by:'K. Flores',note:'Year 2 monitoring report submitted for review.'}] },
+  { id:'C-011', permitId:'P-003', conditionNumber:'1', category:'Air Quality',        title:'Dust Control During Construction',        description:'Active dust control measures shall be employed during all grading and earthwork activities. Water trucks shall be on-site during all grading.',                                                   dueDate:'2024-03-01', assignedTo:'J. Reyes',    status:'fulfilled',   completedDate:'2024-03-01', history:[{date:'2024-01-30',action:'Pre-Con Meeting',by:'J. Reyes',note:'Dust control requirements reviewed with contractor at pre-construction meeting.'},{date:'2024-02-15',action:'Site Inspection',by:'J. Reyes',note:'Water truck on site during grading. No visible dust events.'},{date:'2024-03-01',action:'Condition Fulfilled',by:'J. Reyes',note:'Grading phase complete. Dust control maintained throughout.'}] },
+  { id:'C-012', permitId:'P-003', conditionNumber:'2', category:'Erosion Control',    title:'Phase 1 BMP Inspection',                 description:'TRPA shall conduct an on-site BMP inspection at the completion of Phase 1 grading before Phase 2 may commence.',                                                                              dueDate:'2024-05-15', assignedTo:'J. Reyes',    status:'fulfilled',   completedDate:'2024-05-08', history:[{date:'2024-04-30',action:'Notice Issued',by:'J. Reyes',note:'Applicant notified Phase 1 inspection required before Phase 2 start.'},{date:'2024-05-08',action:'Site Inspection',by:'J. Reyes',note:'Phase 1 BMP inspection passed. Silt fence, fiber rolls, and inlet protection all in place. Phase 2 authorized to proceed.'}] },
+  { id:'C-013', permitId:'P-003', conditionNumber:'3', category:'Water Quality',      title:'Impervious Surface Offset (1,200 sq ft)', description:'A stormwater offset of 1,200 sq ft of impervious surface shall be demonstrated through an approved offset project or fee payment prior to certificate of occupancy.',                    dueDate:'2025-03-01', assignedTo:'T. Navarro',  status:'in-progress', completedDate:null,         history:[{date:'2024-02-10',action:'Notice Issued',by:'T. Navarro',note:'Applicant contacted regarding offset project options and fee-in-lieu structure.'},{date:'2024-06-15',action:'Pre-Con Meeting',by:'T. Navarro',note:'Meeting held with applicant to review offset options. Applicant leaning toward fee-in-lieu payment.'},{date:'2024-09-20',action:'Plan Submitted',by:'Tahoe Sierra Properties LLC',note:'Fee-in-lieu payment application submitted.'}] },
+  { id:'C-014', permitId:'P-003', conditionNumber:'4', category:'Revegetation',       title:'Landscape Plan Compliance',              description:'All landscaping shall be installed per the approved landscape plan using only TRPA-approved plant species lists before final inspection.',                                                        dueDate:'2025-06-01', assignedTo:'K. Flores',   status:'not-started', completedDate:null,         history:[{date:'2024-01-30',action:'Notice Issued',by:'K. Flores',note:'Landscape condition requirements communicated to applicant. Planting to occur prior to final inspection.'}] },
+  { id:'C-015', permitId:'P-003', conditionNumber:'5', category:'Cultural Resources', title:'Tribal Cultural Resource Monitoring',    description:'A Washoe Tribe Cultural Monitor shall be present during all initial ground disturbance activities within the project area.',                                                                  dueDate:'2024-02-28', assignedTo:'J. Reyes',    status:'fulfilled',   completedDate:'2024-02-23', history:[{date:'2024-02-15',action:'Notice Issued',by:'J. Reyes',note:'Washoe Tribe contacted to confirm monitor availability for Feb 22nd ground break.'},{date:'2024-02-22',action:'Work Commenced',by:'J. Reyes',note:'Cultural monitor on site for initial ground disturbance.'},{date:'2024-02-23',action:'Condition Fulfilled',by:'J. Reyes',note:'Ground disturbance monitored Feb 22-23. No cultural resources encountered. Report submitted Feb 26th.'}] },
+  { id:'C-016', permitId:'P-003', conditionNumber:'6', category:'Monitoring',         title:'Monthly Construction Progress Reports', description:'Monthly construction progress reports shall be submitted to TRPA during all active construction phases.',                                                                               dueDate:'2025-12-31', assignedTo:'J. Reyes',    status:'in-progress', completedDate:null,         history:[{date:'2024-03-01',action:'Report Submitted',by:'J. Reyes',note:'February construction progress report received and filed.'},{date:'2024-04-02',action:'Report Submitted',by:'J. Reyes',note:'March report received.'},{date:'2024-05-03',action:'Report Submitted',by:'J. Reyes',note:'April report received.'},{date:'2024-12-02',action:'Follow-up Notice',by:'J. Reyes',note:'November report not received. Reminder sent to applicant.'}] }
+];
+
+// ── localStorage Persistence ───────────────────
+const LS_PERMITS    = 'trpa_ct_permits';
+const LS_CONDITIONS = 'trpa_ct_conditions';
+
+function loadData() {
+  const p = localStorage.getItem(LS_PERMITS);
+  const c = localStorage.getItem(LS_CONDITIONS);
+  if (!p) { localStorage.setItem(LS_PERMITS, JSON.stringify(SEED_PERMITS)); }
+  if (!c) { localStorage.setItem(LS_CONDITIONS, JSON.stringify(SEED_CONDITIONS)); }
+  return {
+    permits:    JSON.parse(localStorage.getItem(LS_PERMITS)),
+    conditions: JSON.parse(localStorage.getItem(LS_CONDITIONS))
+  };
+}
+function saveConditions(conds) { localStorage.setItem(LS_CONDITIONS, JSON.stringify(conds)); }
+function savePermits(perms)    { localStorage.setItem(LS_PERMITS,    JSON.stringify(perms)); }
+
+// ── State ──────────────────────────────────────
+let allPermits = [], allConditions = [], filtConditions = [];
+let selCondId  = null;
+let sortField  = 'dueDate', sortDir = 1;
+let searchQ    = '';
+let modalMode  = null;
+
+// ── Helpers ────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function isoToMs(iso) { return iso ? new Date(iso + 'T12:00:00').getTime() : null; }
+
+function daysUntil(iso) {
+  if (!iso) return null;
+  return Math.round((isoToMs(iso) - NOW) / MS);
+}
+
+function duePillClass(cond) {
+  if (cond.status === 'fulfilled' || cond.status === 'waived') return 'due-done';
+  const d = daysUntil(cond.dueDate);
+  if (d === null) return 'due-none';
+  if (d < 0)   return 'due-over';
+  if (d <= 14) return 'due-near';
+  if (d <= 30) return 'due-soon';
+  return 'due-ok';
+}
+
+function duePillLabel(cond) {
+  if (cond.status === 'waived')    return 'Waived';
+  if (cond.status === 'fulfilled') return cond.completedDate ? 'Done ' + fmtDate(cond.completedDate) : 'Fulfilled';
+  const d = daysUntil(cond.dueDate);
+  if (d === null) return 'No Due Date';
+  if (d < 0)     return Math.abs(d) + 'd overdue';
+  if (d === 0)   return 'Due today';
+  return d + 'd remaining';
+}
+
+function statusPill(status) {
+  const s = STATUS[status] || STATUS['not-started'];
+  return `<span class="sp" style="color:${s.color};background:${s.bg};border-color:${s.border}">${s.label}</span>`;
+}
+function catPill(cat) {
+  const c = CAT[cat] || CAT['Other'];
+  return `<span class="cat-pill" style="color:${c.color};background:${c.bg}">${cat}</span>`;
+}
+
+function permitById(id)    { return allPermits.find(p => p.id === id); }
+function conditionById(id) { return allConditions.find(c => c.id === id); }
+
+function autoOverdue() {
+  let changed = false;
+  allConditions.forEach(c => {
+    if (c.status !== 'fulfilled' && c.status !== 'waived' && c.status !== 'extended' && c.dueDate) {
+      if (daysUntil(c.dueDate) < 0 && c.status !== 'overdue') {
+        c.status = 'overdue'; changed = true;
+      }
+    }
+  });
+  if (changed) saveConditions(allConditions);
+}
+
+// ── Tab switching ──────────────────────────────
+window.switchTab = function(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'map' && mapView) mapView.resize();
+  if (name === 'timeline') renderTimeline(filtConditions);
+};
+
+// ── Init ───────────────────────────────────────
+function init() {
+  const data = loadData();
+  allPermits    = data.permits;
+  allConditions = data.conditions;
+  autoOverdue();
+  filtConditions = [...allConditions];
+  populateFilters();
+  refresh(filtConditions);
+}
+
+// ── Populate filter dropdowns ──────────────────
+function populateFilters() {
+  const pSel = document.getElementById('f-permit');
+  const cSel = document.getElementById('f-cat');
+  const sSel = document.getElementById('f-staff');
+  const staffSet = new Set(), catSet = new Set();
+  allConditions.forEach(c => {
+    if (c.assignedTo) staffSet.add(c.assignedTo);
+    if (c.category)   catSet.add(c.category);
+  });
+  pSel.innerHTML = '<option value="">All Permits</option>' +
+    allPermits.map(p => `<option value="${p.id}">${p.accelaId} — ${p.projectName}</option>`).join('');
+  cSel.innerHTML = '<option value="">All Categories</option>' +
+    [...catSet].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+  sSel.innerHTML = '<option value="">All Staff</option>' +
+    [...staffSet].sort().map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// ── Filters ────────────────────────────────────
+window.applyFilters = function() {
+  const perm   = document.getElementById('f-permit').value;
+  const cat    = document.getElementById('f-cat').value;
+  const status = document.getElementById('f-status').value;
+  const staff  = document.getElementById('f-staff').value;
+  filtConditions = allConditions.filter(c => {
+    if (perm   && c.permitId    !== perm)   return false;
+    if (cat    && c.category    !== cat)    return false;
+    if (status && c.status      !== status) return false;
+    if (staff  && c.assignedTo  !== staff)  return false;
+    return true;
+  });
+  refresh(filtConditions);
+};
+window.clearFilters = function() {
+  ['f-permit','f-cat','f-status','f-staff'].forEach(id => document.getElementById(id).value = '');
+  filtConditions = [...allConditions];
+  document.getElementById('rp-search').value = '';
+  searchQ = '';
+  refresh(filtConditions);
+};
+
+// ── Search ─────────────────────────────────────
+window.searchConditions = function(q) {
+  searchQ = q.toLowerCase().trim();
+  renderCondList(filtConditions);
+};
+
+// ── Refresh all ────────────────────────────────
+function refresh(conds) {
+  renderKPIs(conds);
+  renderStatusLegend(conds);
+  renderOverview(conds);
+  renderCondList(conds);
+  renderTable(conds);
+  if (document.getElementById('tab-timeline').classList.contains('active')) renderTimeline(conds);
+  document.getElementById('cond-count').textContent = `· ${conds.length}`;
+}
+
+// ── KPIs ───────────────────────────────────────
+function renderKPIs(conds) {
+  const fulfilled = conds.filter(c => c.status === 'fulfilled').length;
+  const overdue   = conds.filter(c => c.status === 'overdue').length;
+  const dueSoon   = conds.filter(c => {
+    if (c.status === 'fulfilled' || c.status === 'waived') return false;
+    const d = daysUntil(c.dueDate);
+    return d !== null && d >= 0 && d <= 30;
+  }).length;
+  document.getElementById('kpi-total').textContent    = conds.length;
+  document.getElementById('kpi-fulfilled').textContent = fulfilled;
+  document.getElementById('kpi-overdue').textContent  = overdue;
+  document.getElementById('kpi-due-soon').textContent = dueSoon;
+}
+
+// ── Status Legend ──────────────────────────────
+function renderStatusLegend(conds) {
+  const counts = {};
+  Object.keys(STATUS).forEach(k => counts[k] = 0);
+  conds.forEach(c => { if (counts[c.status] !== undefined) counts[c.status]++; });
+  document.getElementById('status-legend-rows').innerHTML = Object.entries(STATUS).map(([k,s]) =>
+    `<div class="sl-row">
+      <div class="sl-dot" style="background:${s.color}"></div>
+      <div class="sl-lbl">${s.label}</div>
+      <div class="sl-cnt">${counts[k]}</div>
+    </div>`
+  ).join('');
+}
+
+// ── Overview Tab ───────────────────────────────
+function renderOverview(conds) {
+  // Due soon alert
+  const urgent = conds.filter(c => {
+    if (c.status === 'fulfilled' || c.status === 'waived') return false;
+    const d = daysUntil(c.dueDate);
+    return d !== null && d >= 0 && d <= 14;
+  }).sort((a,b) => isoToMs(a.dueDate) - isoToMs(b.dueDate));
+  const alertEl = document.getElementById('due-alert-strip');
+  if (urgent.length) {
+    alertEl.innerHTML = `<div class="due-alert">
+      <div class="due-alert-badge">⚠ ${urgent.length} DUE SOON</div>
+      <div class="due-alert-body">
+        <div class="due-alert-title">Conditions due within 14 days</div>
+        ${urgent.slice(0,5).map(c => {
+          const p = permitById(c.permitId);
+          return `<div class="due-alert-item" onclick="selectCondition('${c.id}')">
+            <strong>${p ? p.accelaId : c.permitId}</strong> · #${c.conditionNumber} ${c.title} — Due ${fmtDate(c.dueDate)}
+          </div>`;
+        }).join('')}
+        ${urgent.length > 5 ? `<div style="font-size:0.65rem;color:var(--text-light);margin-top:3px">+${urgent.length-5} more</div>` : ''}
+      </div>
+    </div>`;
+  } else {
+    alertEl.innerHTML = '';
+  }
+
+  // Permit cards
+  const grid = document.getElementById('permit-grid');
+  const relevant = [...new Set(conds.map(c => c.permitId))].map(id => permitById(id)).filter(Boolean);
+  if (!relevant.length) { grid.innerHTML = '<div style="color:var(--text-light);font-size:0.75rem;padding:20px;">No permits match current filters.</div>'; return; }
+
+  grid.innerHTML = relevant.map(p => {
+    const pConds = conds.filter(c => c.permitId === p.id);
+    const fulfilled = pConds.filter(c => c.status === 'fulfilled').length;
+    const inProg    = pConds.filter(c => c.status === 'in-progress').length;
+    const submitted = pConds.filter(c => c.status === 'submitted').length;
+    const overdue   = pConds.filter(c => c.status === 'overdue').length;
+    const notStart  = pConds.filter(c => c.status === 'not-started').length;
+    const waived    = pConds.filter(c => c.status === 'waived').length;
+    const pct = pConds.length ? Math.round(((fulfilled + waived) / pConds.length) * 100) : 0;
+    const isSel = selCondId && conditionById(selCondId) && conditionById(selCondId).permitId === p.id;
+    return `<div class="permit-card ${isSel?'sel':''}" onclick="filterByPermit('${p.id}')">
+      <div class="pc-top">
+        <div class="pc-accela">${p.accelaId}</div>
+        <div class="pc-type">${p.permitType}</div>
+      </div>
+      <div class="pc-name">${p.projectName}</div>
+      <div class="pc-sub">${p.applicant} · Issued ${fmtDate(p.issueDate)}</div>
+      <div class="pp-bar"><div class="pp-fill" style="width:${pct}%"></div></div>
+      <div class="pp-lbl">${fulfilled + waived} of ${pConds.length} conditions complete</div>
+      <div class="pc-strips">
+        ${fulfilled  ? `<div class="pcs" style="background:rgba(34,168,85,0.12);color:#22a855">${fulfilled} Fulfilled</div>` : ''}
+        ${inProg     ? `<div class="pcs" style="background:rgba(0,125,195,0.12);color:#007dc3">${inProg} In Progress</div>` : ''}
+        ${submitted  ? `<div class="pcs" style="background:rgba(123,79,158,0.12);color:#7b4f9e">${submitted} Submitted</div>` : ''}
+        ${overdue    ? `<div class="pcs" style="background:rgba(192,57,43,0.12);color:#c0392b">${overdue} Overdue</div>` : ''}
+        ${notStart   ? `<div class="pcs" style="background:rgba(138,154,176,0.12);color:#8a9ab0">${notStart} Not Started</div>` : ''}
+        ${waived     ? `<div class="pcs" style="background:rgba(107,63,138,0.12);color:#6b3f8a">${waived} Waived</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filterByPermit = function(pid) {
+  document.getElementById('f-permit').value = pid;
+  applyFilters();
+};
+
+// ── Right Panel Condition List ─────────────────
+function renderCondList(conds) {
+  const list = document.getElementById('cond-list');
+  let disp = conds;
+  if (searchQ) {
+    disp = conds.filter(c =>
+      c.title.toLowerCase().includes(searchQ) ||
+      c.category.toLowerCase().includes(searchQ) ||
+      c.description.toLowerCase().includes(searchQ) ||
+      (c.assignedTo && c.assignedTo.toLowerCase().includes(searchQ)) ||
+      (permitById(c.permitId) && permitById(c.permitId).accelaId.toLowerCase().includes(searchQ))
+    );
+  }
+  if (!disp.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:0.72rem;">No conditions match.</div>';
+    return;
+  }
+  const s = STATUS;
+  list.innerHTML = disp.map(c => {
+    const st = s[c.status] || s['not-started'];
+    const p  = permitById(c.permitId);
+    const cc = CAT[c.category] || CAT['Other'];
+    return `<div class="cond-card ${selCondId===c.id?'sel':''}"
+                 style="--card-color:${st.color}"
+                 onclick="selectCondition('${c.id}')">
+      <div class="cc-top">
+        <div class="cc-id">${p ? p.accelaId : c.permitId} · #${c.conditionNumber}</div>
+        ${statusPill(c.status)}
+      </div>
+      <div class="cc-title">${c.title}</div>
+      <div class="cc-meta">
+        ${catPill(c.category)}
+      </div>
+      <div class="cc-footer">
+        <span class="cc-staff">${c.assignedTo || '—'}</span>
+        <span class="due-pill ${duePillClass(c)}">${duePillLabel(c)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Conditions Table ───────────────────────────
+let _sortDir = {};
+window.sortTable = function(field) {
+  if (sortField === field) { sortDir *= -1; }
+  else { sortField = field; sortDir = 1; }
+  document.querySelectorAll('.cond-table thead th').forEach(th => {
+    th.classList.remove('sorted-asc','sorted-desc');
+  });
+  const idx = ['permitId','conditionNumber','category','title','status','dueDate','daysUntil','assignedTo'].indexOf(field);
+  if (idx >= 0) {
+    const ths = document.querySelectorAll('.cond-table thead th');
+    if (ths[idx]) ths[idx].classList.add(sortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+  }
+  renderTable(filtConditions);
+};
+
+function renderTable(conds) {
+  const sorted = [...conds].sort((a,b) => {
+    let av, bv;
+    if (sortField === 'daysUntil') {
+      av = daysUntil(a.dueDate) ?? 99999;
+      bv = daysUntil(b.dueDate) ?? 99999;
+    } else if (sortField === 'dueDate') {
+      av = isoToMs(a.dueDate) || 0;
+      bv = isoToMs(b.dueDate) || 0;
+    } else if (sortField === 'conditionNumber') {
+      av = parseFloat(a.conditionNumber) || 0;
+      bv = parseFloat(b.conditionNumber) || 0;
+    } else {
+      av = (a[sortField] || '').toLowerCase();
+      bv = (b[sortField] || '').toLowerCase();
+    }
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+  const body = document.getElementById('table-body');
+  body.innerHTML = sorted.map(c => {
+    const p  = permitById(c.permitId);
+    const d  = daysUntil(c.dueDate);
+    const st = STATUS[c.status] || STATUS['not-started'];
+    const cc = CAT[c.category] || CAT['Other'];
+    let daysCls = '', daysLbl = '—';
+    if (c.status === 'fulfilled' || c.status === 'waived') { daysCls = 'td-days-done'; daysLbl = '✓'; }
+    else if (d !== null) {
+      if (d < 0)   { daysCls='td-days-over'; daysLbl=Math.abs(d)+'d over'; }
+      else if (d<=14) { daysCls='td-days-near'; daysLbl=d+'d'; }
+      else if (d<=30) { daysCls='td-days-soon'; daysLbl=d+'d'; }
+      else            { daysCls='td-days-ok';   daysLbl=d+'d'; }
+    }
+    return `<tr class="${selCondId===c.id?'sel':''}" onclick="selectCondition('${c.id}')">
+      <td><div class="td-permit">${p ? p.accelaId : c.permitId}</div></td>
+      <td><div class="td-num">${c.conditionNumber}</div></td>
+      <td>${catPill(c.category)}</td>
+      <td><div class="td-title-text" title="${c.title}">${c.title}</div></td>
+      <td>${statusPill(c.status)}</td>
+      <td style="white-space:nowrap;font-size:0.72rem;color:var(--text-mid)">${fmtDate(c.dueDate)}</td>
+      <td><span class="${daysCls}">${daysLbl}</span></td>
+      <td style="font-size:0.7rem;color:var(--text-mid)">${c.assignedTo || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Timeline Tab ───────────────────────────────
+function renderTimeline(conds) {
+  const inner = document.getElementById('timeline-inner');
+  if (!conds.length) { inner.innerHTML = '<div style="color:var(--text-light);font-size:0.75rem;padding:20px;">No conditions to display.</div>'; return; }
+
+  const sorted = [...conds].sort((a,b) => (isoToMs(a.dueDate)||0) - (isoToMs(b.dueDate)||0));
+  const minMs = Math.min(...sorted.filter(c=>c.dueDate).map(c => {
+    const p = permitById(c.permitId);
+    return p ? isoToMs(p.issueDate) : isoToMs(c.dueDate);
+  }));
+  const maxMs = Math.max(...sorted.filter(c=>c.dueDate).map(c => isoToMs(c.dueDate)));
+  const span  = maxMs - minMs || MS * 365;
+  const todayPct = Math.max(0, Math.min(100, ((NOW - minMs) / span) * 100));
+
+  const rows = sorted.filter(c => c.dueDate).map(c => {
+    const p       = permitById(c.permitId);
+    const issueMs = p ? isoToMs(p.issueDate) : minMs;
+    const dueMs   = isoToMs(c.dueDate);
+    const startPct = Math.max(0, Math.min(95, ((issueMs - minMs) / span) * 100));
+    let   endPct;
+    if (c.status === 'fulfilled' && c.completedDate) {
+      endPct = Math.max(startPct+2, Math.min(100, ((isoToMs(c.completedDate) - minMs) / span) * 100));
+    } else {
+      endPct = Math.max(startPct+2, Math.min(100, ((dueMs - minMs) / span) * 100));
+    }
+    const widthPct  = endPct - startPct;
+    const st        = STATUS[c.status] || STATUS['not-started'];
+    const d         = daysUntil(c.dueDate);
+    let dueCls = 'due-ok';
+    if (c.status==='fulfilled'||c.status==='waived') dueCls='due-done';
+    else if (d!==null && d<0) dueCls='due-over';
+    else if (d!==null && d<=14) dueCls='due-near';
+    else if (d!==null && d<=30) dueCls='due-soon';
+    return `<div class="tl-row ${selCondId===c.id?'sel':''}" onclick="selectCondition('${c.id}')">
+      <div class="tl-label">
+        <div class="tl-permit-id">${p ? p.accelaId : c.permitId} · #${c.conditionNumber}</div>
+        <div class="tl-name" title="${c.title}">${c.title}</div>
+      </div>
+      <div class="tl-track">
+        <div class="tl-fill" style="left:${startPct}%;width:${widthPct}%;background:${st.color};opacity:0.75"></div>
+        <div class="tl-today" style="left:${todayPct}%"></div>
+      </div>
+      <div class="tl-due-date"><span class="due-pill ${dueCls}">${fmtDate(c.dueDate)}</span></div>
+    </div>`;
+  }).join('');
+
+  const minYear = new Date(minMs).getFullYear();
+  const maxYear = new Date(maxMs).getFullYear();
+
+  inner.innerHTML = `
+    <div class="tl-header">
+      <div class="tl-header-label">Condition</div>
+      <div class="tl-header-bar"><span>${minYear}</span><span>Today</span><span>${maxYear}</span></div>
+      <div class="tl-header-due">Due Date</div>
+    </div>
+    ${rows}`;
+}
+
+// ── Select Condition ───────────────────────────
+window.selectCondition = function(id) {
+  selCondId = id;
+  // Re-render lists to highlight selection
+  renderCondList(filtConditions);
+  renderTable(filtConditions);
+  renderOverview(filtConditions);
+  if (document.getElementById('tab-timeline').classList.contains('active')) renderTimeline(filtConditions);
+  // Show detail panel
+  const c = conditionById(id);
+  if (!c) return;
+  document.getElementById('d-empty').style.display = 'none';
+  document.getElementById('d-pane').style.display  = 'flex';
+  document.getElementById('log-add-form').classList.remove('open');
+  renderDetailInfo(c);
+  renderLogList(c);
+  // Zoom map to parcel if map tab is active
+  const p = permitById(c.permitId);
+  if (p && p.apn && mapView) zoomAPN(p.apn);
+};
+
+function renderDetailInfo(c) {
+  const p  = permitById(c.permitId);
+  const d  = daysUntil(c.dueDate);
+  document.getElementById('d-info').innerHTML = `
+    <div class="d-title">${c.title}</div>
+    <div class="d-pills">
+      ${statusPill(c.status)}
+      ${catPill(c.category)}
+    </div>
+    <div class="d-grid">
+      <div>
+        <div class="d-lbl">Permit</div>
+        <div class="d-val">${p ? p.accelaId : c.permitId}</div>
+      </div>
+      <div>
+        <div class="d-lbl">Condition #</div>
+        <div class="d-val">${c.conditionNumber}</div>
+      </div>
+      <div>
+        <div class="d-lbl">Assigned To</div>
+        <div class="d-val" style="font-weight:600">${c.assignedTo || '—'}</div>
+      </div>
+      <div>
+        <div class="d-lbl">Due Date</div>
+        <div class="d-val">${fmtDate(c.dueDate)}</div>
+      </div>
+      ${c.completedDate ? `<div>
+        <div class="d-lbl">Completed</div>
+        <div class="d-val" style="color:#22a855;font-weight:600">${fmtDate(c.completedDate)}</div>
+      </div>` : `<div>
+        <div class="d-lbl">Days Remaining</div>
+        <div class="d-val"><span class="due-pill ${duePillClass(c)}">${duePillLabel(c)}</span></div>
+      </div>`}
+      <div>
+        <div class="d-lbl">Applicant</div>
+        <div class="d-val">${p ? p.applicant : '—'}</div>
+      </div>
+    </div>
+    <div class="d-desc">${c.description}</div>`;
+}
+
+function renderLogList(c) {
+  const logEl = document.getElementById('log-list');
+  if (!c.history || !c.history.length) {
+    logEl.innerHTML = '<div class="log-empty">No activity logged yet.<br>Click "Log Activity" to add the first entry.</div>';
+    return;
+  }
+  const sorted = [...c.history].reverse();
+  logEl.innerHTML = sorted.map(e => {
+    const st = STATUS[c.status] || STATUS['not-started'];
+    return `<div class="log-entry">
+      <div class="le-dot" style="border-color:${st.color};color:${st.color}">${st.icon}</div>
+      <div class="le-body">
+        <div class="le-action">${e.action}</div>
+        <div class="le-meta">${fmtDate(e.date)}${e.by ? ' · ' + e.by : ''}</div>
+        ${e.note ? `<div class="le-note">${e.note}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Log Form ───────────────────────────────────
+window.toggleLogForm = function() {
+  const form = document.getElementById('log-add-form');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) {
+    document.getElementById('laf-date').value  = TODAY_ISO;
+    document.getElementById('laf-status').value = '';
+    document.getElementById('laf-notes').value  = '';
+    document.getElementById('laf-verified').value = '';
+    document.getElementById('laf-notes').focus();
+  }
+};
+
+window.submitLogEntry = function() {
+  if (!selCondId) return;
+  const c = conditionById(selCondId);
+  if (!c) return;
+  const newStatus  = document.getElementById('laf-status').value;
+  const action     = document.getElementById('laf-action').value;
+  const date       = document.getElementById('laf-date').value;
+  const notes      = document.getElementById('laf-notes').value.trim();
+  const verifiedBy = document.getElementById('laf-verified').value.trim();
+  if (!date)  { alert('Please enter a date.'); return; }
+  if (!notes) { alert('Please enter notes describing the activity.'); return; }
+
+  const entry = { date, action, by: verifiedBy || '', note: notes };
+  if (!c.history) c.history = [];
+  c.history.push(entry);
+  if (newStatus) c.status = newStatus;
+  if (newStatus === 'fulfilled' && !c.completedDate) c.completedDate = date;
+  saveConditions(allConditions);
+  document.getElementById('log-add-form').classList.remove('open');
+  renderDetailInfo(c);
+  renderLogList(c);
+  renderKPIs(filtConditions);
+  renderStatusLegend(filtConditions);
+  renderCondList(filtConditions);
+  renderTable(filtConditions);
+  renderOverview(filtConditions);
+};
+
+// ── Modal ──────────────────────────────────────
+window.openModal = function(mode) {
+  modalMode = mode;
+  const overlay = document.getElementById('modal-overlay');
+  const body    = document.getElementById('modal-body');
+  const title   = document.getElementById('modal-title');
+  if (mode === 'permit') {
+    title.textContent = 'Add New Permit';
+    body.innerHTML = `<div class="modal-grid">
+      <div class="modal-row"><div class="modal-lbl">Accela ID *</div><input class="modal-inp" id="m-accela" placeholder="e.g. BLD24-001234"/></div>
+      <div class="modal-row"><div class="modal-lbl">APN</div><input class="modal-inp" id="m-apn" placeholder="e.g. 019-020-034"/></div>
+      <div class="modal-row full"><div class="modal-lbl">Project Name *</div><input class="modal-inp" id="m-name" placeholder="Project description"/></div>
+      <div class="modal-row"><div class="modal-lbl">Applicant *</div><input class="modal-inp" id="m-applicant" placeholder="Name or organization"/></div>
+      <div class="modal-row"><div class="modal-lbl">Permit Type</div>
+        <select class="modal-inp" id="m-type">
+          <option>Building/Residential</option><option>Building/Commercial</option>
+          <option>EIP Construction</option><option>Grading</option>
+          <option>Land Coverage</option><option>Other</option>
+        </select>
+      </div>
+      <div class="modal-row"><div class="modal-lbl">Issue Date *</div><input class="modal-inp" id="m-issue" type="date"/></div>
+    </div>`;
+  } else {
+    title.textContent = 'Add New Condition';
+    body.innerHTML = `<div class="modal-grid">
+      <div class="modal-row"><div class="modal-lbl">Permit *</div>
+        <select class="modal-inp" id="m-permit">
+          ${allPermits.map(p => `<option value="${p.id}">${p.accelaId} — ${p.projectName}</option>`).join('')}
+        </select>
+      </div>
+      <div class="modal-row"><div class="modal-lbl">Condition # *</div><input class="modal-inp" id="m-num" placeholder="e.g. 1, 2a, 3"/></div>
+      <div class="modal-row full"><div class="modal-lbl">Condition Title *</div><input class="modal-inp" id="m-title" placeholder="Short descriptive title"/></div>
+      <div class="modal-row"><div class="modal-lbl">Category *</div>
+        <select class="modal-inp" id="m-cat">
+          ${Object.keys(CAT).map(k => `<option>${k}</option>`).join('')}
+        </select>
+      </div>
+      <div class="modal-row"><div class="modal-lbl">Due Date *</div><input class="modal-inp" id="m-due" type="date"/></div>
+      <div class="modal-row"><div class="modal-lbl">Assigned To</div><input class="modal-inp" id="m-staff" placeholder="Staff name"/></div>
+      <div class="modal-row full"><div class="modal-lbl">Condition Description *</div><textarea class="modal-inp" id="m-desc" rows="3" placeholder="Full text of the condition as stated in the permit…"></textarea></div>
+    </div>`;
+  }
+  overlay.classList.add('open');
+};
+
+window.closeModal = function() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  modalMode = null;
+};
+
+window.submitModal = function() {
+  if (modalMode === 'permit') {
+    const accela = document.getElementById('m-accela').value.trim();
+    const name   = document.getElementById('m-name').value.trim();
+    const appl   = document.getElementById('m-applicant').value.trim();
+    const issue  = document.getElementById('m-issue').value;
+    if (!accela || !name || !appl || !issue) { alert('Please fill in all required fields.'); return; }
+    const id = 'P-' + String(allPermits.length + 1).padStart(3,'0');
+    const newP = {
+      id, accelaId: accela, apn: document.getElementById('m-apn').value.trim(),
+      projectName: name, applicant: appl,
+      permitType: document.getElementById('m-type').value,
+      issueDate: issue
+    };
+    allPermits.push(newP);
+    savePermits(allPermits);
+    populateFilters();
+    closeModal();
+    refresh(filtConditions);
+  } else if (modalMode === 'condition') {
+    const permitId = document.getElementById('m-permit').value;
+    const num      = document.getElementById('m-num').value.trim();
+    const title    = document.getElementById('m-title').value.trim();
+    const cat      = document.getElementById('m-cat').value;
+    const due      = document.getElementById('m-due').value;
+    const desc     = document.getElementById('m-desc').value.trim();
+    if (!permitId || !num || !title || !due || !desc) { alert('Please fill in all required fields.'); return; }
+    const id = 'C-' + String(allConditions.length + 1).padStart(3,'0');
+    const newC = {
+      id, permitId, conditionNumber: num, category: cat, title, description: desc,
+      dueDate: due, assignedTo: document.getElementById('m-staff').value.trim(),
+      status: 'not-started', completedDate: null,
+      history: [{ date: TODAY_ISO, action: 'Condition Added', by: '', note: 'Condition entered into commitment tracker.' }]
+    };
+    allConditions.push(newC);
+    filtConditions.push(newC);
+    saveConditions(allConditions);
+    populateFilters();
+    closeModal();
+    refresh(filtConditions);
+  }
+};
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── Map ────────────────────────────────────────
+const map     = new Map({ basemap:'topo-vector' });
+const mapView = new MapView({ container:'mapDiv', map, center:[-119.9,39.1], zoom:10, ui:{components:['zoom']} });
+const parcelLayer = new FeatureLayer({
+  url: 'https://maps.trpa.org/server/rest/services/Parcels/FeatureServer/0',
+  outFields:['*'], title:'Parcels', popupEnabled:false,
+  renderer:{ type:'simple', symbol:{ type:'simple-fill', color:[11,31,65,0.06], outline:{ color:[11,31,65,0.4], width:0.6 }}}
+});
+map.add(parcelLayer);
+mapView.when(() => document.getElementById('loading-overlay').style.display='none');
+
+async function zoomAPN(apn) {
+  if (!apn) return;
+  const q = parcelLayer.createQuery();
+  q.where = `APN='${apn.replace(/'/g,"''")}'`;
+  q.returnGeometry = true;
+  try {
+    const res = await parcelLayer.queryFeatures(q);
+    if (res.features.length) mapView.goTo({ target:res.features, zoom:16 }, { duration:600 });
+  } catch(e) {}
+}
+
+// ── Start ──────────────────────────────────────
+init();
+
+}); // end require
+</script>
+</body>
+</html>

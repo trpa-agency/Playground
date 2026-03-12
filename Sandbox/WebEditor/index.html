@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>TRPA Web Feature Editor</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Calcite Design System -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+
+  <!-- ArcGIS Maps SDK 5.0 -->
+  <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/light/main.css"/>
+  <script type="module" src="https://js.arcgis.com/5.0/"></script>
+
+  <style>
+    /* ── TRPA DESIGN TOKENS ── */
+    :root {
+      --navy:       #0b1f41;
+      --green:      #6ebe44;
+      --blue:       #007dc3;
+      --orange:     #f16022;
+      --bg:         #f4f6f9;
+      --surface:    #ffffff;
+      --border:     #d5dde8;
+      --text-dark:  #0b1f41;
+      --text-mid:   #4a5b73;
+      --text-light: #8a9bb2;
+      --shadow:     0 2px 16px rgba(11,31,65,0.09);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Lexend Deca', sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+    }
+
+    calcite-shell {
+      --calcite-color-brand: var(--navy);
+      --calcite-color-brand-hover: #0f2d5c;
+    }
+
+    /* ── TRPA HEADER ── */
+    .trpa-header {
+      height: 58px;
+      background: var(--navy);
+      color: #fff;
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+      box-shadow: 0 2px 10px rgba(11,31,65,0.25);
+    }
+    .hdr-accent {
+      width: 7px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, var(--green) 0%, var(--blue) 50%, var(--orange) 100%);
+    }
+    .hdr-body {
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      flex: 1;
+      gap: 16px;
+      min-width: 0;
+    }
+    .hdr-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .hdr-eyebrow {
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--green); line-height: 1;
+    }
+    .hdr-title {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em;
+      line-height: 1.1; margin-top: 2px;
+    }
+    .hdr-title span { color: var(--blue); }
+    .hdr-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.15); flex-shrink: 0; }
+
+    .wm-loader { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; max-width: 560px; }
+    .wm-label {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light); white-space: nowrap;
+    }
+    .wm-input {
+      flex: 1; min-width: 0;
+      background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: 4px; color: #fff; font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.75rem; padding: 7px 11px; outline: none; transition: border-color .15s;
+    }
+    .wm-input::placeholder { color: rgba(255,255,255,0.28); }
+    .wm-input:focus { border-color: var(--blue); background: rgba(255,255,255,0.12); }
+    .wm-btn {
+      background: var(--blue); border: none; border-radius: 4px; color: #fff;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 700;
+      padding: 7px 18px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .wm-btn:hover { background: #006aaa; }
+    .hdr-meta { font-size: 0.63rem; color: var(--text-light); text-align: right; line-height: 1.9; flex-shrink: 0; }
+    .hdr-meta strong { color: #fff; }
+
+    /* ── LEFT PANEL ── */
+    .p-section { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .p-section:last-child { border-bottom: none; }
+    .sec-label {
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-light); margin-bottom: 9px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .ctrl-label { font-size: 0.63rem; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; }
+    .ctrl-row { margin-bottom: 8px; }
+    .ctrl-select, .ctrl-input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 4px;
+      color: var(--text-dark); font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.74rem; padding: 6px 9px; background: #fff; outline: none; transition: border-color .15s;
+    }
+    .ctrl-select:focus, .ctrl-input:focus { border-color: var(--blue); }
+    .ctrl-select:disabled, .ctrl-input:disabled { background: var(--bg); color: var(--text-light); cursor: not-allowed; }
+
+    .btn-row { display: flex; gap: 7px; margin-top: 9px; }
+    .btn {
+      flex: 1; padding: 7px 10px; border-radius: 4px;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.71rem; font-weight: 700;
+      cursor: pointer; border: none; transition: all .15s; letter-spacing: 0.01em;
+    }
+    .btn-navy  { background: var(--navy);  color: #fff; }
+    .btn-navy:hover  { background: #0f2d5c; }
+    .btn-blue  { background: var(--blue);  color: #fff; }
+    .btn-blue:hover  { background: #006aaa; }
+    .btn-green { background: var(--green); color: var(--navy); }
+    .btn-green:hover { background: #5daa36; }
+    .btn-ghost { background: #fff; border: 1.5px solid var(--border); color: var(--text-mid); }
+    .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-danger:hover { background: #a33025; }
+    .btn:disabled { background: #d5dde8; color: var(--text-light); cursor: not-allowed; border-color: var(--border); }
+
+    .status-msg { font-size: 0.65rem; color: var(--text-light); margin-top: 6px; min-height: 14px; line-height: 1.4; }
+    .status-msg.ok   { color: #22a855; }
+    .status-msg.err  { color: #c0392b; }
+    .status-msg.info { color: var(--blue); }
+    .status-msg.warn { color: var(--orange); }
+
+    .sel-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 3px 10px; font-size: 0.66rem; font-weight: 700; color: var(--text-mid); transition: all .15s;
+    }
+    .sel-chip.active { background: rgba(0,125,195,0.08); border-color: var(--blue); color: var(--blue); }
+
+    .load-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+    .load-fill {
+      height: 100%; background: linear-gradient(90deg, var(--blue), var(--green));
+      border-radius: 2px; animation: slide-bar 1.2s ease-in-out infinite;
+    }
+    @keyframes slide-bar {
+      0%   { margin-left:0;    width:30% }
+      50%  { margin-left:40%; width:60%  }
+      100% { margin-left:100%; width:0   }
+    }
+
+    .about-text { font-size: 0.66rem; color: var(--text-mid); line-height: 1.7; }
+    .batch-hint { font-size: 0.62rem; color: var(--text-light); margin-top: 4px; font-style: italic; }
+
+    /* ── CENTER CONTENT ── */
+    .center-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* arcgis-map is a proper custom element — flex:1 works natively */
+    arcgis-map {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+    }
+
+    #tableDiv { height: 240px; }
+
+    #editorDiv {
+      display: none;
+      position: absolute;
+      bottom: 20px; left: 16px;
+      z-index: 50; min-width: 280px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; box-shadow: var(--shadow); overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <calcite-shell>
+
+    <!-- TRPA Header in shell's header slot -->
+    <header slot="header" class="trpa-header">
+      <div class="hdr-accent"></div>
+      <div class="hdr-body">
+        <div class="hdr-brand">
+          <div>
+            <div class="hdr-eyebrow">Tahoe Regional Planning Agency</div>
+            <div class="hdr-title">Web Feature <span>Editor</span></div>
+          </div>
+        </div>
+        <div class="hdr-divider"></div>
+        <div class="wm-loader">
+          <div class="wm-label">Web Map ID</div>
+          <input id="webmapInput" class="wm-input" type="text"
+            value="fca767943b2a4f53803b9cc63eb21778"
+            placeholder="Paste ArcGIS Web Map Item ID…"/>
+          <button class="wm-btn" onclick="loadWebMap()">Load Map</button>
+        </div>
+        <div class="hdr-meta">
+          <div>Portal: <strong>trpa.maps.arcgis.com</strong></div>
+          <div id="mapStatusLabel">Loading default map…</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Left Panel -->
+    <calcite-shell-panel slot="panel-start" display-mode="dock" width-scale="s">
+      <calcite-panel heading="Editor Controls" style="height:100%;overflow-y:auto;">
+
+        <calcite-action slot="header-actions-end" id="refreshLayersBtn"
+          icon="refresh" text="Refresh layers" title="Refresh editable layers" disabled>
+        </calcite-action>
+
+        <!-- Layer Selection -->
+        <div class="p-section">
+          <div class="sec-label">Editable Layer</div>
+          <div class="ctrl-row">
+            <select id="layerSelect" class="ctrl-select" disabled>
+              <option value="">— Load a web map first —</option>
+            </select>
+          </div>
+          <div class="status-msg" id="layerStatus">Load a web map to begin.</div>
+        </div>
+
+        <!-- Selection Tools -->
+        <div class="p-section">
+          <div class="sec-label">Selection</div>
+          <div class="btn-row">
+            <button id="drawSelectBtn" class="btn btn-navy" onclick="startDrawSelect()" disabled>⬡ Draw Select</button>
+            <button id="clearSelectBtn" class="btn btn-ghost" onclick="clearSelection()" disabled>✕ Clear</button>
+          </div>
+          <div style="margin-top:9px;display:flex;align-items:center;gap:8px;">
+            <span class="sel-chip" id="selChip">0 Selected</span>
+            <button id="zoomSelBtn" class="btn btn-ghost"
+              style="flex:unset;padding:4px 10px;font-size:0.65rem;"
+              onclick="zoomToSelection()" disabled>Zoom</button>
+          </div>
+          <div class="status-msg" id="selStatus">Select features to enable batch editing.</div>
+        </div>
+
+        <!-- Batch Update Tool -->
+        <div class="p-section">
+          <div class="sec-label">Batch Update Tool</div>
+          <div class="ctrl-row">
+            <div class="ctrl-label">Field to Update</div>
+            <select id="batchFieldSelect" class="ctrl-select" onchange="onBatchFieldChange()" disabled>
+              <option value="">— Select a layer first —</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-label">New Value</div>
+            <input id="batchValueInput" class="ctrl-input" type="text" placeholder="Enter new value…" disabled/>
+          </div>
+          <div class="btn-row">
+            <button id="applyBatchBtn" class="btn btn-green" onclick="applyBatchUpdate()" disabled>✓ Apply to Selection</button>
+          </div>
+          <div class="btn-row">
+            <button id="undoBatchBtn" class="btn btn-ghost" onclick="undoBatchUpdate()" disabled>↩ Undo Last Batch</button>
+          </div>
+          <div class="status-msg" id="batchStatus"></div>
+          <div class="batch-hint">Updates selected features in the active layer. Undo reverts the most recent batch.</div>
+        </div>
+
+        <!-- Standard Editor -->
+        <div class="p-section">
+          <div class="sec-label">Standard Editor</div>
+          <div class="about-text" style="margin-bottom:8px;">
+            Click a feature on the map to open the attribute form for single-record editing.
+          </div>
+          <button id="editorToggleBtn" class="btn btn-ghost" onclick="toggleEditor()" disabled>Enable Editor Widget</button>
+          <div class="status-msg" id="editorStatus"></div>
+        </div>
+
+        <!-- About -->
+        <div class="p-section" style="border-bottom:none;">
+          <div class="sec-label">Template Info</div>
+          <div class="about-text">
+            Load any TRPA or ArcGIS Online web map by item ID. Select an editable feature layer,
+            then use <strong>Draw Select</strong> to spatially select features, and
+            <strong>Batch Update</strong> to apply a single attribute value across the entire selection.
+          </div>
+        </div>
+
+      </calcite-panel>
+    </calcite-shell-panel>
+
+    <!-- Center: map + table -->
+    <div class="center-wrap">
+
+      <!-- arcgis-map component handles its own sizing -->
+      <arcgis-map id="theMap"></arcgis-map>
+
+      <!-- Editor overlay -->
+      <div id="editorDiv"></div>
+
+      <!-- Attribute Table -->
+      <calcite-panel id="tablePanel" heading="Attribute Table" collapsible collapsed>
+        <calcite-action slot="header-actions-end" icon="reset"
+          text="Clear selection" title="Clear selection" onclick="clearSelection()">
+        </calcite-action>
+        <div id="tableDiv"></div>
+      </calcite-panel>
+
+    </div>
+
+    <!-- Right action bar -->
+    <calcite-action-bar slot="panel-end" expand-disabled style="border-left:1px solid var(--border);">
+      <calcite-action icon="table" text="Attribute Table"
+        title="Show / hide attribute table" onclick="toggleTable()">
+      </calcite-action>
+      <calcite-action icon="layer-zoom-to" id="zoomSelActionBtn"
+        text="Zoom to selection" title="Zoom to selected features"
+        onclick="zoomToSelection()" disabled>
+      </calcite-action>
+    </calcite-action-bar>
+
+  </calcite-shell>
+
+  <!-- ── APPLICATION LOGIC (SDK 5.0 — ES modules + $arcgis.import) ── -->
+  <script type="module">
+
+    // Import all modules in parallel
+    const [
+      WebMap,
+      GraphicsLayer,
+      IdentityManager,
+      Editor,
+      FeatureTable,
+      SketchViewModel,
+      reactiveUtils,
+      esriConfig
+    ] = await Promise.all([
+      $arcgis.import("@arcgis/core/WebMap.js"),
+      $arcgis.import("@arcgis/core/layers/GraphicsLayer.js"),
+      $arcgis.import("@arcgis/core/identity/IdentityManager.js"),
+      $arcgis.import("@arcgis/core/widgets/Editor.js"),
+      $arcgis.import("@arcgis/core/widgets/FeatureTable.js"),
+      $arcgis.import("@arcgis/core/widgets/Sketch/SketchViewModel.js"),
+      $arcgis.import("@arcgis/core/core/reactiveUtils.js"),
+      $arcgis.import("@arcgis/core/config.js")
+    ]);
+
+    esriConfig.portalUrl = "https://trpa.maps.arcgis.com";
+
+    // ── State ────────────────────────────────────────────────
+    const mapEl = document.getElementById("theMap");
+    let view, activeLayer, featureTable, editor, sketchVM, selGraphicsLayer;
+    let undoStack = [], isDrawing = false, editorOn = false;
+
+    // ── Load Web Map ─────────────────────────────────────────
+    window.loadWebMap = async function() {
+      const itemId = document.getElementById("webmapInput").value.trim();
+      if (!itemId) { setStatus("mapStatusLabel", "Enter a Web Map Item ID first.", "err"); return; }
+
+      setStatus("mapStatusLabel", "Loading…");
+      setStatus("layerStatus", "Loading web map…", "info");
+      resetLayerUI();
+
+      if (featureTable) { featureTable.destroy(); featureTable = null; }
+      if (editor)       { editor.destroy();       editor = null; }
+      if (sketchVM)     { sketchVM.destroy();      sketchVM = null; }
+
+      try {
+        selGraphicsLayer = new GraphicsLayer({ listMode: "hide" });
+
+        const webmap = new WebMap({
+          portalItem: {
+            id: itemId,
+            portal: { url: "https://trpa.maps.arcgis.com" }
+          }
+        });
+        webmap.add(selGraphicsLayer);
+
+        // Set on the arcgis-map component — it creates / replaces the MapView
+        mapEl.map = webmap;
+        await mapEl.viewOnReady();
+        view = mapEl.view;
+
+        setStatus("mapStatusLabel", "Map loaded ✓", "ok");
+        populateLayerList();
+        setupSketch();
+
+      } catch (err) {
+        console.error(err);
+        setStatus("mapStatusLabel", "Load failed", "err");
+        setStatus("layerStatus", err.message, "err");
+      }
+    };
+
+    // ── Layer List ───────────────────────────────────────────
+    function populateLayerList() {
+      const sel = document.getElementById("layerSelect");
+      sel.innerHTML = '<option value="">— Choose an editable layer —</option>';
+      sel.disabled  = false;
+
+      const allLayers = [];
+      view.map.layers.forEach(l => collectFeatureLayers(l, allLayers));
+
+      if (!allLayers.length) {
+        sel.innerHTML = '<option value="">No feature layers found</option>';
+        setStatus("layerStatus", "No editable feature layers in this web map.", "warn");
+        return;
+      }
+
+      allLayers.forEach(layer => {
+        const opt = document.createElement("option");
+        opt.value = layer.id; opt.textContent = layer.title;
+        sel.appendChild(opt);
+      });
+
+      setStatus("layerStatus", `${allLayers.length} layer${allLayers.length !== 1 ? "s" : ""} available.`, "info");
+      sel.onchange = () => selectLayer(sel.value);
+
+      const refreshBtn = document.getElementById("refreshLayersBtn");
+      refreshBtn.disabled = false;
+      refreshBtn.addEventListener("click", populateLayerList);
+
+      document.getElementById("drawSelectBtn").disabled   = false;
+      document.getElementById("editorToggleBtn").disabled = false;
+    }
+
+    function collectFeatureLayers(layer, acc) {
+      if (layer.type === "feature") { acc.push(layer); }
+      else if (layer.layers) { layer.layers.forEach(l => collectFeatureLayers(l, acc)); }
+    }
+
+    // ── Select Layer ─────────────────────────────────────────
+    async function selectLayer(layerId) {
+      if (!layerId) return;
+      clearSelection();
+      const allLayers = [];
+      view.map.layers.forEach(l => collectFeatureLayers(l, allLayers));
+      activeLayer = allLayers.find(l => l.id === layerId);
+      if (!activeLayer) return;
+
+      setStatus("layerStatus", `Active: ${activeLayer.title}`, "ok");
+      await activeLayer.when();
+      populateBatchFields();
+
+      if (featureTable) { featureTable.destroy(); featureTable = null; }
+      featureTable = new FeatureTable({
+        layer: activeLayer, view,
+        editingEnabled: true,
+        visibleElements: { header: true, selectionColumn: true },
+        container: document.getElementById("tableDiv")
+      });
+
+      reactiveUtils.on(
+        () => featureTable.highlightIds, "change",
+        () => updateSelUI(featureTable.highlightIds.length)
+      );
+
+      if (editorOn) initEditor();
+    }
+
+    // ── Batch Fields ─────────────────────────────────────────
+    function populateBatchFields() {
+      const sel = document.getElementById("batchFieldSelect");
+      sel.innerHTML = '<option value="">— Select a field —</option>';
+      sel.disabled  = false;
+      document.getElementById("batchValueInput").disabled = false;
+
+      if (!activeLayer?.fields) return;
+      const editable = ["string","small-integer","integer","single","double","date"];
+      activeLayer.fields
+        .filter(f => editable.includes(f.type) && f.editable !== false && !["objectid","globalid"].includes(f.type))
+        .forEach(f => {
+          const opt = document.createElement("option");
+          opt.value = f.name; opt.dataset.type = f.type; opt.textContent = f.alias || f.name;
+          sel.appendChild(opt);
+        });
+    }
+
+    window.onBatchFieldChange = function() {
+      const sel = document.getElementById("batchFieldSelect");
+      const opt = sel.options[sel.selectedIndex];
+      const inp = document.getElementById("batchValueInput");
+      const t   = opt?.dataset.type || "string";
+      inp.type  = t === "date" ? "date"
+                : ["integer","small-integer","double","single"].includes(t) ? "number"
+                : "text";
+    };
+
+    // ── Sketch / Draw Select ─────────────────────────────────
+    function setupSketch() {
+      sketchVM = new SketchViewModel({
+        layer: selGraphicsLayer, view,
+        activeFillSymbol: {
+          type: "simple-fill",
+          color: [0, 125, 195, 0.08],
+          outline: { style: "dash", color: [0, 125, 195, 1], width: 2 }
+        },
+        activeVertexSymbol: { type: "simple-marker", color: [0,0,0,0], outline: null },
+        vertexSymbol:       { type: "simple-marker", color: [0,0,0,0], outline: null }
+      });
+
+      sketchVM.on("create", async (event) => {
+        if (event.state === "complete") {
+          isDrawing = false;
+          document.getElementById("drawSelectBtn").textContent = "⬡ Draw Select";
+          const geom = event.graphic.geometry;
+          selGraphicsLayer.remove(event.graphic);
+          await selectByGeometry(geom);
+        }
+      });
+    }
+
+    window.startDrawSelect = function() {
+      if (!view) return;
+      if (!activeLayer) { setStatus("selStatus", "Choose a layer first.", "warn"); return; }
+      if (isDrawing) {
+        sketchVM.cancel(); isDrawing = false;
+        document.getElementById("drawSelectBtn").textContent = "⬡ Draw Select";
+        return;
+      }
+      isDrawing = true;
+      document.getElementById("drawSelectBtn").textContent = "✕ Cancel Draw";
+      setStatus("selStatus", "Draw a freehand shape on the map to select features…", "info");
+      sketchVM.create("polygon", { mode: "freehand" });
+    };
+
+    async function selectByGeometry(geometry) {
+      if (!featureTable || !activeLayer) return;
+      setStatus("selStatus", "Querying features…", "info");
+      try {
+        const lv    = await view.whenLayerView(activeLayer);
+        const query = lv.createQuery();
+        query.geometry  = geometry;
+        query.outFields = [activeLayer.objectIdField];
+        const result    = await lv.queryFeatures(query);
+        const oids      = result.features.map(f => f.getObjectId());
+        featureTable.highlightIds.addMany(oids);
+        setStatus("selStatus", `${oids.length} feature${oids.length !== 1 ? "s" : ""} added to selection.`, "ok");
+      } catch (err) {
+        setStatus("selStatus", "Query failed: " + err.message, "err");
+      }
+    }
+
+    window.clearSelection = function() {
+      if (featureTable) featureTable.highlightIds.removeAll();
+      if (selGraphicsLayer) selGraphicsLayer.removeAll();
+      updateSelUI(0);
+      setStatus("selStatus", "Selection cleared.", "info");
+    };
+
+    function updateSelUI(count) {
+      const chip = document.getElementById("selChip");
+      chip.textContent = `${count} Selected`;
+      chip.className   = "sel-chip" + (count > 0 ? " active" : "");
+      const hasSel = count > 0;
+      document.getElementById("clearSelectBtn").disabled  = !hasSel;
+      document.getElementById("applyBatchBtn").disabled   = !hasSel;
+      document.getElementById("zoomSelBtn").disabled      = !hasSel;
+      document.getElementById("zoomSelActionBtn").disabled = !hasSel;
+    }
+
+    window.zoomToSelection = async function() {
+      if (!featureTable?.highlightIds.length || !activeLayer) return;
+      const query = activeLayer.createQuery();
+      query.objectIds = featureTable.highlightIds.toArray();
+      query.returnGeometry = true;
+      try {
+        const res = await activeLayer.queryFeatures(query);
+        if (res.features.length) view.goTo(res.features, { duration: 600 });
+      } catch(e) {}
+    };
+
+    // ── Batch Update ─────────────────────────────────────────
+    window.applyBatchUpdate = async function() {
+      const fieldEl   = document.getElementById("batchFieldSelect");
+      const fieldName = fieldEl.value;
+      const rawValue  = document.getElementById("batchValueInput").value;
+      const fieldOpt  = fieldEl.options[fieldEl.selectedIndex];
+
+      if (!fieldName) { setStatus("batchStatus", "Select a field first.", "warn"); return; }
+      if (!featureTable?.highlightIds.length) { setStatus("batchStatus", "No features selected.", "warn"); return; }
+
+      let newVal;
+      const fType = fieldOpt?.dataset.type || "string";
+      if (rawValue === "") { newVal = null; }
+      else if (fType === "date") { newVal = new Date(rawValue).getTime(); }
+      else if (["integer","small-integer","double","single"].includes(fType)) {
+        newVal = Number(rawValue);
+        if (isNaN(newVal)) { setStatus("batchStatus", "Invalid numeric value.", "err"); return; }
+      } else { newVal = rawValue; }
+
+      const count = featureTable.highlightIds.length;
+      setStatus("batchStatus", `Updating ${count} feature${count !== 1 ? "s" : ""}…`, "info");
+      showLoadBar("batchStatus");
+      document.getElementById("applyBatchBtn").disabled = true;
+
+      try {
+        const q = activeLayer.createQuery();
+        q.objectIds = featureTable.highlightIds.toArray();
+        q.outFields = ["*"];
+        const res  = await activeLayer.queryFeatures(q);
+        const feats = res.features;
+
+        undoStack.push({ clones: feats.map(f => f.clone()), layer: activeLayer });
+        document.getElementById("undoBatchBtn").disabled = false;
+
+        feats.forEach(f => { f.attributes[fieldName] = newVal; });
+        const editRes = await activeLayer.applyEdits({ updateFeatures: feats });
+        const errs    = editRes.updateFeatureResults.filter(r => r.error);
+
+        setStatus("batchStatus",
+          errs.length ? `Done with ${errs.length} error(s). Check console.`
+                      : `✓ ${count} feature${count !== 1 ? "s" : ""} updated successfully.`,
+          errs.length ? "warn" : "ok");
+        if (errs.length) console.error("Batch errors:", errs);
+
+        await featureTable.refresh();
+      } catch (err) {
+        setStatus("batchStatus", "Update failed: " + err.message, "err");
+        console.error(err);
+      } finally {
+        document.getElementById("applyBatchBtn").disabled = !featureTable.highlightIds.length;
+      }
+    };
+
+    // ── Undo Batch ────────────────────────────────────────────
+    window.undoBatchUpdate = async function() {
+      if (!undoStack.length) return;
+      const last = undoStack.pop();
+      setStatus("batchStatus", "Reverting…", "info");
+      try {
+        const res  = await last.layer.applyEdits({ updateFeatures: last.clones });
+        const errs = res.updateFeatureResults.filter(r => r.error);
+        setStatus("batchStatus", errs.length ? "Undo had errors." : "✓ Undo successful.", errs.length ? "err" : "ok");
+        await featureTable.refresh();
+      } catch (err) {
+        setStatus("batchStatus", "Undo failed: " + err.message, "err");
+      }
+      document.getElementById("undoBatchBtn").disabled = undoStack.length === 0;
+    };
+
+    // ── Editor Widget ─────────────────────────────────────────
+    window.toggleEditor = function() {
+      editorOn = !editorOn;
+      const btn = document.getElementById("editorToggleBtn");
+      if (editorOn) {
+        btn.textContent = "Disable Editor Widget"; btn.className = "btn btn-danger";
+        initEditor();
+        setStatus("editorStatus", "Editor active — click a feature to edit.", "ok");
+      } else {
+        btn.textContent = "Enable Editor Widget"; btn.className = "btn btn-ghost";
+        if (editor) { editor.destroy(); editor = null; document.getElementById("editorDiv").style.display = "none"; }
+        setStatus("editorStatus", "");
+      }
+    };
+
+    function initEditor() {
+      if (!view) return;
+      if (editor) { editor.destroy(); editor = null; }
+      const editorDiv  = document.getElementById("editorDiv");
+      const layerInfos = activeLayer ? [{ layer: activeLayer, enabled: true }] : [];
+      editor = new Editor({ view, layerInfos, container: editorDiv });
+      editorDiv.style.display = "block";
+    }
+
+    // ── Table Toggle ──────────────────────────────────────────
+    window.toggleTable = function() {
+      const panel = document.getElementById("tablePanel");
+      panel.collapsed = !panel.collapsed;
+    };
+
+    // ── UI Helpers ────────────────────────────────────────────
+    function setStatus(elemId, msg, type) {
+      const el = document.getElementById(elemId);
+      if (!el) return;
+      el.textContent = msg;
+      el.className   = "status-msg" + (type ? " " + type : "");
+    }
+
+    function showLoadBar(afterElemId) {
+      const el = document.getElementById(afterElemId);
+      if (!el) return;
+      const bar = document.createElement("div");
+      bar.className = "load-bar"; bar.innerHTML = '<div class="load-fill"></div>';
+      el.after(bar); setTimeout(() => bar.remove(), 3000);
+    }
+
+    function resetLayerUI() {
+      document.getElementById("layerSelect").innerHTML = '<option value="">— Load a web map first —</option>';
+      document.getElementById("layerSelect").disabled  = true;
+      document.getElementById("batchFieldSelect").innerHTML = '<option value="">— Select a layer first —</option>';
+      document.getElementById("batchFieldSelect").disabled  = true;
+      document.getElementById("batchValueInput").disabled   = true;
+      document.getElementById("drawSelectBtn").disabled     = true;
+      document.getElementById("clearSelectBtn").disabled    = true;
+      document.getElementById("applyBatchBtn").disabled     = true;
+      document.getElementById("undoBatchBtn").disabled      = true;
+      document.getElementById("editorToggleBtn").disabled   = true;
+      document.getElementById("refreshLayersBtn").disabled  = true;
+      updateSelUI(0);
+      setStatus("layerStatus",  "Load a web map to begin.");
+      setStatus("selStatus",    "Select features to enable batch editing.");
+      setStatus("batchStatus",  "");
+      setStatus("editorStatus", "");
+      document.getElementById("editorDiv").style.display = "none";
+      editorOn = false;
+      document.getElementById("editorToggleBtn").textContent = "Enable Editor Widget";
+      document.getElementById("editorToggleBtn").className   = "btn btn-ghost";
+    }
+
+    document.getElementById("webmapInput")
+      .addEventListener("keydown", e => { if (e.key === "Enter") loadWebMap(); });
+
+    // Auto-load default map
+    loadWebMap();
+
+  </script>
+
+</body>
+</html>
