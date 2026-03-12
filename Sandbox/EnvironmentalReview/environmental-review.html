@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Environmental Review | TRPA</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <style>
+    :root {
+      --navy:   #0b1f41;
+      --green:  #6ebe44;
+      --blue:   #007dc3;
+      --orange: #f16022;
+      --purple: #7b4f9e;
+      --bg:     #f4f6f9;
+      --surface:#ffffff;
+      --border: #d5dde8;
+      --text-dark:  #0b1f41;
+      --text-mid:   #4a5b73;
+      --text-light: #8a9bb2;
+      --shadow: 0 2px 16px rgba(11,31,65,0.09);
+      --s-clear:   #22a855;
+      --s-note:    #c89c00;
+      --s-flag:    #d45a10;
+      --s-concern: #c0392b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lexend Deca', sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+
+    /* ── HEADER ── */
+    .app-header { background: var(--navy); color: #fff; display: flex; align-items: stretch; flex-shrink: 0; }
+    .hdr-accent { width: 7px; flex-shrink: 0; background: linear-gradient(180deg, var(--green) 0%, var(--blue) 50%, var(--orange) 100%); }
+    .hdr-content { padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex: 1; }
+    .hdr-eyebrow { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 3px; }
+    .hdr-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+    .hdr-title span { color: var(--blue); }
+    .hdr-sub { font-size: 0.72rem; color: #8a9bb2; margin-top: 3px; }
+    .hdr-meta { font-size: 0.71rem; color: #8a9bb2; text-align: right; line-height: 1.8; }
+    .live-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--green); color: var(--navy); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; margin-bottom: 4px; }
+    .live-dot { width: 5px; height: 5px; background: var(--navy); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── LAYOUT ── */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── LEFT PANEL ── */
+    .left-panel { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .sec-hdr { padding: 10px 14px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .search-sec { padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .f-row { margin-bottom: 8px; }
+    .f-lbl { font-size: 0.67rem; font-weight: 600; color: var(--text-mid); margin-bottom: 3px; }
+    .f-inp { width: 100%; border: 1.5px solid var(--border); border-radius: 4px; color: var(--text-dark); font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; padding: 6px 9px; outline: none; background: #fff; transition: border-color .15s; }
+    .f-inp:focus { border-color: var(--blue); }
+    .f-btns { display: flex; gap: 7px; margin-top: 10px; }
+    .btn { flex: 1; padding: 7px; border-radius: 4px; font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+    .btn-p { background: var(--navy); color: #fff; }
+    .btn-p:hover { background: #0f2d5c; }
+    .btn-g { background: #fff; border: 1.5px solid var(--border); color: var(--text-mid); }
+    .btn-g:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* Permit list */
+    .permit-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .permit-list::-webkit-scrollbar { width: 4px; }
+    .permit-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .permit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 9px 11px 9px 14px; margin-bottom: 5px; cursor: pointer; transition: all .15s; position: relative; overflow: hidden; box-shadow: 0 1px 4px rgba(11,31,65,0.05); }
+    .permit-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--blue); }
+    .permit-card:hover { border-color: var(--blue); box-shadow: var(--shadow); transform: translateX(1px); }
+    .permit-card.sel { border-color: var(--navy); background: rgba(11,31,65,.03); }
+    .permit-card.sel::before { background: var(--orange); }
+    .pc-id  { font-size: 0.75rem; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+    .pc-apn { font-size: 0.68rem; color: var(--text-light); margin-bottom: 4px; }
+    .pc-row { display: flex; justify-content: space-between; align-items: center; }
+    .pc-type { font-size: 0.67rem; color: var(--text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .pc-status { font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: rgba(0,125,195,0.1); color: var(--blue); border: 1px solid rgba(0,125,195,0.2); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── MAIN / MAP ── */
+    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .tab-nav { background: var(--surface); border-bottom: 2px solid var(--border); padding: 0 12px; display: flex; align-items: center; flex-shrink: 0; }
+    .tab-btn { padding: 9px 16px; border: none; background: none; font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); }
+    .tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; }
+    .tab-panel.active { display: flex; }
+    #mapDiv { flex: 1; min-height: 0; }
+
+    /* Sketch toolbar */
+    .sketch-bar {
+      position: absolute; top: 8px; left: 8px; z-index: 10;
+      background: white; border-radius: 6px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); padding: 6px 10px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      max-width: calc(100% - 60px);
+    }
+    .sb-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); white-space: nowrap; }
+    .sb-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+    .sb-btn { padding: 4px 9px; border-radius: 4px; background: var(--bg); border: 1.5px solid var(--border); font-family: 'Lexend Deca', sans-serif; font-size: 0.68rem; font-weight: 600; color: var(--text-mid); cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .sb-btn:hover { border-color: var(--blue); color: var(--blue); background: #fff; }
+    .sb-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .sb-btn.sb-clear { color: var(--s-flag); border-color: rgba(212,90,16,0.3); }
+    .sb-btn.sb-clear:hover { background: rgba(212,90,16,0.08); border-color: var(--s-flag); }
+    .sb-active-badge { font-size: 0.63rem; font-weight: 700; color: var(--s-clear); padding: 2px 7px; background: rgba(34,168,85,0.1); border-radius: 3px; border: 1px solid rgba(34,168,85,0.3); white-space: nowrap; }
+    .sb-hint { font-size: 0.63rem; color: var(--text-light); font-style: italic; }
+
+    /* Layers tab */
+    .layers-scroll { flex: 1; overflow-y: auto; padding: 14px; }
+    .layers-scroll::-webkit-scrollbar { width: 4px; }
+    .layers-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .lyr-group-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); margin: 12px 0 6px; }
+    .lyr-group-title:first-child { margin-top: 0; }
+    .lyr-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 0.75rem; color: var(--text-mid); cursor: pointer; user-select: none; border-bottom: 1px solid rgba(213,221,232,.4); }
+    .lyr-row:last-child { border-bottom: none; }
+    .lyr-check { width: 16px; height: 16px; border-radius: 3px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; transition: all .15s; }
+    .lyr-check.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .lyr-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+    .lyr-name { flex: 1; }
+
+    /* Loading overlay */
+    .loading-overlay { position: absolute; inset: 0; background: rgba(244,246,249,0.88); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 100; }
+    .loading-card { background: #fff; border-radius: 8px; padding: 28px 40px; text-align: center; box-shadow: var(--shadow); }
+    .loading-card h3 { font-size: 0.85rem; color: var(--navy); margin-bottom: 16px; }
+    .lb-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; width: 160px; margin: 0 auto; }
+    .spinner { height: 100%; width: 40%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 2px; animation: slide 1.2s ease-in-out infinite; }
+    @keyframes slide { 0%{margin-left:0;width:30%} 50%{margin-left:40%;width:60%} 100%{margin-left:100%;width:0} }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel { width: 390px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .rp-hdr { padding: 11px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .rp-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; color: var(--text-light); text-transform: uppercase; }
+    .rp-sub { font-size: 0.72rem; color: var(--text-mid); margin-top: 3px; }
+
+    .analysis-bar { height: 3px; background: linear-gradient(90deg, var(--blue), var(--green)); display: none; flex-shrink: 0; }
+    .analysis-bar.running { display: block; animation: slide 1.5s ease-in-out infinite; }
+
+    .pib { padding: 8px 14px; background: rgba(11,31,65,.04); border-bottom: 1px solid var(--border); flex-shrink: 0; display: none; }
+    .pib.vis { display: block; }
+    .pib-id { font-size: 0.82rem; font-weight: 700; color: var(--navy); }
+    .pib-meta { font-size: 0.68rem; color: var(--text-mid); margin-top: 2px; }
+
+    /* Summary strip */
+    .findings-summary { display: none; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .fs-tile { flex: 1; padding: 8px; border-right: 1px solid var(--border); text-align: center; }
+    .fs-tile:last-child { border-right: none; }
+    .fs-val { font-size: 1.15rem; font-weight: 700; line-height: 1; }
+    .fs-lbl { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-top: 2px; }
+
+    /* PDF buttons */
+    .pdf-bar { display: none; padding: 6px 10px; border-bottom: 1px solid var(--border); gap: 6px; flex-shrink: 0; background: rgba(11,31,65,0.02); }
+    .pdf-btn { flex: 1; padding: 6px 8px; border-radius: 4px; font-family: 'Lexend Deca', sans-serif; font-size: 0.68rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: #fff; color: var(--text-mid); transition: all .15s; white-space: nowrap; }
+    .pdf-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .pdf-btn.blue { border-color: rgba(0,125,195,0.4); color: var(--blue); }
+    .pdf-btn.blue:hover { background: var(--blue); color: #fff; }
+
+    /* Regulation tabs */
+    .reg-tabs { display: none; border-bottom: 1px solid var(--border); padding: 0 8px; flex-shrink: 0; }
+    .reg-tab { padding: 7px 12px; border: none; background: none; font-family: 'Lexend Deca', sans-serif; font-size: 0.7rem; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+    .reg-tab.active { color: var(--navy); border-bottom-color: var(--blue); }
+
+    /* Findings body */
+    .findings-body { flex: 1; overflow-y: auto; padding: 10px; }
+    .findings-body::-webkit-scrollbar { width: 4px; }
+    .findings-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .reg-pane { display: none; flex-direction: column; }
+    .reg-pane.active { display: flex; }
+
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 10px; color: var(--text-light); font-size: 0.75rem; text-align: center; height: 100%; }
+    .empty-icon { font-size: 36px; opacity: 0.18; }
+
+    /* Finding section */
+    .finding-section { margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .fsh { background: var(--bg); padding: 8px 12px; display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+    .fsh-icon { font-size: 13px; flex-shrink: 0; }
+    .fsh-title { font-size: 0.75rem; font-weight: 700; color: var(--navy); flex: 1; }
+    .fsh-badge { font-size: 0.58rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .badge-clear   { background: rgba(34,168,85,.12);  color: var(--s-clear);   border: 1px solid rgba(34,168,85,.25); }
+    .badge-note    { background: rgba(200,156,0,.12);  color: var(--s-note);    border: 1px solid rgba(200,156,0,.25); }
+    .badge-flag    { background: rgba(212,90,16,.12);  color: var(--s-flag);    border: 1px solid rgba(212,90,16,.25); }
+    .badge-concern { background: rgba(192,57,43,.12);  color: var(--s-concern); border: 1px solid rgba(192,57,43,.25); }
+    .fsh-toggle { font-size: 9px; color: var(--text-light); }
+    .fsb { padding: 6px 12px; }
+    .fsb.collapsed { display: none; }
+
+    /* Finding row */
+    .finding-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(213,221,232,.45); }
+    .finding-row:last-child { border-bottom: none; }
+    .fr-ic { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .fr-ic.clear   { background: rgba(34,168,85,.15);  color: var(--s-clear); }
+    .fr-ic.note    { background: rgba(200,156,0,.15);  color: var(--s-note); }
+    .fr-ic.flag    { background: rgba(212,90,16,.15);  color: var(--s-flag); }
+    .fr-ic.concern { background: rgba(192,57,43,.15);  color: var(--s-concern); }
+    .fr-ic.loading { background: var(--bg); color: var(--text-light); }
+    .fr-body { flex: 1; min-width: 0; }
+    .fr-label  { font-size: 0.72rem; font-weight: 600; color: var(--text-dark); margin-bottom: 2px; }
+    .fr-detail { font-size: 0.67rem; color: var(--text-mid); line-height: 1.45; }
+    .fr-tags { margin-top: 3px; }
+    .fr-tag { display: inline-block; font-size: 0.56rem; font-weight: 700; padding: 1px 5px; border-radius: 2px; margin-right: 3px; }
+    .tag-trpa { background: rgba(110,190,68,0.15); color: #3a7a1a; }
+    .tag-nepa { background: rgba(0,125,195,0.12); color: var(--blue); }
+    .tag-ceqa { background: rgba(241,96,34,0.12); color: var(--orange); }
+    .tag-sez  { background: rgba(34,168,85,.2); color: #1a6b38; }
+    .tag-esa  { background: rgba(192,57,43,.12); color: var(--s-concern); }
+    .tag-other { background: var(--bg); color: var(--text-light); }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="hdr-accent"></div>
+  <div class="hdr-content">
+    <div>
+      <div class="hdr-eyebrow">Tahoe Regional Planning Agency</div>
+      <div class="hdr-title">Environmental <span>Review</span></div>
+      <div class="hdr-sub">NEPA · CEQA · TRPA Threshold Findings</div>
+    </div>
+    <div class="hdr-meta">
+      <div class="live-badge"><div class="live-dot"></div>Live Analysis</div><br>
+      Source: TRPA GIS Services
+    </div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- ── LEFT ── -->
+  <div class="left-panel">
+    <div class="search-sec">
+      <div class="sec-hdr" style="padding:0 0 9px;border:none">Permit Lookup</div>
+      <div class="f-row">
+        <div class="f-lbl">APN or Record ID</div>
+        <input id="f-apn" class="f-inp" type="text" placeholder="e.g. 093-180-005"/>
+      </div>
+      <div class="f-row">
+        <div class="f-lbl">Record Type</div>
+        <select id="f-type" class="f-inp"><option value="">All Types</option></select>
+      </div>
+      <div class="f-row">
+        <div class="f-lbl">Status</div>
+        <select id="f-status" class="f-inp"><option value="">All Statuses</option></select>
+      </div>
+      <div class="f-btns">
+        <button class="btn btn-p" onclick="applyFilters()">Search</button>
+        <button class="btn btn-g" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <div class="sec-hdr">
+      Permits <span id="permit-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-light)"></span>
+    </div>
+    <div class="permit-list" id="permit-list">
+      <div style="text-align:center;padding:20px;color:var(--text-light);font-size:0.75rem;">Loading records…</div>
+    </div>
+  </div>
+
+  <!-- ── CENTER ── -->
+  <div class="main-area">
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('map',this)">Map</button>
+      <button class="tab-btn"        onclick="switchTab('layers',this)">Layers</button>
+    </div>
+
+    <!-- Map tab -->
+    <div class="tab-panel active" id="tab-map" style="position:relative;">
+
+      <!-- Sketch / Project Area toolbar -->
+      <div class="sketch-bar" id="sketch-bar">
+        <span class="sb-label">Project Area</span>
+        <div class="sb-sep"></div>
+        <button class="sb-btn" id="sb-poly" onclick="activateDraw('polygon')" title="Draw polygon project boundary">✏ Polygon</button>
+        <button class="sb-btn" id="sb-rect" onclick="activateDraw('rectangle')" title="Draw rectangle project boundary">⬜ Rectangle</button>
+        <button class="sb-btn" id="sb-upload" onclick="document.getElementById('geojson-upload').click()" title="Upload GeoJSON file">↑ Upload GeoJSON</button>
+        <input type="file" id="geojson-upload" accept=".geojson,.json" style="display:none" onchange="handleUpload(event)"/>
+        <div class="sb-sep" id="sb-sep2" style="display:none"></div>
+        <button class="sb-btn sb-clear" id="sb-clear" onclick="clearSketch()" style="display:none" title="Clear custom area">✕ Clear</button>
+        <span class="sb-active-badge" id="sb-active-badge" style="display:none">● Custom area active</span>
+        <span class="sb-hint" id="sb-hint"></span>
+      </div>
+
+      <div id="mapDiv"></div>
+    </div>
+
+    <!-- Layers tab -->
+    <div class="tab-panel" id="tab-layers">
+      <div class="layers-scroll" id="layers-scroll"></div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-card">
+        <h3>Loading Map &amp; Permit Data</h3>
+        <div class="lb-bg"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Findings ── -->
+  <div class="right-panel">
+    <div class="rp-hdr">
+      <div class="rp-title">Environmental Review Findings</div>
+      <div class="rp-sub" id="rp-sub">Select a permit to run spatial analysis</div>
+    </div>
+
+    <div class="analysis-bar" id="analysis-bar"></div>
+
+    <div class="pib" id="pib">
+      <div class="pib-id" id="pib-id">—</div>
+      <div class="pib-meta" id="pib-meta">—</div>
+    </div>
+
+    <div class="findings-summary" id="findings-summary">
+      <div class="fs-tile"><div class="fs-val" id="fs-clear"   style="color:var(--s-clear)">—</div><div class="fs-lbl">Clear</div></div>
+      <div class="fs-tile"><div class="fs-val" id="fs-note"    style="color:var(--s-note)">—</div><div class="fs-lbl">Note</div></div>
+      <div class="fs-tile"><div class="fs-val" id="fs-flag"    style="color:var(--s-flag)">—</div><div class="fs-lbl">Flag</div></div>
+      <div class="fs-tile"><div class="fs-val" id="fs-concern" style="color:var(--s-concern)">—</div><div class="fs-lbl">Concern</div></div>
+    </div>
+
+    <!-- PDF Export bar -->
+    <div class="pdf-bar" id="pdf-bar">
+      <button class="pdf-btn" onclick="generateIEC()" title="Generate Initial Environmental Study / CEQA Checklist">📄 Initial Env. Checklist</button>
+      <button class="pdf-btn blue" onclick="generateFindings()" title="Generate TRPA Required Findings document">📋 Required Findings</button>
+    </div>
+
+    <div class="reg-tabs" id="reg-tabs">
+      <button class="reg-tab active" onclick="switchRegTab('trpa',this)">TRPA Thresholds</button>
+      <button class="reg-tab"        onclick="switchRegTab('nepa',this)">NEPA</button>
+      <button class="reg-tab"        onclick="switchRegTab('ceqa',this)">CEQA</button>
+    </div>
+
+    <div class="findings-body">
+      <div class="empty-state" id="findings-empty">
+        <div class="empty-icon">⬡</div>
+        <div style="font-weight:600;color:var(--text-mid)">No permit selected</div>
+        <div style="font-size:0.67rem;max-width:220px;line-height:1.55;">
+          Select a permit from the list to run a spatial analysis.<br><br>
+          You can also <strong>draw or upload</strong> a custom project area on the map using the toolbar above.
+        </div>
+      </div>
+      <div class="reg-pane active" id="pane-trpa"></div>
+      <div class="reg-pane" id="pane-nepa"></div>
+      <div class="reg-pane" id="pane-ceqa"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+require([
+  "esri/Map",
+  "esri/views/MapView",
+  "esri/layers/FeatureLayer",
+  "esri/layers/GraphicsLayer",
+  "esri/Graphic",
+  "esri/widgets/Sketch/SketchViewModel",
+  "esri/geometry/support/webMercatorUtils"
+], function(Map, MapView, FeatureLayer, GraphicsLayer, Graphic, SketchViewModel, webMercatorUtils) {
+
+  // ── State ──────────────────────────────────────────────
+  let allPermits = [], filtPermits = [], selPermit = null;
+  let sketchGeom = null;   // custom drawn/uploaded geometry
+  let lastResults = null;  // stored for PDF generation
+  let mapView;
+
+  const ENV_CFG = [
+    { id:'lc_bailey',     group:'soils',    name:'Land Capability (Bailey)',      color:'#7b4f9e', url:'https://maps.trpa.org/server/rest/services/Soils_and_Land_Capability/MapServer/4', out:['CAPABILITY','SEZ','RIPARIAN','PERCENT_COVERAGE_ALLOWED','LOW_CAP','MAP_UNIT','Acres'] },
+    { id:'sez',           group:'water',    name:'SEZ Assessment Unit',           color:'#22a855', url:'https://maps.trpa.org/server/rest/services/SEZ_Assessment_Unit/FeatureServer/0',   out:['OBJECTID'] },
+    { id:'flood_zone',    group:'water',    name:'Flood Zone (FEMA)',             color:'#007dc3', url:'https://maps.trpa.org/server/rest/services/Streams_and_Flood_Zone/MapServer/0',    out:['OBJECTID'] },
+    { id:'streams',       group:'water',    name:'Streams & Water Bodies',        color:'#00aaee', url:'https://maps.trpa.org/server/rest/services/Streams_and_Flood_Zone/MapServer/1',    out:['OBJECTID'] },
+    { id:'goshawk',       group:'wildlife', name:'Goshawk Threshold Zone',        color:'#8B4513', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/0',          out:['OBJECTID'] },
+    { id:'eagle',         group:'wildlife', name:'Bald Eagle Winter Habitat',     color:'#5a3e00', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/1',          out:['OBJECTID'] },
+    { id:'waterfowl',     group:'wildlife', name:'Waterfowl Habitat',             color:'#4169E1', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/2',          out:['OBJECTID'] },
+    { id:'flycatcher',    group:'wildlife', name:'Willow Flycatcher Habitat',     color:'#FF8C00', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/3',          out:['OBJECTID'] },
+    { id:'frog_critical', group:'wildlife', name:'SNYLF Critical Habitat',        color:'#c0392b', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/4',          out:['OBJECTID'] },
+    { id:'frog_suitable', group:'wildlife', name:'SNYLF Suitable Habitat',        color:'#e74c3c', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/5',          out:['OBJECTID'] },
+    { id:'deer_fawning',  group:'wildlife', name:'Deer Fawning Habitat',          color:'#A0522D', url:'https://maps.trpa.org/server/rest/services/Wildlife_Habitat/MapServer/45',         out:['OBJECTID'] },
+  ];
+
+  const envLayers = {};
+
+  // ── Map ────────────────────────────────────────────────
+  const map = new Map({ basemap: 'topo-vector' });
+  mapView = new MapView({ container:'mapDiv', map, center:[-119.9,39.1], zoom:11, ui:{components:['zoom','attribution']} });
+
+  const parcelHighlightLayer = new GraphicsLayer({ title:'Selected Parcel', listMode:'hide' });
+  const sketchLayer           = new GraphicsLayer({ title:'Project Area',   listMode:'hide' });
+  map.add(parcelHighlightLayer);
+  map.add(sketchLayer);
+
+  ENV_CFG.forEach(cfg => {
+    const lyr = new FeatureLayer({
+      url:cfg.url, id:cfg.id, title:cfg.name, outFields:cfg.out,
+      opacity:0.45, visible:false, popupEnabled:false,
+      renderer:{ type:'simple', symbol:{ type:'simple-fill', color:hexToRgba(cfg.color,0.2), outline:{color:hexToRgba(cfg.color,0.85),width:1.2} } }
+    });
+    map.add(lyr);
+    envLayers[cfg.id] = lyr;
+  });
+
+  const parcelsFL = new FeatureLayer({
+    url:'https://maps.trpa.org/server/rest/services/Parcels/FeatureServer/0',
+    outFields:['APN','PARCEL_ACRES','JURISDICTION'], visible:false, listMode:'hide'
+  });
+  map.add(parcelsFL);
+
+  mapView.when(() => document.getElementById('loading-overlay').style.display = 'none');
+
+  // ── SketchViewModel ────────────────────────────────────
+  const sketchVM = new SketchViewModel({
+    view: mapView,
+    layer: sketchLayer,
+    defaultCreateOptions: { hasZ: false },
+    polygonSymbol: { type:'simple-fill', color:[110,190,68,0.15], outline:{color:[110,190,68,1],width:2.5,style:'dash'} },
+    activeVertexSymbol: { type:'simple-marker', style:'circle', color:'white', size:10, outline:{color:[110,190,68,1],width:2} },
+    vertexSymbol:       { type:'simple-marker', style:'circle', color:'white', size:8,  outline:{color:[110,190,68,1],width:1.5} }
+  });
+
+  sketchVM.on('create', event => {
+    if (event.state === 'active') {
+      const hint = sketchVM.activeTool === 'rectangle'
+        ? 'Drag to draw rectangle'
+        : 'Click to add vertices · Double-click to finish';
+      document.getElementById('sb-hint').textContent = hint;
+    }
+    if (event.state === 'complete') {
+      sketchGeom = event.graphic.geometry;
+      setSketchUIActive(true);
+      if (selPermit) runAnalysisWithGeom(sketchGeom);
+      else document.getElementById('rp-sub').textContent = 'Custom area defined · Select a permit to run analysis';
+    }
+    if (event.state === 'cancel') {
+      setSketchBtnActive(null);
+      document.getElementById('sb-hint').textContent = '';
+    }
+  });
+
+  // Allow editing the sketch by clicking on it
+  sketchVM.on('update', event => {
+    if (event.state === 'complete') {
+      const g = sketchLayer.graphics.items[0];
+      if (g) {
+        sketchGeom = g.geometry;
+        if (selPermit) runAnalysisWithGeom(sketchGeom);
+      }
+    }
+  });
+
+  window.activateDraw = function(type) {
+    sketchVM.cancel();
+    sketchLayer.removeAll();
+    sketchGeom = null;
+    setSketchUIActive(false);
+    setSketchBtnActive(type);
+    document.getElementById('sb-hint').textContent = type === 'rectangle'
+      ? 'Click and drag to draw rectangle'
+      : 'Click to place vertices · Double-click to finish';
+    sketchVM.create(type);
+  };
+
+  window.clearSketch = function() {
+    sketchVM.cancel();
+    sketchLayer.removeAll();
+    sketchGeom = null;
+    setSketchUIActive(false);
+    setSketchBtnActive(null);
+    document.getElementById('sb-hint').textContent = '';
+    if (selPermit) selectPermit(selPermit._id);
+  };
+
+  function setSketchUIActive(on) {
+    document.getElementById('sb-clear').style.display       = on ? '' : 'none';
+    document.getElementById('sb-sep2').style.display        = on ? '' : 'none';
+    document.getElementById('sb-active-badge').style.display = on ? '' : 'none';
+    if (on) { setSketchBtnActive(null); document.getElementById('sb-hint').textContent = ''; }
+  }
+
+  function setSketchBtnActive(type) {
+    ['sb-poly','sb-rect'].forEach(id => document.getElementById(id).classList.remove('active'));
+    if (type === 'polygon')   document.getElementById('sb-poly').classList.add('active');
+    if (type === 'rectangle') document.getElementById('sb-rect').classList.add('active');
+  }
+
+  // ── GeoJSON Upload ─────────────────────────────────────
+  window.handleUpload = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const gj = JSON.parse(e.target.result);
+        let geomObj = null;
+        if      (gj.type === 'FeatureCollection') geomObj = gj.features?.[0]?.geometry;
+        else if (gj.type === 'Feature')           geomObj = gj.geometry;
+        else if (gj.type === 'Polygon' || gj.type === 'MultiPolygon') geomObj = gj;
+        if (!geomObj || !['Polygon','MultiPolygon'].includes(geomObj.type)) throw new Error('No polygon geometry found in file.');
+
+        const rings = geomObj.type === 'MultiPolygon' ? geomObj.coordinates[0] : geomObj.coordinates;
+        const wgs84  = { type:'polygon', rings, spatialReference:{ wkid:4326 } };
+        const wmGeom = webMercatorUtils.geographicToWebMercator(wgs84);
+
+        sketchVM.cancel();
+        sketchLayer.removeAll();
+        sketchLayer.add(new Graphic({
+          geometry: wmGeom,
+          symbol: { type:'simple-fill', color:[110,190,68,0.15], outline:{color:[110,190,68,1],width:2.5,style:'dash'} }
+        }));
+        sketchGeom = wmGeom;
+        setSketchUIActive(true);
+        document.getElementById('sb-hint').textContent = `Loaded: ${file.name}`;
+        mapView.goTo({ target:wmGeom, padding:{top:40,bottom:40,left:40,right:40} }, {duration:700});
+        if (selPermit) runAnalysisWithGeom(sketchGeom);
+        else document.getElementById('rp-sub').textContent = 'Custom area loaded · Select a permit to run analysis';
+      } catch(err) { alert('Upload error: ' + err.message); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
+  // ── Helpers ────────────────────────────────────────────
+  function hexToRgba(hex, alpha) {
+    const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+    return [r,g,b,Math.round(alpha*255)];
+  }
+  function fmtDate(ms) {
+    return ms ? new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  }
+  function fmtDateLong(ms) {
+    return ms ? new Date(ms).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '—';
+  }
+
+  // ── Tab switching ──────────────────────────────────────
+  window.switchTab = function(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+name).classList.add('active');
+    if (name === 'map') mapView.resize();
+    if (name === 'layers') renderLayerLegend();
+  };
+  window.switchRegTab = function(name, btn) {
+    document.querySelectorAll('.reg-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.reg-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-'+name).classList.add('active');
+  };
+
+  // ── Permit data ────────────────────────────────────────
+  async function fetchPermits(where='1=1') {
+    const url = 'https://maps.trpa.org/server/rest/services/Permit_Records/MapServer/1/query';
+    const p = new URLSearchParams({ where, f:'json', returnGeometry:false, resultRecordCount:2000,
+      outFields:'OBJECTID,APN,Accela_ID,Key_One,Record_Status,Accela_CAPType_Name,File_Date,Assigned_To_Staff,Short_Notes',
+      orderByFields:'File_Date DESC' });
+    const res = await fetch(`${url}?${p}`);
+    const d   = await res.json();
+    return (d.features||[]).map(f => {
+      const a = f.attributes;
+      return { _id:a.OBJECTID, APN:a.APN||'', accelaId:a.Accela_ID||a.Key_One||'', status:a.Record_Status||'',
+               capType:a.Accela_CAPType_Name||'', fileDateMs:a.File_Date||null, assignedTo:a.Assigned_To_Staff||'', notes:a.Short_Notes||'' };
+    });
+  }
+
+  async function init() {
+    try {
+      allPermits = await fetchPermits();
+      filtPermits = [...allPermits];
+      populateDropdowns();
+      renderPermitList(allPermits);
+      document.getElementById('permit-count').textContent = `· ${allPermits.length.toLocaleString()} records`;
+    } catch(e) {
+      document.getElementById('permit-list').innerHTML = `<div style="padding:14px;color:var(--s-flag);font-size:0.75rem;">Error: ${e.message}</div>`;
+    }
+  }
+  init();
+
+  function populateDropdowns() {
+    const types=new Set(), statuses=new Set();
+    allPermits.forEach(p => { if(p.capType) types.add(p.capType); if(p.status) statuses.add(p.status); });
+    fillSel('f-type',[...types].sort()); fillSel('f-status',[...statuses].sort());
+  }
+  function fillSel(id,vals) {
+    const el=document.getElementById(id), first=el.options[0]; el.innerHTML=''; el.appendChild(first);
+    vals.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  }
+
+  window.applyFilters = function() {
+    const apn=document.getElementById('f-apn').value.trim().toLowerCase();
+    const type=document.getElementById('f-type').value, status=document.getElementById('f-status').value;
+    filtPermits = allPermits.filter(p => {
+      if (apn    && !p.APN.toLowerCase().includes(apn) && !p.accelaId.toLowerCase().includes(apn)) return false;
+      if (type   && p.capType !== type)   return false;
+      if (status && p.status  !== status) return false;
+      return true;
+    });
+    renderPermitList(filtPermits);
+    document.getElementById('permit-count').textContent = `· ${filtPermits.length.toLocaleString()} records`;
+  };
+  window.clearFilters = function() {
+    ['f-apn','f-type','f-status'].forEach(id=>document.getElementById(id).value='');
+    filtPermits=[...allPermits]; renderPermitList(allPermits);
+    document.getElementById('permit-count').textContent = `· ${allPermits.length.toLocaleString()} records`;
+  };
+
+  function renderPermitList(permits) {
+    const c=document.getElementById('permit-list');
+    if (!permits.length) { c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-light);font-size:0.75rem;">No records found.</div>'; return; }
+    c.innerHTML = permits.slice(0,300).map(p => {
+      const sel = selPermit && selPermit._id===p._id;
+      return `<div class="permit-card ${sel?'sel':''}" onclick="selectPermit(${p._id})">
+        <div class="pc-id">${p.accelaId||'N/A'}</div>
+        <div class="pc-apn">APN: ${p.APN||'—'}</div>
+        <div class="pc-row"><div class="pc-type" title="${p.capType}">${p.capType||'—'}</div><span class="pc-status">${p.status||'—'}</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Select permit ──────────────────────────────────────
+  window.selectPermit = async function(id) {
+    const permit = filtPermits.find(p=>p._id===id) || allPermits.find(p=>p._id===id);
+    if (!permit) return;
+    selPermit = permit;
+    renderPermitList(filtPermits);
+
+    document.getElementById('pib').classList.add('vis');
+    document.getElementById('pib-id').textContent = permit.accelaId || permit.APN || 'N/A';
+    document.getElementById('pib-meta').textContent = `APN: ${permit.APN||'—'} · ${permit.capType||'—'} · Filed: ${fmtDate(permit.fileDateMs)}`;
+    document.getElementById('rp-sub').textContent = `Analysis: ${permit.APN||permit.accelaId||'N/A'}`;
+    document.getElementById('reg-tabs').style.display = 'flex';
+    document.getElementById('findings-summary').style.display = 'flex';
+    document.getElementById('findings-empty').style.display = 'none';
+
+    const bar = document.getElementById('analysis-bar');
+    bar.classList.add('running');
+    setLoadingState();
+
+    // Use sketch geometry if present, else fetch parcel geometry
+    let geom = sketchGeom;
+    if (!geom) geom = await getParcelGeom(permit.APN);
+    if (!geom) { bar.classList.remove('running'); showNoGeomError(permit.APN); return; }
+
+    if (!sketchGeom) {
+      highlightParcel(geom);
+      try { await mapView.goTo({ target:geom, zoom:16 }, {duration:700}); } catch(e) {}
+    }
+
+    const results = await runAllQueries(geom);
+    bar.classList.remove('running');
+    renderFindings(results, permit);
+    updateEnvLayerVisibility(results);
+  };
+
+  async function runAnalysisWithGeom(geom) {
+    if (!selPermit) return;
+    const bar = document.getElementById('analysis-bar');
+    bar.classList.add('running');
+    setLoadingState();
+    const results = await runAllQueries(geom);
+    bar.classList.remove('running');
+    renderFindings(results, selPermit);
+    updateEnvLayerVisibility(results);
+  }
+
+  // ── Parcel geometry ────────────────────────────────────
+  async function getParcelGeom(apn) {
+    if (!apn) return null;
+    const esc = apn.replace(/'/g,"''");
+    try {
+      const q = parcelsFL.createQuery();
+      q.where=`APN='${esc}'`; q.returnGeometry=true; q.outSpatialReference=mapView.spatialReference;
+      const r = await parcelsFL.queryFeatures(q);
+      if (r.features.length) return r.features[0].geometry;
+    } catch(e) {}
+    return null;
+  }
+
+  function highlightParcel(geom) {
+    parcelHighlightLayer.removeAll();
+    parcelHighlightLayer.add(new Graphic({ geometry:geom, symbol:{ type:'simple-fill', color:[241,96,34,0.18], outline:{color:[241,96,34,1],width:2.5} } }));
+  }
+
+  // ── Spatial queries ────────────────────────────────────
+  async function querySpatial(layerId, geom) {
+    const lyr = envLayers[layerId];
+    if (!lyr) return [];
+    try {
+      const q = lyr.createQuery();
+      q.geometry=geom; q.spatialRelationship='intersects'; q.returnGeometry=false; q.num=100;
+      const r = await lyr.queryFeatures(q);
+      return r.features||[];
+    } catch(e) { return null; }
+  }
+
+  async function runAllQueries(geom) {
+    const ids = ['lc_bailey','sez','flood_zone','streams','goshawk','eagle','waterfowl','flycatcher','frog_critical','frog_suitable','deer_fawning'];
+    const arr = await Promise.all(ids.map(id=>querySpatial(id,geom)));
+    const out = {}; ids.forEach((id,i)=>out[id]=arr[i]);
+    return out;
+  }
+
+  // ── Loading state ──────────────────────────────────────
+  function setLoadingState() {
+    const row=`<div class="finding-row"><div class="fr-ic loading" style="font-size:8px">···</div><div class="fr-body"><div class="fr-label">Running spatial analysis…</div></div></div>`;
+    ['pane-trpa','pane-nepa','pane-ceqa'].forEach(id=>document.getElementById(id).innerHTML=`<div class="finding-section"><div class="fsb">${row}</div></div>`);
+    ['clear','note','flag','concern'].forEach(k=>document.getElementById('fs-'+k).textContent='—');
+    document.getElementById('pdf-bar').style.display = 'none';
+  }
+
+  // ── Render findings ────────────────────────────────────
+  function renderFindings(results, permit) {
+    lastResults = results; // store for PDF
+    const lc    = parseLandCapability(results.lc_bailey);
+    const sez   = parseSEZ(results.sez);
+    const hydro = parseHydro(results.flood_zone, results.streams);
+    const wild  = parseWildlife(results);
+    const all   = [...lc,...sez,...hydro,...wild];
+
+    let clr=0,nte=0,flg=0,con=0;
+    all.forEach(f=>{ if(f.s==='clear') clr++; else if(f.s==='note') nte++; else if(f.s==='flag') flg++; else con++; });
+    document.getElementById('fs-clear').textContent   = clr;
+    document.getElementById('fs-note').textContent    = nte;
+    document.getElementById('fs-flag').textContent    = flg;
+    document.getElementById('fs-concern').textContent = con;
+
+    document.getElementById('pane-trpa').innerHTML = renderTRPA(lc,sez,hydro,wild);
+    document.getElementById('pane-nepa').innerHTML = renderNEPA(lc,sez,hydro,wild);
+    document.getElementById('pane-ceqa').innerHTML = renderCEQA(lc,sez,hydro,wild);
+    document.getElementById('pdf-bar').style.display = 'flex';
+
+    document.querySelectorAll('.fsh').forEach(hdr => {
+      hdr.addEventListener('click', ()=>{
+        const b=hdr.nextElementSibling;
+        if (b){ b.classList.toggle('collapsed'); const t=hdr.querySelector('.fsh-toggle'); if(t) t.textContent=b.classList.contains('collapsed')?'▶':'▼'; }
+      });
+    });
+  }
+
+  // ── Parsers ────────────────────────────────────────────
+  function parseLandCapability(features) {
+    if (!features) return [{s:'note',label:'Land Capability',detail:'Service unavailable – manual review required.',tags:['TRPA']}];
+    if (!features.length) return [{s:'note',label:'Land Capability',detail:'No land capability data for this parcel. Verify coverage area.',tags:['TRPA']}];
+    const findings=[];
+    const caps=[...new Set(features.map(f=>(f.attributes.CAPABILITY||'').toString().trim()).filter(Boolean))];
+    const sezHits=features.filter(f=>f.attributes.SEZ===1||f.attributes.SEZ==='Yes'||f.attributes.SEZ==='YES');
+    const riparian=features.filter(f=>f.attributes.RIPARIAN===1||f.attributes.RIPARIAN==='Yes');
+    const pctVals=features.map(f=>f.attributes.PERCENT_COVERAGE_ALLOWED).filter(v=>v!=null);
+    const minCov=pctVals.length?Math.min(...pctVals):null;
+    const sezClasses=caps.filter(c=>/^1[abc]$/i.test(c));
+    const sensClasses=caps.filter(c=>/^2[ab]$/i.test(c));
+    if (sezClasses.length) findings.push({s:'concern',label:`Class ${sezClasses.join(', ')} – SEZ/Restricted`,detail:`Parcel overlaps Class ${sezClasses.join('/')} (SEZ). Development prohibited. Disturbance severely restricted per TRPA Code §30.3.${minCov!==null?` Max coverage: ${minCov}%.`:''}`,tags:['TRPA','SEZ']});
+    if (sensClasses.length) findings.push({s:'flag',label:`Class ${sensClasses.join(', ')} – Sensitive Soils`,detail:`Sensitive land capability Class ${sensClasses.join('/')}. Very limited coverage allowed. Soils analysis and TRPA coverage calculation required.${minCov!==null?` Min coverage: ${minCov}%.`:''}`,tags:['TRPA']});
+    if (!sezClasses.length && !sensClasses.length && caps.length) findings.push({s:'note',label:`Land Capability Classes: ${caps.join(', ')}`,detail:`Parcel spans Classes ${caps.join(', ')}.${minCov!==null?` Min coverage allowed: ${minCov}%.`:''} Verify coverage calculation with planner.`,tags:['TRPA']});
+    if (sezHits.length && !sezClasses.length) findings.push({s:'concern',label:'SEZ Flag in Capability Layer',detail:`${sezHits.length} polygon(s) flagged as SEZ. No development/grading permitted without mitigation.`,tags:['TRPA','SEZ']});
+    if (riparian.length) findings.push({s:'flag',label:'Riparian Designation',detail:`${riparian.length} polygon(s) with riparian designation. TRPA SEZ buffer and CWA §401/404 may apply.`,tags:['TRPA','NEPA']});
+    return findings;
+  }
+
+  function parseSEZ(features) {
+    if (!features) return [{s:'note',label:'SEZ Assessment Unit',detail:'SEZ service unavailable – manual review required.',tags:['TRPA','NEPA','CEQA']}];
+    if (!features.length) return [{s:'clear',label:'No SEZ Overlap',detail:'Parcel does not intersect any mapped SEZ Assessment Units.',tags:['TRPA','NEPA','CEQA']}];
+    return [{s:'concern',label:`SEZ Overlap: ${features.length} Unit${features.length>1?'s':''}`,detail:`Parcel intersects ${features.length} SEZ Assessment Unit(s). TRPA Code prohibits most development in SEZ. Condition scoring, mitigation, or restoration offset may be required.`,tags:['TRPA','SEZ','NEPA','CEQA']}];
+  }
+
+  function parseHydro(floodF, streamF) {
+    const findings=[];
+    if (!floodF) findings.push({s:'note',label:'FEMA Flood Zone',detail:'Flood zone service unavailable – manual check required.',tags:['NEPA','CEQA']});
+    else if (floodF.length) findings.push({s:'flag',label:'FEMA Flood Zone Overlap',detail:'Parcel intersects FEMA flood hazard area. EO 11988 applies under NEPA. CEQA requires flood hazard analysis. Floodplain development permit likely required.',tags:['NEPA','CEQA']});
+    else findings.push({s:'clear',label:'No FEMA Flood Zone',detail:'Parcel does not intersect any FEMA-mapped flood hazard zones.',tags:['NEPA','CEQA']});
+    if (!streamF) findings.push({s:'note',label:'Streams & Water Bodies',detail:'Stream layer unavailable – manual check required.',tags:['TRPA','NEPA','CEQA']});
+    else if (streamF.length) findings.push({s:'flag',label:`Stream/Water Body Overlap (${streamF.length} feature${streamF.length>1?'s':''})`,detail:'Parcel intersects LiDAR-derived stream or water body features. TRPA SEZ buffer, CWA §401/404, Porter-Cologne Act, and CEQA hydrology analysis apply.',tags:['TRPA','NEPA','CEQA']});
+    else findings.push({s:'clear',label:'No Stream/Water Body Overlap',detail:'No LiDAR-derived streams or water bodies intersect this parcel.',tags:['TRPA','NEPA','CEQA']});
+    return findings;
+  }
+
+  function parseWildlife(results) {
+    const species=[
+      {id:'goshawk',      name:'Northern Goshawk Threshold Zone',   level:'flag',    tags:['TRPA']},
+      {id:'eagle',        name:'Bald Eagle Winter Habitat',          level:'flag',    tags:['NEPA','ESA']},
+      {id:'waterfowl',    name:'Waterfowl Habitat',                  level:'note',    tags:['TRPA','CEQA']},
+      {id:'flycatcher',   name:'Willow Flycatcher (SWFL) Habitat',   level:'concern', tags:['ESA','CEQA']},
+      {id:'frog_critical',name:'SNYLF Critical Habitat',             level:'concern', tags:['ESA','NEPA']},
+      {id:'frog_suitable',name:'SNYLF Suitable Habitat',             level:'flag',    tags:['ESA','CEQA']},
+      {id:'deer_fawning', name:'Deer Fawning Habitat',               level:'note',    tags:['TRPA','CEQA']},
+    ];
+    const findings=[]; let anyHit=false;
+    species.forEach(sp=>{
+      const ft=results[sp.id];
+      if (ft===null) findings.push({s:'note',label:sp.name,detail:`${sp.name} layer unavailable – manual check required.`,tags:sp.tags});
+      else if (ft&&ft.length>0) {
+        anyHit=true;
+        const detail=sp.level==='concern'?`Parcel intersects ${sp.name}. Federally-listed species. Biological Assessment and ESA Section 7/10 consultation likely required.`
+          :sp.level==='flag'?`Parcel intersects ${sp.name}. Species-specific impact analysis and USFWS/CDFG coordination may be required.`
+          :`Parcel intersects ${sp.name}. Note in project description; assess significance of impacts.`;
+        findings.push({s:sp.level,label:`${sp.name} Present`,detail,tags:sp.tags});
+      }
+    });
+    if (!anyHit && findings.every(f=>f.s==='note')) findings.unshift({s:'clear',label:'No Sensitive Wildlife Habitat',detail:'No sensitive wildlife habitat layers intersect this parcel in the spatial analysis.',tags:['TRPA','NEPA','CEQA']});
+    return findings;
+  }
+
+  // ── Pane renderers ─────────────────────────────────────
+  function renderTRPA(lc,sez,hydro,wild) {
+    const waterTRPA=[...sez,...hydro.filter(f=>f.tags.includes('TRPA'))];
+    return `${section('🏔️','Land Capability & Soils',lc)}
+      ${section('🌊','Water Quality & SEZ',waterTRPA)}
+      ${section('🦅','Wildlife Thresholds',wild.filter(f=>f.tags.includes('TRPA')).length?wild.filter(f=>f.tags.includes('TRPA')):wild)}
+      ${section('📋','Additional TRPA Thresholds',[
+        {s:'note',label:'Scenic Quality',detail:'Manual review required. Check view corridors, travel route visibility, and scenic quality rating per TRPA Code Chapter 62.',tags:['TRPA']},
+        {s:'note',label:'Recreation',detail:'Manual review required. Assess proximity to recreational facilities and confirm no significant recreation impact.',tags:['TRPA']},
+        {s:'note',label:'Air Quality',detail:'Manual review required. Assess construction equipment, wood burning, and traffic generation. TRPA Air Quality Management Plan applies.',tags:['TRPA']},
+        {s:'note',label:'Noise',detail:'Manual review required. Review construction and operational noise relative to TRPA noise ordinance thresholds.',tags:['TRPA']},
+      ],false)}`;
+  }
+
+  function renderNEPA(lc,sez,hydro,wild) {
+    const phys=[...lc.map(f=>({...f,tags:['NEPA']})),...hydro.filter(f=>f.tags.includes('NEPA'))];
+    const bio=[...sez.map(f=>({...f,tags:['NEPA']})),...wild.filter(f=>f.tags.some(t=>['NEPA','ESA'].includes(t)))];
+    return `${section('📄','Purpose, Need & Alternatives',[
+      {s:'note',label:'Purpose & Need Statement',detail:'Document the purpose and need for the action and evaluate a reasonable range of alternatives including the No-Action alternative (40 CFR §1502.13).',tags:['NEPA']},
+      {s:'note',label:'Cumulative Impacts (40 CFR §1508.7)',detail:'Assess cumulative effects in context of past, present, and reasonably foreseeable future actions in the project area.',tags:['NEPA']},
+    ])}
+    ${section('🌍','Physical Environment',phys.length?phys:[{s:'clear',label:'No Critical Physical Factors Identified',detail:'No flood zone, stream, or SEZ features identified. Verify soils and geology via field inspection.',tags:['NEPA']}])}
+    ${section('🦎','Biological Resources (ESA §7)',bio.length?bio:[{s:'clear',label:'No ESA-Listed Species Habitat',detail:'No mapped critical/suitable habitat for federally listed species detected. Confirm with USFWS IPaC project review.',tags:['NEPA','ESA']}])}
+    ${section('🏛️','Socioeconomic & Cultural Resources',[
+      {s:'note',label:'Cultural & Historic Resources (NHPA §106)',detail:'Manual review required. Initiate Section 106 consultation with SHPO and tribes. Contact TRPA Cultural Resources staff.',tags:['NEPA']},
+      {s:'note',label:'Environmental Justice (EO 12898)',detail:'Manual review required. Assess potential disproportionate impacts on minority or low-income populations.',tags:['NEPA']},
+    ],false)}`;
+  }
+
+  function renderCEQA(lc,sez,hydro,wild) {
+    const h=[...sez.map(f=>({...f,tags:['CEQA']})),...hydro.filter(f=>f.tags.includes('CEQA'))];
+    const b=wild.filter(f=>f.tags.includes('CEQA')||f.tags.includes('ESA'));
+    return `${section('💧','Hydrology & Water Quality',h.length?h:[{s:'clear',label:'No Significant Hydrology Issues',detail:'No SEZ, flood zone, or stream features found.',tags:['CEQA']}])}
+    ${section('🌿','Biological Resources',b.length?b:[{s:'clear',label:'No Sensitive Biological Resources',detail:'No sensitive species habitat intersects this parcel in the layers analyzed.',tags:['CEQA']}])}
+    ${section('🪨','Geology & Soils',lc.map(f=>({...f,tags:['CEQA']})))}
+    ${section('🏗️','Land Use & Planning Consistency',[
+      {s:'note',label:'General Plan / Regional Plan Consistency',detail:'Verify consistency with local General Plan and TRPA Regional Plan policies.',tags:['CEQA']},
+      {s:'note',label:'Zoning Consistency',detail:'Check zoning designation, setbacks, height limits, and coverage allowances.',tags:['CEQA']},
+    ],false)}
+    ${section('🔥','Wildfire & Public Safety',[
+      {s:'note',label:'Fire Hazard Severity Zone (PRC §4202)',detail:'Verify parcel location relative to CalFire FHSZ map. High/Very High FHSZ triggers additional CEQA and building code requirements.',tags:['CEQA']},
+      {s:'note',label:'Defensible Space (PRC §4291)',detail:'Review compliance with 100-ft defensible space requirements.',tags:['CEQA']},
+    ],false)}`;
+  }
+
+  // ── Section builder ────────────────────────────────────
+  function section(icon,title,findings,open=true) {
+    const order={concern:3,flag:2,note:1,clear:0};
+    const worst=findings.reduce((w,f)=>(order[f.s]||0)>(order[w]||0)?f.s:w,'clear');
+    const badgeTxt={clear:'Clear',note:'Note',flag:'Flag',concern:'Concern'};
+    const icTxt={clear:'✓',note:'i',flag:'!',concern:'⚠'};
+    const rows=findings.map(f=>{
+      const tagHtml=(f.tags||[]).map(t=>{
+        const cls=t==='TRPA'?'trpa':t==='NEPA'?'nepa':t==='CEQA'?'ceqa':t==='SEZ'?'sez':t==='ESA'?'esa':'other';
+        return `<span class="fr-tag tag-${cls}">${t}</span>`;
+      }).join('');
+      return `<div class="finding-row"><div class="fr-ic ${f.s}">${icTxt[f.s]||'?'}</div>
+        <div class="fr-body"><div class="fr-label">${f.label}</div><div class="fr-detail">${f.detail}</div><div class="fr-tags">${tagHtml}</div></div></div>`;
+    }).join('');
+    return `<div class="finding-section"><div class="fsh">
+      <span class="fsh-icon">${icon}</span><span class="fsh-title">${title}</span>
+      <span class="fsh-badge badge-${worst}">${badgeTxt[worst]}</span><span class="fsh-toggle">${open?'▼':'▶'}</span>
+    </div><div class="fsb${open?'':' collapsed'}">${rows}</div></div>`;
+  }
+
+  // ── Layer visibility ───────────────────────────────────
+  function updateEnvLayerVisibility(results) {
+    Object.entries(envLayers).forEach(([id,lyr])=>{ const h=results[id]; lyr.visible=h&&h.length>0; });
+    if (envLayers['lc_bailey']) envLayers['lc_bailey'].visible=true;
+  }
+
+  function showNoGeomError(apn) {
+    const msg=`<div class="finding-section"><div class="fsb"><div class="finding-row"><div class="fr-ic flag">!</div><div class="fr-body"><div class="fr-label">Parcel geometry not found</div><div class="fr-detail">No boundary found for APN: <strong>${apn||'N/A'}</strong>. Try drawing a custom area using the map toolbar above.</div></div></div></div></div>`;
+    ['pane-trpa','pane-nepa','pane-ceqa'].forEach(id=>document.getElementById(id).innerHTML=msg);
+    document.getElementById('findings-summary').style.display='none';
+  }
+
+  // ── Layer legend ───────────────────────────────────────
+  function renderLayerLegend() {
+    const groups={soils:'Soils & Land Capability',water:'Hydrology & Water',wildlife:'Wildlife Habitat'};
+    const grouped={};
+    ENV_CFG.forEach(cfg=>{ if(!grouped[cfg.group]) grouped[cfg.group]=[]; grouped[cfg.group].push(cfg); });
+    document.getElementById('layers-scroll').innerHTML = Object.entries(groups).map(([gid,gname])=>{
+      const rows=(grouped[gid]||[]).map(cfg=>{
+        const on=envLayers[cfg.id]&&envLayers[cfg.id].visible;
+        return `<div class="lyr-row" onclick="toggleLayer('${cfg.id}',this)">
+          <div class="lyr-check ${on?'on':''}" id="lc-${cfg.id}">${on?'✓':''}</div>
+          <div class="lyr-swatch" style="background:${cfg.color};opacity:0.7"></div>
+          <span class="lyr-name">${cfg.name}</span></div>`;
+      }).join('');
+      return `<div class="lyr-group-title">${gname}</div>${rows}`;
+    }).join('');
+  }
+
+  window.toggleLayer=function(id) {
+    const lyr=envLayers[id]; if(!lyr) return; lyr.visible=!lyr.visible;
+    const chk=document.getElementById('lc-'+id); if(chk){chk.classList.toggle('on',lyr.visible);chk.textContent=lyr.visible?'✓':'';}
+  };
+
+  // ════════════════════════════════════════════════════════
+  // ── PDF GENERATION ────────────────────────────────────
+  // ════════════════════════════════════════════════════════
+
+  function determineSignificance(results) {
+    if (!results) return defaultSig();
+    const hasSEZ   = results.sez        && results.sez.length > 0;
+    const hasFlood = results.flood_zone && results.flood_zone.length > 0;
+    const hasStream= results.streams    && results.streams.length > 0;
+    const caps = (results.lc_bailey||[]).map(f=>(f.attributes.CAPABILITY||'').toLowerCase());
+    const hasSevereLC   = caps.some(c=>/^1[abc]$/.test(c));
+    const hasSensLC     = caps.some(c=>/^2[ab]$/.test(c));
+    const capStr        = [...new Set(caps)].map(c=>c.toUpperCase()).join(', ') || 'not available';
+    const hasThreatened = (results.flycatcher?.length||0)+(results.frog_critical?.length||0)>0;
+    const hasSensWild   = hasThreatened||(results.eagle?.length||0)>0||(results.goshawk?.length||0)>0||(results.frog_suitable?.length||0)>0;
+    return {
+      aesthetics:   {level:'LSI',note:'Manual review required for view corridors and scenic quality.'},
+      agriculture:  {level:'NI', note:'No agricultural or forestry resources identified in project area.'},
+      airQuality:   {level:'LSI',note:'Manual review required for construction and operational emissions.'},
+      biological:   hasThreatened?{level:'PSI',note:'Federally-listed species habitat detected. Biological Assessment required.'}
+                   :hasSensWild ?{level:'LSM',note:'Sensitive wildlife habitat present. Species-specific analysis required.'}
+                   :              {level:'LSI',note:'No sensitive wildlife habitat detected in spatial analysis.'},
+      cultural:     {level:'LSM',note:'NHPA §106 consultation required. Contact TRPA Cultural Resources staff.'},
+      energy:       {level:'LSI',note:'Standard construction and operational energy use expected.'},
+      geology:      hasSevereLC?{level:'PSI',note:`Class 1 (SEZ) land capability detected. Significant soils impacts possible.`}
+                   :hasSensLC  ?{level:'LSM',note:`Class 2 sensitive soils detected. Soils report and coverage calculation required.`}
+                   :             {level:'LSI',note:`Land capability Classes: ${capStr}.`},
+      ghg:          {level:'LSI',note:'Project scale unlikely to result in significant GHG emissions.'},
+      hazards:      {level:'LSI',note:'Manual review required for hazardous materials handling.'},
+      hydrology:    hasSEZ  ?{level:'PSI',note:'SEZ overlap detected. Development in SEZ prohibited without mitigation.'}
+                   :hasFlood?{level:'LSM',note:'FEMA flood zone overlap. Floodplain development permit and mitigation required.'}
+                   :hasStream?{level:'LSM',note:'Stream/water body overlap. CWA §401/404 analysis required.'}
+                   :           {level:'LSI',note:'No SEZ, flood zone, or stream intersections detected.'},
+      landUse:      {level:'LSI',note:'Manual review required for Regional Plan and zoning consistency.'},
+      minerals:     {level:'NI', note:'No mineral resource zones identified.'},
+      noise:        {level:'LSI',note:'Manual review required. Standard construction noise mitigation applies.'},
+      population:   {level:'NI', note:'No significant population or housing impacts expected.'},
+      publicServices:{level:'LSI',note:'Manual review required for service provider coordination.'},
+      recreation:   {level:'LSI',note:'Manual review required for recreation area proximity.'},
+      transportation:{level:'LSI',note:'Manual review required for traffic generation.'},
+      tribal:       {level:'LSM',note:'Tribal consultation required per AB 52 and TRPA tribal relations policy.'},
+      utilities:    {level:'LSI',note:'Manual review required for utility provider coordination.'},
+      wildfire:     {level:'LSI',note:'Manual review required for FHSZ designation and defensible space.'},
+    };
+  }
+
+  function defaultSig() {
+    const s={level:'LSI',note:'Spatial analysis pending – manual review required.'};
+    return {aesthetics:s,agriculture:{level:'NI',note:''},airQuality:s,biological:s,cultural:{level:'LSM',note:'Tribal consultation required.'},energy:s,geology:s,ghg:s,hazards:s,hydrology:s,landUse:s,minerals:{level:'NI',note:''},noise:s,population:{level:'NI',note:''},publicServices:s,recreation:s,transportation:s,tribal:{level:'LSM',note:'Tribal consultation required.'},utilities:s,wildfire:s};
+  }
+
+  window.generateIEC = function() {
+    if (!selPermit) { alert('Please select a permit first.'); return; }
+    const sig = determineSignificance(lastResults);
+    const today = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+    const checklist = [
+      {cat:'A', name:'Aesthetics',                        ...sig.aesthetics},
+      {cat:'B', name:'Agriculture & Forestry Resources',  ...sig.agriculture},
+      {cat:'C', name:'Air Quality',                       ...sig.airQuality},
+      {cat:'D', name:'Biological Resources',              ...sig.biological},
+      {cat:'E', name:'Cultural Resources',                ...sig.cultural},
+      {cat:'F', name:'Energy',                            ...sig.energy},
+      {cat:'G', name:'Geology & Soils',                   ...sig.geology},
+      {cat:'H', name:'Greenhouse Gas Emissions',          ...sig.ghg},
+      {cat:'I', name:'Hazards & Hazardous Materials',     ...sig.hazards},
+      {cat:'J', name:'Hydrology & Water Quality',         ...sig.hydrology},
+      {cat:'K', name:'Land Use & Planning',               ...sig.landUse},
+      {cat:'L', name:'Mineral Resources',                 ...sig.minerals},
+      {cat:'M', name:'Noise',                             ...sig.noise},
+      {cat:'N', name:'Population & Housing',              ...sig.population},
+      {cat:'O', name:'Public Services',                   ...sig.publicServices},
+      {cat:'P', name:'Recreation',                        ...sig.recreation},
+      {cat:'Q', name:'Transportation',                    ...sig.transportation},
+      {cat:'R', name:'Tribal Cultural Resources',         ...sig.tribal},
+      {cat:'S', name:'Utilities & Service Systems',       ...sig.utilities},
+      {cat:'T', name:'Wildfire',                          ...sig.wildfire},
+    ];
+    const hasConcern = checklist.some(c=>c.level==='PSI');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Initial Environmental Study – ${selPermit.accelaId||selPermit.APN}</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:10pt;color:#111;max-width:8.5in;margin:0 auto;padding:.6in}
+  h1{font-size:14pt;text-align:center;color:#0b1f41;border-bottom:2.5px solid #0b1f41;padding-bottom:8px;margin-bottom:4px}
+  h2{font-size:11pt;color:#0b1f41;border-bottom:1px solid #d5dde8;padding-bottom:4px;margin-top:20px}
+  .agency{text-align:center;font-size:9pt;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+  .info-table{width:100%;border-collapse:collapse;margin:8px 0}
+  .info-table td{padding:5px 8px;border:1px solid #d5dde8;font-size:9pt}
+  .info-table .lbl{background:#f4f6f9;font-weight:700;color:#4a5b73;width:22%}
+  .ck{width:100%;border-collapse:collapse;font-size:8.5pt;margin:8px 0}
+  .ck th{background:#0b1f41;color:#fff;padding:6px 8px;font-size:8pt}
+  .ck th:first-child{text-align:left}
+  .ck td{padding:5px 8px;border:1px solid #d5dde8;vertical-align:top}
+  .ck tr:nth-child(even) td{background:#f9fafb}
+  .ck td.mark{text-align:center;font-size:11pt;font-weight:700}
+  .psi{color:#c0392b}.lsm{color:#d45a10}.lsi{color:#c89c00}.ni{color:#22a855}
+  .note-txt{font-size:7.5pt;color:#4a5b73;margin-top:2px}
+  .det-box{border:1px solid #d5dde8;padding:8px 10px;font-size:9pt;border-radius:3px}
+  .footer{margin-top:28px;font-size:8pt;color:#8a9bb2;border-top:1px solid #d5dde8;padding-top:8px;text-align:center}
+  @media print{@page{size:letter portrait;margin:.7in}body{padding:0}}
+</style></head><body>
+<div class="agency">Tahoe Regional Planning Agency</div>
+<h1>Initial Environmental Study / Checklist</h1>
+
+<h2>I. Project Information</h2>
+<table class="info-table">
+  <tr><td class="lbl">Project / Record ID</td><td>${selPermit.accelaId||'N/A'}</td><td class="lbl">Date Prepared</td><td>${today}</td></tr>
+  <tr><td class="lbl">Assessor Parcel Number</td><td>${selPermit.APN||'—'}</td><td class="lbl">Lead Agency</td><td>TRPA</td></tr>
+  <tr><td class="lbl">Record / Project Type</td><td>${selPermit.capType||'—'}</td><td class="lbl">Staff Planner</td><td>${selPermit.assignedTo||'—'}</td></tr>
+  <tr><td class="lbl">Application Date</td><td>${fmtDateLong(selPermit.fileDateMs)}</td><td class="lbl">Record Status</td><td>${selPermit.status||'—'}</td></tr>
+  <tr><td class="lbl">Project Description</td><td colspan="3">${selPermit.notes||'No description provided.'}</td></tr>
+  <tr><td class="lbl">Analysis Geometry</td><td colspan="3">${sketchGeom?'Custom project area (drawn/uploaded on map)':'Parcel boundary (APN: '+selPermit.APN+')'}</td></tr>
+</table>
+
+<h2>II. Environmental Factors Potentially Affected</h2>
+<p style="font-size:9pt">The environmental factors checked below would be potentially affected by this project, involving at least one impact that is a "Potentially Significant Impact" as indicated by the checklist on the following pages.</p>
+<p style="font-size:9pt;margin-top:6px">${checklist.filter(c=>c.level==='PSI'||c.level==='LSM').map(c=>`<strong>☑ ${c.name}</strong>`).join(' &nbsp;·&nbsp; ')||'No potentially significant factors identified in spatial analysis.'}</p>
+
+<h2>III. Environmental Checklist</h2>
+<p style="font-size:8.5pt;margin-bottom:6px"><strong>PSI</strong> = Potentially Significant Impact &nbsp;|&nbsp; <strong>LSM</strong> = Less Than Significant w/ Mitigation &nbsp;|&nbsp; <strong>LSI</strong> = Less Than Significant Impact &nbsp;|&nbsp; <strong>NI</strong> = No Impact</p>
+<table class="ck">
+  <thead><tr><th style="width:34%">Environmental Issue Area</th><th style="width:8%">PSI</th><th style="width:8%">LSM</th><th style="width:8%">LSI</th><th style="width:8%">NI</th><th>Notes / Spatial Analysis Basis</th></tr></thead>
+  <tbody>
+    ${checklist.map(item=>`<tr>
+      <td><strong>${item.cat}. ${item.name}</strong></td>
+      <td class="mark psi">${item.level==='PSI'?'●':''}</td>
+      <td class="mark lsm">${item.level==='LSM'?'●':''}</td>
+      <td class="mark lsi">${item.level==='LSI'?'●':''}</td>
+      <td class="mark ni">${item.level==='NI'?'●':''}</td>
+      <td><div class="note-txt">${item.note||''}</div></td>
+    </tr>`).join('')}
+  </tbody>
+</table>
+
+<h2>IV. Mandatory Findings of Significance (CEQA §21083)</h2>
+<table class="ck">
+  <thead><tr><th style="width:60%">Finding</th><th style="width:10%">PSI</th><th style="width:10%">LSM</th><th style="width:10%">LSI</th><th style="width:10%">NI</th></tr></thead>
+  <tbody>
+    <tr><td>Does the project have the potential to substantially degrade the quality of the environment, substantially reduce the habitat of a fish or wildlife species, or threaten to eliminate a plant or animal community?</td>
+      <td class="mark psi">${(sig.biological.level==='PSI'||sig.hydrology.level==='PSI')?'●':''}</td>
+      <td class="mark lsm">${(sig.biological.level==='LSM'||sig.hydrology.level==='LSM')&&sig.biological.level!=='PSI'&&sig.hydrology.level!=='PSI'?'●':''}</td>
+      <td class="mark lsi">${(sig.biological.level==='LSI'&&sig.hydrology.level==='LSI')?'●':''}</td>
+      <td class="mark ni"></td></tr>
+    <tr><td>Does the project have impacts that are individually limited, but cumulatively considerable?</td>
+      <td class="mark psi"></td><td class="mark lsm"></td><td class="mark lsi">●</td><td class="mark ni"></td></tr>
+    <tr><td>Does the project have environmental effects that will cause substantial adverse effects on human beings, either directly or indirectly?</td>
+      <td class="mark psi"></td><td class="mark lsm"></td><td class="mark lsi"></td><td class="mark ni">●</td></tr>
+  </tbody>
+</table>
+
+<h2>V. CEQA Determination</h2>
+<div class="det-box">
+  ☐ The project does not have a significant effect on the environment. A <strong>Negative Declaration</strong> shall be prepared.<br/>
+  ☐ Although the project could have a significant effect on the environment, revisions have been agreed to. A <strong>Mitigated Negative Declaration</strong> shall be prepared.<br/>
+  ☐ The project may have a significant effect on the environment. An <strong>Environmental Impact Report</strong> shall be prepared.
+</div>
+
+<h2>VI. Certification</h2>
+<table class="info-table" style="margin-top:8px">
+  <tr><td class="lbl">Prepared By</td><td style="min-width:160px"></td><td class="lbl">Title</td><td></td></tr>
+  <tr><td class="lbl">Signature</td><td></td><td class="lbl">Date</td><td>${today}</td></tr>
+</table>
+
+<div class="footer">
+  TRPA Environmental Review System · ${today} · Record: ${selPermit.accelaId||selPermit.APN}<br/>
+  This document is a draft checklist and does not constitute a final CEQA determination.<br/>
+  Tahoe Regional Planning Agency · 128 Market Street, Stateline, NV 89449 · (775) 588-4547 · trpa.org
+</div>
+</body></html>`;
+    openPrintWindow(html);
+  };
+
+  window.generateFindings = function() {
+    if (!selPermit) { alert('Please select a permit first.'); return; }
+    const r = lastResults || {};
+    const today = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+    const hasSEZ    = r.sez        && r.sez.length > 0;
+    const hasFlood  = r.flood_zone && r.flood_zone.length > 0;
+    const hasStream = r.streams    && r.streams.length > 0;
+    const caps = (r.lc_bailey||[]).map(f=>(f.attributes?.CAPABILITY||'').toUpperCase());
+    const hasSevereLC = caps.some(c=>/^1[ABC]$/.test(c));
+    const hasSensLC   = caps.some(c=>/^2[AB]$/.test(c));
+    const capStr      = [...new Set(caps)].join('/') || '—';
+    const hasThreat   = (r.flycatcher?.length||0)+(r.frog_critical?.length||0)>0;
+    const hasSensWild = hasThreat||(r.eagle?.length||0)>0||(r.goshawk?.length||0)>0||(r.frog_suitable?.length||0)>0;
+
+    const fb = (cls,num,name,statusCls,statusTxt,body,basis) => `
+      <div style="border-left:4px solid ${cls==='met'?'#22a855':cls==='concern'?'#c0392b':'#c89c00'};padding:8px 12px;margin:8px 0;background:${cls==='met'?'#f6fef9':cls==='concern'?'#fff9f9':'#fffdf0'};border-radius:0 4px 4px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <strong style="font-size:10pt">${num}. ${name}</strong>
+          <span style="font-size:9pt;font-weight:700;color:${cls==='met'?'#22a855':cls==='concern'?'#c0392b':'#c89c00'};white-space:nowrap">${statusTxt}</span>
+        </div>
+        <p style="font-size:9pt;line-height:1.55;margin:0 0 4px">${body}</p>
+        <p style="font-size:8pt;color:#666;font-style:italic;margin:0"><em>Basis: ${basis}</em></p>
+      </div>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Environmental Findings – ${selPermit.accelaId||selPermit.APN}</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:10pt;color:#111;max-width:8.5in;margin:0 auto;padding:.6in}
+  h1{font-size:14pt;text-align:center;color:#0b1f41;border-bottom:2.5px solid #0b1f41;padding-bottom:8px;margin-bottom:4px}
+  h2{font-size:11pt;color:#0b1f41;border-bottom:1px solid #d5dde8;padding-bottom:4px;margin-top:20px}
+  .agency{text-align:center;font-size:9pt;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+  .info-table{width:100%;border-collapse:collapse;margin:8px 0}
+  .info-table td{padding:5px 8px;border:1px solid #d5dde8;font-size:9pt}
+  .info-table .lbl{background:#f4f6f9;font-weight:700;color:#4a5b73;width:22%}
+  p{font-size:9.5pt;line-height:1.6;margin:4px 0}
+  .det-box{border:1px solid #d5dde8;padding:10px 12px;font-size:9pt;border-radius:3px;line-height:2}
+  .sig-block{border:1px solid #d5dde8;padding:14px;margin:8px 0;border-radius:4px}
+  .sig-row{display:flex;gap:20px;margin-bottom:18px}
+  .sig-field{flex:2;border-bottom:1px solid #333;min-height:24px}
+  .sig-date{flex:1;border-bottom:1px solid #333;min-height:24px}
+  .sig-lbl{font-size:8pt;color:#888;margin-top:2px}
+  .footer{margin-top:28px;font-size:8pt;color:#8a9bb2;border-top:1px solid #d5dde8;padding-top:8px;text-align:center}
+  ol li{margin-bottom:6px;font-size:9.5pt;line-height:1.55}
+  @media print{@page{size:letter portrait;margin:.7in}body{padding:0}}
+</style></head><body>
+<div class="agency">Tahoe Regional Planning Agency</div>
+<h1>Environmental Findings of Approval</h1>
+
+<h2>I. Project Information</h2>
+<table class="info-table">
+  <tr><td class="lbl">Record / Project ID</td><td>${selPermit.accelaId||'N/A'}</td><td class="lbl">Date</td><td>${today}</td></tr>
+  <tr><td class="lbl">Assessor Parcel Number</td><td>${selPermit.APN||'—'}</td><td class="lbl">Lead Agency</td><td>TRPA</td></tr>
+  <tr><td class="lbl">Project Type</td><td>${selPermit.capType||'—'}</td><td class="lbl">Staff Planner</td><td>${selPermit.assignedTo||'—'}</td></tr>
+  <tr><td class="lbl">Application Date</td><td>${fmtDateLong(selPermit.fileDateMs)}</td><td class="lbl">Status</td><td>${selPermit.status||'—'}</td></tr>
+  <tr><td class="lbl">Analysis Geometry</td><td colspan="3">${sketchGeom?'Custom project area (drawn/uploaded on map)':'Parcel boundary (APN: '+selPermit.APN+')'}</td></tr>
+  <tr><td class="lbl">Project Description</td><td colspan="3">${selPermit.notes||'No description provided.'}</td></tr>
+</table>
+
+<h2>II. Authority</h2>
+<p>These findings are made pursuant to the Tahoe Regional Planning Compact (P.L. 96-551), TRPA Code of Ordinances Chapter 10 (Environmental Review Process), the California Environmental Quality Act (CEQA, PRC §21000 et seq.), and the National Environmental Policy Act (NEPA, 42 U.S.C. §4321 et seq.), as applicable.</p>
+
+<h2>III. TRPA Environmental Threshold Findings (Code §10.3.1)</h2>
+<p>The following findings are made regarding attainment of TRPA Environmental Threshold Carrying Capacities established pursuant to Tahoe Regional Planning Compact §33:</p>
+
+${fb(
+  hasSEZ||hasFlood||hasStream?'concern':'met',
+  '1','Water Quality Threshold',
+  hasSEZ?'concern':hasFlood||hasStream?'review':'met',
+  hasSEZ?'⚠ SEZ OVERLAP – CONCERN':hasFlood?'⚠ FLOOD ZONE – FLAG':hasStream?'⚠ STREAM OVERLAP – FLAG':'✓ NO CONFLICTS IDENTIFIED',
+  hasSEZ?'Parcel intersects mapped Stream Environment Zone (SEZ). Development in SEZ is prohibited without an approved mitigation and restoration plan per TRPA Code §30.3. A net-zero SEZ disturbance analysis and restoration plan are required prior to permit issuance.'
+  :hasFlood?'Parcel intersects FEMA-mapped flood hazard zone. Project must comply with local floodplain management ordinance and TRPA Code Chapter 70. A hydrology report demonstrating no adverse flood impacts is required.'
+  :hasStream?'Parcel intersects mapped stream/water body features. Project must demonstrate compliance with TRPA Code Chapter 70 and applicable stream environment zone buffer requirements. CWA §401/404 coordination required.'
+  :'No SEZ, FEMA flood zone, or stream/water body intersections detected for this analysis area. Standard stormwater management BMPs required per TRPA Code §70.',
+  'Spatial analysis of TRPA SEZ Assessment Units, FEMA Flood Zone, and LiDAR-derived stream network.'
+)}
+
+${fb(
+  hasSevereLC?'concern':hasSensLC?'review':'met',
+  '2','Soil Conservation Threshold (Land Capability)',
+  hasSevereLC?'concern':hasSensLC?'review':'met',
+  hasSevereLC?`⚠ CLASS 1 (SEZ) – CONCERN`:hasSensLC?`⚠ CLASS 2 – FLAG`:capStr!=='—'?`✓ CLASS ${capStr}`:'⚠ DATA UNAVAILABLE',
+  hasSevereLC?`Analysis area overlaps Class 1 (SEZ) land capability. Class 1 lands are the most sensitive soils in the Lake Tahoe basin. No impervious coverage is permitted. Disturbance requires restoration and TRPA coverage transfer or bonus unit program.`
+  :hasSensLC?`Analysis area overlaps Class 2 sensitive land capability. Class 2 soils are highly sensitive. Coverage is very limited. A certified soils report, drainage plan, and TRPA coverage calculation are required prior to approval.`
+  :capStr!=='—'?`Analysis area is mapped as Land Capability Class ${capStr}. Coverage allowances apply per TRPA Code §30.5. A coverage calculation demonstrating compliance is required.`
+  :`Land capability data not returned. Applicant must provide a land capability verification or certified soils report by a licensed geologist or civil engineer.`,
+  'Spatial analysis of TRPA Land Capability – Bailey classification.'
+)}
+
+${fb(
+  hasThreat?'concern':hasSensWild?'review':'met',
+  '3','Wildlife Threshold',
+  hasThreat?'concern':hasSensWild?'review':'met',
+  hasThreat?'⚠ SPECIAL STATUS SPECIES – CONCERN':hasSensWild?'⚠ SENSITIVE HABITAT – FLAG':'✓ NO SENSITIVE HABITAT DETECTED',
+  hasThreat?'Analysis area intersects habitat mapped for federally-listed species (Sierra Nevada Yellow-legged Frog and/or Willow Flycatcher). An ESA Section 7 Biological Assessment is required. No ground disturbance may occur during sensitive periods without clearance from USFWS and CDFW.'
+  :hasSensWild?'Analysis area intersects sensitive wildlife habitat (Bald Eagle winter habitat, Goshawk threshold zone, and/or SNYLF suitable habitat). Species-specific surveys and TRPA Wildlife Threshold analysis required prior to approval.'
+  :'No sensitive wildlife habitat layers intersect this analysis area. A standard wildlife clearance letter from the project biologist confirming no special-status species or habitat on site is required.',
+  'Spatial analysis of TRPA/USFWS wildlife habitat layers.'
+)}
+
+${fb('review','4','Vegetation Threshold','review','⚠ FIELD REVIEW REQUIRED',
+  'A vegetation survey and impact analysis is required to demonstrate compliance with TRPA Vegetation Threshold standards. Removal of native vegetation must be minimized and revegetation with native species is required per TRPA Code §62.','Field survey required; spatial vegetation layer analysis not performed.')}
+
+${fb('review','5','Scenic Quality Threshold','review','⚠ MANUAL REVIEW REQUIRED',
+  'Scenic quality analysis required per TRPA Code Chapter 62. The project must be reviewed using the Scenic Quality Evaluation Form. Any visible impervious surfaces must be screened with vegetation consistent with Threshold standards.','Manual review required.')}
+
+${fb('review','6–9','Air Quality, Recreation, Fisheries & Noise Thresholds','review','⚠ MANUAL REVIEW REQUIRED',
+  'Manual review required for: Air Quality (TRPA Code Chapter 90; construction BMPs, wood burning, traffic); Recreation (proximity to facilities); Fisheries (if streams present); and Noise (construction and operational noise ordinance compliance).','Manual review required.')}
+
+<h2>IV. CEQA Determination</h2>
+<div class="det-box">
+  ☐ <strong>Negative Declaration (ND)</strong> – The project does not have a significant effect on the environment.<br/>
+  ☐ <strong>Mitigated Negative Declaration (MND)</strong> – The project may have a significant effect, but mitigation measures will reduce effects to below significance.<br/>
+  ☐ <strong>Environmental Impact Report (EIR)</strong> – The project may have a significant effect and an EIR is required.<br/>
+  ☐ <strong>CEQA Exemption</strong> – Categorical Exemption §_____ or Statutory Exemption applies.
+</div>
+
+<h2>V. NEPA Determination (if Federal Nexus)</h2>
+<div class="det-box">
+  ☐ <strong>Categorical Exclusion (CE)</strong> – Action falls within a CE; no EA or EIS required.<br/>
+  ☐ <strong>Environmental Assessment / FONSI</strong> – An EA has been prepared; Finding of No Significant Impact is appropriate.<br/>
+  ☐ <strong>Environmental Impact Statement (EIS)</strong> – Action may significantly affect the human environment.<br/>
+  ☐ <strong>Not Applicable</strong> – No federal nexus identified.
+</div>
+
+<h2>VI. Recommended Conditions of Approval</h2>
+<ol>
+  ${hasSEZ?'<li>No development, grading, or vegetation disturbance within the Stream Environment Zone. A SEZ restoration plan shall be submitted and approved prior to permit issuance.</li>':''}
+  ${hasSevereLC||hasSensLC?'<li>A land capability verification or certified soils report shall be prepared by a licensed geologist. TRPA coverage calculation demonstrating compliance with applicable class limits shall be submitted prior to grading permit.</li>':''}
+  ${hasThreat?'<li>A Biological Assessment addressing ESA-listed species shall be prepared by a qualified biologist. ESA Section 7 consultation with USFWS shall be completed prior to any ground disturbance.</li>':''}
+  <li>All ground disturbance shall be accompanied by erosion control BMPs per TRPA Code §70 and the Regional Stormwater Management Plan.</li>
+  <li>Revegetation of all disturbed areas with native species is required within 90 days of construction completion.</li>
+  <li>Tribal cultural resources consultation is required per TRPA Tribal Policy and AB 52 prior to ground disturbance.</li>
+  <li>No burning of construction debris on site. All waste to be removed to approved disposal facilities.</li>
+</ol>
+
+<h2>VII. Signatures</h2>
+<div class="sig-block">
+  <div class="sig-row">
+    <div style="flex:2"><div class="sig-field"></div><div class="sig-lbl">Environmental Planner / Reviewer</div></div>
+    <div style="flex:1"><div class="sig-date"></div><div class="sig-lbl">Date</div></div>
+  </div>
+  <div class="sig-row" style="margin-bottom:0">
+    <div style="flex:2"><div class="sig-field"></div><div class="sig-lbl">Supervising Planner / Section Manager</div></div>
+    <div style="flex:1"><div class="sig-date"></div><div class="sig-lbl">Date</div></div>
+  </div>
+</div>
+
+<div class="footer">
+  TRPA Environmental Review System · ${today} · Record: ${selPermit.accelaId||selPermit.APN}<br/>
+  This is a draft document. Final findings require review and signature by authorized TRPA staff.<br/>
+  Tahoe Regional Planning Agency · 128 Market Street, Stateline, NV 89449 · (775) 588-4547 · trpa.org
+</div>
+</body></html>`;
+    openPrintWindow(html);
+  };
+
+  function openPrintWindow(html) {
+    const win = window.open('','_blank','width=960,height=800,scrollbars=yes');
+    if (!win) { alert('Pop-up blocked. Please allow pop-ups for this page.'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(()=>win.print(), 800);
+  }
+
+}); // end require
+</script>
+</body>
+</html>

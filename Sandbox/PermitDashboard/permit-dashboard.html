@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TRPA Permit Records Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    :root {
+      --navy:   #0b1f41;
+      --green:  #6ebe44;
+      --blue:   #007dc3;
+      --orange: #f16022;
+      --purple: #7b4f9e;
+      --yellow: #e8c014;
+      --bg:     #f4f6f9;
+      --surface:#ffffff;
+      --border: #d5dde8;
+      --text-dark:  #0b1f41;
+      --text-mid:   #4a5b73;
+      --text-light: #8a9bb2;
+      --shadow: 0 2px 16px rgba(11,31,65,0.09);
+      --age-fresh:   #22a855;
+      --age-warn:    #c89c00;
+      --age-amber:   #d45a10;
+      --age-danger:  #c0392b;
+      --age-overdue: #6b3f8a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lexend Deca', sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+
+    /* ── HEADER ── */
+    .app-header { background: var(--navy); color: #fff; display: flex; align-items: stretch; flex-shrink: 0; }
+    .hdr-accent { width: 7px; flex-shrink: 0; background: linear-gradient(180deg, var(--green) 0%, var(--blue) 50%, var(--orange) 100%); }
+    .hdr-content {
+      padding: 14px 24px; display: flex; align-items: center;
+      justify-content: space-between; gap: 20px; flex: 1;
+    }
+    .hdr-eyebrow {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--green); margin-bottom: 3px;
+    }
+    .hdr-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+    .hdr-title span { color: var(--blue); }
+    .hdr-sub { font-size: 0.72rem; color: #8a9bb2; margin-top: 3px; }
+    .hdr-meta { font-size: 0.71rem; color: #8a9bb2; text-align: right; line-height: 1.8; }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--green); color: var(--navy);
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 2px; margin-bottom: 4px;
+    }
+    .live-dot { width: 5px; height: 5px; background: var(--navy); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%,100% { opacity:1 }
+      50%      { opacity:.4 }
+    }
+    #rec-count { color: #8a9bb2; }
+
+    /* ── LAYOUT ── */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 295px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* Filters */
+    .filter-sec { padding: 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sec-lbl {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-light); margin-bottom: 10px;
+    }
+    .f-row { margin-bottom: 7px; }
+    .f-lbl { font-size: 0.67rem; font-weight: 600; color: var(--text-mid); margin-bottom: 3px; }
+    .f-inp {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 4px;
+      color: var(--text-dark); font-family: 'Lexend Deca', sans-serif;
+      font-size: 0.75rem; padding: 6px 9px; outline: none;
+      background: #fff; transition: border-color .15s;
+    }
+    .f-inp:focus { border-color: var(--blue); }
+    .f-btns { display: flex; gap: 7px; margin-top: 10px; }
+    .btn {
+      flex: 1; padding: 7px; border-radius: 4px;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .btn-p { background: var(--navy); color: #fff; }
+    .btn-p:hover { background: #0f2d5c; }
+    .btn-g { background: #fff; border: 1.5px solid var(--border); color: var(--text-mid); }
+    .btn-g:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* Age legend */
+    .age-legend { padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .age-legend-title {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-light); margin-bottom: 8px;
+    }
+    .age-bands { display: flex; gap: 4px; }
+    .age-band {
+      flex: 1; border-radius: 4px; padding: 6px 2px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      border: 1px solid var(--border); background: var(--bg);
+    }
+    .ab-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .ab-lbl { font-size: 0.58rem; color: var(--text-light); text-align: center; white-space: nowrap; }
+    .ab-cnt { font-size: 0.95rem; font-weight: 700; }
+
+    /* KPI strip */
+    .kpi-strip {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .kpi-tile {
+      padding: 10px 14px; border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border); position: relative;
+    }
+    .kpi-tile:nth-child(even) { border-right: none; }
+    .kpi-tile:nth-child(3),
+    .kpi-tile:nth-child(4) { border-bottom: none; }
+    .kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 1px 1px 0 0; }
+    .kpi-val  { font-size: 1.5rem; font-weight: 700; line-height: 1; margin-bottom: 2px; color: var(--navy); }
+    .kpi-lbl  { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); }
+
+    /* ── TABS ── */
+    .tab-nav {
+      background: var(--surface); border-bottom: 2px solid var(--border);
+      padding: 0 16px; display: flex; flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 9px 18px; border: none; background: none;
+      font-family: 'Lexend Deca', sans-serif; font-size: 0.75rem; font-weight: 600;
+      color: var(--text-light); cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); }
+    .tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .tab-panel.active { display: flex; }
+
+    /* ── MAIN ── */
+    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    #mapDiv { flex: 1; min-height: 0; }
+
+    /* ── CHART TAB ── */
+    .chart-tab-inner { flex: 1; overflow-y: auto; padding: 14px 16px; }
+    .chart-tab-inner::-webkit-scrollbar { width: 4px; }
+    .chart-tab-inner::-webkit-scrollbar-thumb { background: var(--border); }
+    .chart-sec-lbl {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-light); margin-bottom: 10px;
+    }
+    .bar-row   { margin-bottom: 10px; }
+    .bar-label { font-size: 0.72rem; color: var(--text-mid); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { height: 16px; background: var(--bg); border-radius: 3px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+    .bar-fill  {
+      height: 100%; border-radius: 2px; transition: width .5s cubic-bezier(.4,0,.2,1);
+      display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; min-width: 28px;
+    }
+    .bar-val { font-size: 0.67rem; font-weight: 700; color: #fff; }
+
+    /* ── RIGHT PANEL (records list) ── */
+    .right-panel {
+      width: 320px; flex-shrink: 0; background: var(--surface);
+      border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .list-hdr {
+      padding: 11px 14px 7px; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--text-light); text-transform: uppercase; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .rec-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .rec-list::-webkit-scrollbar { width: 4px; }
+    .rec-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .rec-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 9px 11px 9px 14px; margin-bottom: 5px; cursor: pointer;
+      transition: all .15s; position: relative; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(11,31,65,0.05);
+    }
+    .rec-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--age-color, var(--border));
+    }
+    .rec-card:hover { border-color: var(--blue); box-shadow: var(--shadow); transform: translateX(1px); }
+    .rec-card.sel   { border-color: var(--navy); background: rgba(11,31,65,.03); box-shadow: var(--shadow); }
+    .rc-id   { font-size: 0.75rem; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+    .rc-apn  { font-size: 0.68rem; color: var(--text-light); margin-bottom: 5px; }
+    .rc-meta { display: flex; justify-content: space-between; align-items: center; }
+    .rc-who  { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--text-mid); }
+    .rc-av   {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 7px; font-weight: 700; flex-shrink: 0;
+    }
+    .age-pill {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: .3px;
+      padding: 2px 7px; border-radius: 10px;
+    }
+    .ap-fresh   { background: rgba(34,168,85,.12);  color: var(--age-fresh);   border: 1px solid rgba(34,168,85,.3); }
+    .ap-warn    { background: rgba(200,156,0,.12);  color: var(--age-warn);    border: 1px solid rgba(200,156,0,.3); }
+    .ap-amber   { background: rgba(212,90,16,.12);  color: var(--age-amber);   border: 1px solid rgba(212,90,16,.3); }
+    .ap-danger  { background: rgba(192,57,43,.12);  color: var(--age-danger);  border: 1px solid rgba(192,57,43,.3); }
+    .ap-overdue { background: rgba(107,63,138,.12); color: var(--age-overdue); border: 1px solid rgba(107,63,138,.3); }
+
+    /* ── DETAIL ── */
+    .detail-panel {
+      height: 280px; flex-shrink: 0; background: var(--surface);
+      border-top: 1px solid var(--border); display: flex; overflow: hidden;
+    }
+    .d-empty {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px; color: var(--text-light); font-size: 0.72rem;
+    }
+    .d-empty-icon { font-size: 22px; opacity: .25; }
+    .d-content { flex: 1; display: none; padding: 14px 18px; gap: 22px; overflow-y: auto; }
+    .d-content.vis { display: flex; }
+    .d-content::-webkit-scrollbar { width: 4px; }
+    .d-content::-webkit-scrollbar-thumb { background: var(--border); }
+    .d-col   { flex: 1; }
+    .d-title { font-size: 0.95rem; font-weight: 700; color: var(--navy); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .d-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .d-lbl   { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-bottom: 2px; }
+    .d-val   { font-size: 0.78rem; color: var(--text-dark); word-break: break-word; }
+    .d-notes {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      padding: 8px; font-size: 0.72rem; line-height: 1.5; color: var(--text-mid);
+      margin-top: 6px; max-height: 100px; overflow-y: auto;
+    }
+
+    /* ── LOADING ── */
+    .loading-overlay {
+      position: absolute; inset: 0; background: rgba(244,246,249,0.88);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px; z-index: 100;
+    }
+    .loading-card {
+      background: #fff; border-radius: 8px; padding: 28px 40px;
+      text-align: center; box-shadow: var(--shadow);
+    }
+    .loading-card h3 { font-size: 0.85rem; color: var(--navy); margin-bottom: 16px; }
+    .lb-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; width: 160px; }
+    .spinner { height: 100%; width: 40%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 2px; animation: slide 1.2s ease-in-out infinite; }
+    @keyframes slide { 0%{margin-left:0;width:30%} 50%{margin-left:40%;width:60%} 100%{margin-left:100%;width:0} }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="hdr-accent"></div>
+  <div class="hdr-content">
+    <div>
+      <div class="hdr-eyebrow">Tahoe Regional Planning Agency</div>
+      <div class="hdr-title">Permit <span>Records</span></div>
+      <div class="hdr-sub">Assignment &amp; Status Tracker</div>
+    </div>
+    <div class="hdr-meta">
+      <div class="live-badge"><div class="live-dot"></div>Live Data</div><br>
+      Source: Accela Permit System
+    </div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="filter-sec">
+      <div class="sec-lbl">Filters</div>
+      <div class="f-row"><div class="f-lbl">APN</div><input id="f-apn" class="f-inp" type="text" placeholder="e.g. 093-180-005"/></div>
+      <div class="f-row"><div class="f-lbl">Assigned To Staff</div><select id="f-staff" class="f-inp"><option value="">All Staff</option></select></div>
+      <div class="f-row"><div class="f-lbl">Record Status</div><select id="f-status" class="f-inp"><option value="">All Statuses</option></select></div>
+      <div class="f-row"><div class="f-lbl">CAP Type</div><select id="f-cap" class="f-inp"><option value="">All Types</option></select></div>
+      <div class="f-row">
+        <div class="f-lbl">Age Band</div>
+        <select id="f-age" class="f-inp">
+          <option value="">All Ages</option>
+          <option value="fresh">≤ 30 days</option>
+          <option value="warn">31 – 60 days</option>
+          <option value="amber">61 – 90 days</option>
+          <option value="danger">91 – 120 days</option>
+          <option value="overdue">&gt; 120 days</option>
+        </select>
+      </div>
+      <div class="f-btns">
+        <button class="btn btn-p" onclick="applyFilters()">Apply</button>
+        <button class="btn btn-g" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <div class="age-legend">
+      <div class="age-legend-title">Days Since Filed</div>
+      <div class="age-bands">
+        <div class="age-band">
+          <div class="ab-dot" style="background:var(--age-fresh)"></div>
+          <div class="ab-lbl">≤30</div>
+          <div class="ab-cnt" id="cnt-fresh" style="color:var(--age-fresh)">—</div>
+        </div>
+        <div class="age-band">
+          <div class="ab-dot" style="background:var(--age-warn)"></div>
+          <div class="ab-lbl">31-60</div>
+          <div class="ab-cnt" id="cnt-warn" style="color:var(--age-warn)">—</div>
+        </div>
+        <div class="age-band">
+          <div class="ab-dot" style="background:var(--age-amber)"></div>
+          <div class="ab-lbl">61-90</div>
+          <div class="ab-cnt" id="cnt-amber" style="color:var(--age-amber)">—</div>
+        </div>
+        <div class="age-band">
+          <div class="ab-dot" style="background:var(--age-danger)"></div>
+          <div class="ab-lbl">91-120</div>
+          <div class="ab-cnt" id="cnt-danger" style="color:var(--age-danger)">—</div>
+        </div>
+        <div class="age-band">
+          <div class="ab-dot" style="background:var(--age-overdue)"></div>
+          <div class="ab-lbl">&gt;120</div>
+          <div class="ab-cnt" id="cnt-overdue" style="color:var(--age-overdue)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi-tile">
+        <div class="kpi-accent" style="background:var(--navy)"></div>
+        <div class="kpi-val" id="kpi-total">—</div>
+        <div class="kpi-lbl">Total</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-accent" style="background:var(--green)"></div>
+        <div class="kpi-val" id="kpi-open">—</div>
+        <div class="kpi-lbl">Open</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-accent" style="background:var(--purple)"></div>
+        <div class="kpi-val" id="kpi-overdue">—</div>
+        <div class="kpi-lbl">&gt;120 Days</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-accent" style="background:var(--orange)"></div>
+        <div class="kpi-val" id="kpi-staff">—</div>
+        <div class="kpi-lbl">Staff</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN (tabbed) -->
+  <div class="main-area">
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('map',this)">Map</button>
+      <button class="tab-btn"        onclick="switchTab('chart',this)">Chart</button>
+    </div>
+
+    <!-- Map tab -->
+    <div class="tab-panel active" id="tab-map">
+      <div id="mapDiv"></div>
+    </div>
+
+    <!-- Chart tab -->
+    <div class="tab-panel" id="tab-chart">
+      <div class="chart-tab-inner">
+        <div class="chart-sec-lbl">Projects by CAP Type</div>
+        <div id="chart-wrap">
+          <div style="color:var(--text-light);font-size:0.75rem;text-align:center;padding:16px;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-card">
+        <h3>Loading Map &amp; Data</h3>
+        <div class="lb-bg"><div class="spinner"></div></div>
+      </div>
+    </div>
+    <div class="detail-panel">
+      <div class="d-empty" id="d-empty"><div class="d-empty-icon">◈</div><span>Select a record to view details</span></div>
+      <div class="d-content" id="d-content"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: RECORDS LIST -->
+  <div class="right-panel">
+    <div class="list-hdr">Records <span id="rec-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-light)"></span></div>
+    <div class="rec-list" id="rec-list">
+      <div style="text-align:center;padding:20px;color:var(--text-light);font-size:0.75rem;">Loading records…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+require(["esri/Map","esri/views/MapView","esri/layers/FeatureLayer"],
+function(Map, MapView, FeatureLayer) {
+
+  const NOW = Date.now();
+  const MS  = 86400000;
+
+  // ── Helpers ──────────────────────────────────
+  function ageBand(ms) {
+    if (!ms) return 'overdue';
+    const days = (NOW - ms) / MS;
+    if (days <= 30)  return 'fresh';
+    if (days <= 60)  return 'warn';
+    if (days <= 90)  return 'amber';
+    if (days <= 120) return 'danger';
+    return 'overdue';
+  }
+  const AGE_COLOR = {
+    fresh:   '#22a855',
+    warn:    '#c89c00',
+    amber:   '#d45a10',
+    danger:  '#c0392b',
+    overdue: '#6b3f8a'
+  };
+  const AGE_LABEL = { fresh:'≤30d', warn:'31-60d', amber:'61-90d', danger:'91-120d', overdue:'>120d' };
+
+  function fmtDate(ms) {
+    return ms ? new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  }
+  function ini(n) { return n ? n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() : '?'; }
+  function statusCls(s) {
+    if (!s) return 'closed';
+    const v = s.toLowerCase();
+    if (v.includes('open')||v.includes('active')||v.includes('issued')) return 'open';
+    if (v.includes('pend')||v.includes('review')) return 'pending';
+    if (v.includes('expir')||v.includes('void')||v.includes('cancel')) return 'expired';
+    return 'closed';
+  }
+
+  // ── Tab switching ────────────────────────────
+  window.switchTab = function(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'map') mapView.resize();
+  };
+
+  // ── State ────────────────────────────────────
+  let allRec=[], filtRec=[], selIdx=null, parcelLayer, mapView;
+
+  // ── Map ──────────────────────────────────────
+  const map = new Map({ basemap:'topo-vector' });
+  mapView = new MapView({ container:'mapDiv', map, center:[-119.9,39.1], zoom:10, ui:{components:['zoom']} });
+
+  parcelLayer = new FeatureLayer({
+    url:'https://maps.trpa.org/server/rest/services/Parcels/FeatureServer/0',
+    outFields:['*'], title:'Parcels', popupEnabled:false,
+    renderer:{ type:'simple', symbol:{ type:'simple-fill', color:[11,31,65,0.08], outline:{ color:[11,31,65,0.45], width:0.7 }}}
+  });
+  map.add(parcelLayer);
+  mapView.when(() => document.getElementById('loading-overlay').style.display='none');
+
+  // ── Fetch from REST service ───────────────────
+  async function fetchRec(where='1=1') {
+    const url = 'https://maps.trpa.org/server/rest/services/Permit_Records/MapServer/1/query';
+    const p = new URLSearchParams({
+      where, f:'json', returnGeometry:false, resultRecordCount:2000,
+      outFields:'OBJECTID,APN,Accela_ID,Key_One,Key_Two,Short_Notes,Detailed_Description,Record_Status,Accela_CAPType_Name,File_Date,Assigned_To_Staff',
+      orderByFields:'File_Date DESC'
+    });
+    const r = await fetch(`${url}?${p}`);
+    const d = await r.json();
+    return (d.features||[]).map((f,i) => {
+      const a = f.attributes;
+      return {
+        _id:         a.OBJECTID ?? i,
+        APN:         a.APN             || '',
+        accelaId:    a.Accela_ID       || '',
+        keyOne:      a.Key_One         || '',
+        keyTwo:      a.Key_Two         || '',
+        shortNotes:  a.Short_Notes     || '',
+        description: a.Detailed_Description || '',
+        recordStatus:a.Record_Status   || '',
+        capType:     a.Accela_CAPType_Name || '',
+        fileDateMs:  a.File_Date       || null,
+        assignedTo:  a.Assigned_To_Staff   || '',
+      };
+    });
+  }
+
+  async function init() {
+    allRec  = await fetchRec();
+    filtRec = [...allRec];
+    populateDropdowns();
+    refresh(allRec);
+  }
+  init();
+
+  // ── Dropdowns ────────────────────────────────
+  function populateDropdowns() {
+    const ss=new Set(), ts=new Set(), cs=new Set();
+    allRec.forEach(r => {
+      if (r.assignedTo)   ss.add(r.assignedTo);
+      if (r.recordStatus) ts.add(r.recordStatus);
+      if (r.capType)      cs.add(r.capType);
+    });
+    fillSel('f-staff',  [...ss].sort());
+    fillSel('f-status', [...ts].sort());
+    fillSel('f-cap',    [...cs].sort());
+  }
+  function fillSel(id, vals) {
+    const el = document.getElementById(id);
+    const first = el.options[0];
+    el.innerHTML=''; el.appendChild(first);
+    vals.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  }
+
+  // ── Filters ──────────────────────────────────
+  window.applyFilters = function() {
+    const apn    = document.getElementById('f-apn').value.trim().toLowerCase();
+    const staff  = document.getElementById('f-staff').value;
+    const status = document.getElementById('f-status').value;
+    const cap    = document.getElementById('f-cap').value;
+    const age    = document.getElementById('f-age').value;
+    filtRec = allRec.filter(r => {
+      if (apn    && !r.APN.toLowerCase().includes(apn)) return false;
+      if (staff  && r.assignedTo   !== staff)           return false;
+      if (status && r.recordStatus !== status)          return false;
+      if (cap    && r.capType      !== cap)             return false;
+      if (age    && ageBand(r.fileDateMs) !== age)      return false;
+      return true;
+    });
+    refresh(filtRec);
+    highlightParcels(filtRec);
+  };
+  window.clearFilters = function() {
+    ['f-apn','f-staff','f-status','f-cap','f-age'].forEach(id => { document.getElementById(id).value=''; });
+    filtRec = [...allRec];
+    refresh(allRec);
+    parcelLayer.definitionExpression = '1=1';
+  };
+
+  // ── Refresh all views ────────────────────────
+  function refresh(recs) {
+    renderKPIs(recs);
+    renderAgeLegend(recs);
+    renderList(recs);
+    renderChart(recs);
+    document.getElementById('rec-count').textContent =
+      `· ${recs.length.toLocaleString()} record${recs.length!==1?'s':''}`;
+  }
+
+  // ── KPIs ─────────────────────────────────────
+  function renderKPIs(recs) {
+    const open    = recs.filter(r => statusCls(r.recordStatus) === 'open').length;
+    const overdue = recs.filter(r => ageBand(r.fileDateMs) === 'overdue').length;
+    const staff   = new Set(recs.map(r => r.assignedTo).filter(Boolean)).size;
+    document.getElementById('kpi-total').textContent   = recs.length.toLocaleString();
+    document.getElementById('kpi-open').textContent    = open.toLocaleString();
+    document.getElementById('kpi-overdue').textContent = overdue.toLocaleString();
+    document.getElementById('kpi-staff').textContent   = staff;
+  }
+
+  // ── Age legend counts ────────────────────────
+  function renderAgeLegend(recs) {
+    const c = { fresh:0, warn:0, amber:0, danger:0, overdue:0 };
+    recs.forEach(r => c[ageBand(r.fileDateMs)]++);
+    Object.keys(c).forEach(k => document.getElementById(`cnt-${k}`).textContent = c[k].toLocaleString());
+  }
+
+  // ── Records list ─────────────────────────────
+  function renderList(recs) {
+    const c = document.getElementById('rec-list');
+    if (!recs.length) {
+      c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:0.75rem;">No records match filters.</div>';
+      return;
+    }
+    c.innerHTML = recs.map(r => {
+      const band  = ageBand(r.fileDateMs);
+      const color = AGE_COLOR[band];
+      const days  = r.fileDateMs ? Math.floor((NOW - r.fileDateMs) / MS) : null;
+      const dstr  = days !== null ? `${days}d ago` : 'No date';
+      return `
+        <div class="rec-card ${selIdx===r._id?'sel':''}"
+             style="--age-color:${color}"
+             onclick="selectRec(${r._id})">
+          <div class="rc-id">${r.accelaId||r.keyOne||'N/A'}</div>
+          <div class="rc-apn">APN: ${r.APN||'—'} · ${r.capType||'—'}</div>
+          <div class="rc-meta">
+            <div class="rc-who"><div class="rc-av">${ini(r.assignedTo)}</div>${r.assignedTo||'Unassigned'}</div>
+            <span class="age-pill ap-${band}" title="Filed ${fmtDate(r.fileDateMs)}">${dstr}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Bar chart ────────────────────────────────
+  function renderChart(recs) {
+    const counts = {};
+    recs.forEach(r => { const k=r.capType||'Unknown'; counts[k]=(counts[k]||0)+1; });
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const max = sorted[0]?sorted[0][1]:1;
+    const cw = document.getElementById('chart-wrap');
+    if (!sorted.length) { cw.innerHTML='<div style="color:var(--text-light);font-size:0.75rem;text-align:center;padding:16px;">No data</div>'; return; }
+
+    cw.innerHTML = sorted.map(([label, count]) => {
+      const pct = Math.max(10, Math.round((count/max)*100));
+      const bc  = { fresh:0, warn:0, amber:0, danger:0, overdue:0 };
+      recs.filter(r=>(r.capType||'Unknown')===label).forEach(r=>bc[ageBand(r.fileDateMs)]++);
+      const dom = Object.entries(bc).sort((a,b)=>b[1]-a[1])[0][0];
+      const col = AGE_COLOR[dom];
+      return `
+        <div class="bar-row">
+          <div class="bar-label" title="${label}">${label}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pct}%;background:${col}">
+              <span class="bar-val">${count}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Parcel operations ────────────────────────
+  async function highlightParcels(recs) {
+    const apns = [...new Set(recs.map(r=>r.APN).filter(Boolean))];
+    if (!apns.length) { parcelLayer.definitionExpression='1=0'; return; }
+    const list = apns.slice(0,200).map(a=>`'${a.replace(/'/g,"''")}'`).join(',');
+    parcelLayer.definitionExpression = `APN IN (${list})`;
+    const q = parcelLayer.createQuery();
+    q.where = parcelLayer.definitionExpression; q.returnGeometry=true;
+    try { const res=await parcelLayer.queryFeatures(q); if(res.features.length) mapView.goTo(res.features,{duration:700}); } catch(e){}
+  }
+  async function zoomAPN(apn) {
+    if (!apn) return;
+    const q = parcelLayer.createQuery();
+    q.where=`APN='${apn.replace(/'/g,"''")}'`; q.returnGeometry=true;
+    try { const res=await parcelLayer.queryFeatures(q); if(res.features.length) mapView.goTo({target:res.features,zoom:16},{duration:600}); } catch(e){}
+  }
+
+  // ── Select record ────────────────────────────
+  window.selectRec = function(idx) {
+    selIdx = idx;
+    const r = filtRec.find(r=>r._id===idx);
+    renderList(filtRec);
+    if (r) {
+      showDetail(r);
+      zoomAPN(r.APN);
+      if (r.APN) parcelLayer.definitionExpression=`APN='${r.APN.replace(/'/g,"''")}'`;
+    }
+  };
+
+  // ── Detail panel ─────────────────────────────
+  function showDetail(r) {
+    const band  = ageBand(r.fileDateMs);
+    const color = AGE_COLOR[band];
+    const days  = r.fileDateMs ? Math.floor((NOW-r.fileDateMs)/MS) : null;
+    document.getElementById('d-empty').style.display='none';
+    const dc = document.getElementById('d-content');
+    dc.classList.add('vis');
+    dc.innerHTML=`
+      <div class="d-col">
+        <div class="d-title">
+          <span>${r.accelaId||r.keyOne||'No ID'}</span>
+          <span class="age-pill ap-${band}">${days!==null?days+'d ago':'No date'} · ${AGE_LABEL[band]}</span>
+        </div>
+        <div class="d-grid">
+          <div><div class="d-lbl">APN</div><div class="d-val">${r.APN||'—'}</div></div>
+          <div><div class="d-lbl">CAP Type</div><div class="d-val">${r.capType||'—'}</div></div>
+          <div><div class="d-lbl">Assigned To</div><div class="d-val" style="color:${color};font-weight:600">${r.assignedTo||'Unassigned'}</div></div>
+          <div><div class="d-lbl">File Date</div><div class="d-val">${fmtDate(r.fileDateMs)}</div></div>
+          <div><div class="d-lbl">Status</div><div class="d-val">${r.recordStatus||'—'}</div></div>
+          <div><div class="d-lbl">Key Two</div><div class="d-val">${r.keyTwo||'—'}</div></div>
+        </div>
+      </div>
+      <div class="d-col">
+        <div><div class="d-lbl">Short Notes</div><div class="d-notes">${r.shortNotes||'No notes.'}</div></div>
+        <div style="margin-top:8px"><div class="d-lbl">Detailed Description</div><div class="d-notes">${r.description||'No description.'}</div></div>
+      </div>`;
+  }
+
+});
+</script>
+</body>
+</html>
