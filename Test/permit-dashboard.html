@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRPA Permit Records Dashboard</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <script type="module" src="https://js.arcgis.com/calcite-components/2.8.0/calcite.esm.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/2.8.0/calcite.css" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+    :root {
+      --teal:      #00b4d8;
+      --deep:      #0077a8;
+      --dark:      #0d1b2a;
+      --panel:     #112233;
+      --card:      #162840;
+      --border:    rgba(0,180,216,0.18);
+      --text:      #e0f0fa;
+      --muted:     #7aa3be;
+      --age-fresh:   #2ecc71;
+      --age-warn:    #f1c40f;
+      --age-amber:   #e67e22;
+      --age-danger:  #e74c3c;
+      --age-overdue: #9b59b6;
+      --font-d: 'Rajdhani', sans-serif;
+      --font-b: 'IBM Plex Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:var(--font-b); background:var(--dark); color:var(--text);
+      height:100vh; overflow:hidden; display:flex; flex-direction:column;
+    }
+
+    /* HEADER */
+    .app-header {
+      background:linear-gradient(135deg,#0a1628,#0d2340,#0a1628);
+      border-bottom:1px solid var(--border); padding:0 24px; height:54px;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-shrink:0; position:relative;
+    }
+    .app-header::after {
+      content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,transparent,var(--teal),var(--deep),transparent);
+    }
+    .hdr-l { display:flex; align-items:center; gap:12px; }
+    .hdr-logo {
+      width:34px; height:34px; border-radius:7px;
+      background:linear-gradient(135deg,var(--teal),var(--deep));
+      display:flex; align-items:center; justify-content:center;
+      font-family:var(--font-d); font-weight:700; font-size:13px; color:#fff; letter-spacing:1px;
+    }
+    .hdr-title { font-family:var(--font-d); font-size:19px; font-weight:600; letter-spacing:2px; color:var(--teal); text-transform:uppercase; }
+    .hdr-sub   { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+    .hdr-r     { display:flex; align-items:center; gap:16px; }
+    .live-badge{ display:flex; align-items:center; gap:5px; font-size:10px; color:var(--age-fresh); letter-spacing:1px; text-transform:uppercase; }
+    .live-dot  { width:7px; height:7px; background:var(--age-fresh); border-radius:50%; animation:pulse 2s infinite; }
+    @keyframes pulse {
+      0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(46,204,113,.4)}
+      50%{opacity:.7;box-shadow:0 0 0 5px rgba(46,204,113,0)}
+    }
+    #rec-count { font-size:11px; color:var(--muted); letter-spacing:.5px; }
+
+    /* LAYOUT */
+    .app-body { display:flex; flex:1; overflow:hidden; }
+
+    /* LEFT PANEL */
+    .left-panel {
+      width:305px; flex-shrink:0; background:var(--panel);
+      border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden;
+    }
+
+    /* Filters */
+    .filter-sec { padding:13px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .sec-lbl {
+      font-family:var(--font-d); font-size:11px; letter-spacing:2px; color:var(--teal);
+      text-transform:uppercase; margin-bottom:9px; display:flex; align-items:center; gap:7px;
+    }
+    .sec-lbl::before { content:''; width:14px; height:2px; background:var(--teal); }
+    .f-row { margin-bottom:8px; }
+    .f-lbl { font-size:9px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
+    .f-inp {
+      width:100%; background:rgba(0,180,216,.05); border:1px solid var(--border); border-radius:4px;
+      color:var(--text); font-family:var(--font-b); font-size:12px; padding:6px 9px;
+      outline:none; transition:border-color .2s,background .2s;
+    }
+    .f-inp:focus { border-color:var(--teal); background:rgba(0,180,216,.1); }
+    .f-inp option { background:var(--panel); }
+    .f-btns { display:flex; gap:7px; margin-top:10px; }
+    .btn { flex:1; padding:6px; border-radius:4px; font-family:var(--font-d); font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; border:none; transition:all .2s; }
+    .btn-p { background:linear-gradient(135deg,var(--teal),var(--deep)); color:#fff; }
+    .btn-p:hover { opacity:.85; }
+    .btn-g { background:transparent; border:1px solid var(--border); color:var(--muted); }
+    .btn-g:hover { border-color:var(--teal); color:var(--teal); }
+
+    /* Age legend */
+    .age-legend { padding:10px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .age-legend-title {
+      font-family:var(--font-d); font-size:10px; letter-spacing:2px; color:var(--teal);
+      text-transform:uppercase; margin-bottom:7px; display:flex; align-items:center; gap:7px;
+    }
+    .age-legend-title::before { content:''; width:14px; height:2px; background:var(--teal); }
+    .age-bands { display:flex; gap:4px; }
+    .age-band {
+      flex:1; border-radius:4px; padding:5px 2px;
+      display:flex; flex-direction:column; align-items:center; gap:2px;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .ab-dot  { width:8px; height:8px; border-radius:50%; }
+    .ab-lbl  { font-size:8px; letter-spacing:.5px; color:var(--muted); text-align:center; white-space:nowrap; }
+    .ab-cnt  { font-family:var(--font-d); font-size:15px; font-weight:700; }
+
+    /* KPI */
+    .kpi-strip { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border-bottom:1px solid var(--border); flex-shrink:0; }
+    .kpi-tile  { background:var(--panel); padding:10px 12px; display:flex; flex-direction:column; }
+    .kpi-val   { font-family:var(--font-d); font-size:24px; font-weight:700; line-height:1; margin-bottom:1px; }
+    .kpi-lbl   { font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
+
+    /* List */
+    .list-hdr {
+      padding:10px 14px 6px; font-family:var(--font-d); font-size:11px; letter-spacing:2px;
+      color:var(--teal); text-transform:uppercase; display:flex; align-items:center; gap:7px; flex-shrink:0;
+    }
+    .list-hdr::before { content:''; width:14px; height:2px; background:var(--teal); }
+    .rec-list { flex:1; overflow-y:auto; padding:0 7px 7px; }
+    .rec-list::-webkit-scrollbar { width:3px; }
+    .rec-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .rec-card {
+      background:var(--card); border:1px solid var(--border); border-radius:5px;
+      padding:9px 11px; margin-bottom:5px; cursor:pointer; transition:all .18s;
+      position:relative; overflow:hidden;
+    }
+    .rec-card::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+      background:var(--age-color, var(--muted));
+    }
+    .rec-card:hover  { border-color:rgba(0,180,216,.5); transform:translateX(2px); }
+    .rec-card.sel    { border-color:var(--teal); background:rgba(0,180,216,.07); }
+    .rc-id   { font-size:11px; font-weight:500; color:var(--teal); letter-spacing:.5px; margin-bottom:2px; }
+    .rc-apn  { font-size:9px; color:var(--muted); margin-bottom:4px; }
+    .rc-meta { display:flex; justify-content:space-between; align-items:center; }
+    .rc-who  { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--text); }
+    .rc-av   {
+      width:15px; height:15px; border-radius:50%;
+      background:linear-gradient(135deg,var(--teal),var(--deep));
+      display:flex; align-items:center; justify-content:center;
+      font-size:7px; font-weight:700; flex-shrink:0;
+    }
+    .age-pill { font-size:8px; letter-spacing:.8px; text-transform:uppercase; padding:2px 6px; border-radius:10px; font-weight:600; }
+    .ap-fresh   { background:rgba(46,204,113,.15);  color:var(--age-fresh);   border:1px solid rgba(46,204,113,.3); }
+    .ap-warn    { background:rgba(241,196,15,.15);  color:var(--age-warn);    border:1px solid rgba(241,196,15,.3); }
+    .ap-amber   { background:rgba(230,126,34,.15);  color:var(--age-amber);   border:1px solid rgba(230,126,34,.3); }
+    .ap-danger  { background:rgba(231,76,60,.15);   color:var(--age-danger);  border:1px solid rgba(231,76,60,.3); }
+    .ap-overdue { background:rgba(155,89,182,.15);  color:var(--age-overdue); border:1px solid rgba(155,89,182,.3); }
+
+    /* MAIN */
+    .main-area { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+    #mapDiv    { flex:1; min-height:0; }
+
+    /* RIGHT PANEL – chart */
+    .right-panel {
+      width:270px; flex-shrink:0; background:var(--panel);
+      border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden;
+    }
+    .chart-hdr {
+      padding:12px 14px 9px; font-family:var(--font-d); font-size:11px; letter-spacing:2px;
+      color:var(--teal); text-transform:uppercase; display:flex; align-items:center; gap:7px;
+      border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .chart-hdr::before { content:''; width:14px; height:2px; background:var(--teal); }
+    .chart-wrap { flex:1; overflow-y:auto; padding:11px 13px; }
+    .chart-wrap::-webkit-scrollbar { width:3px; }
+    .chart-wrap::-webkit-scrollbar-thumb { background:var(--border); }
+    .bar-row   { margin-bottom:9px; }
+    .bar-label {
+      font-size:9px; color:var(--text); letter-spacing:.3px; margin-bottom:3px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .bar-track { height:18px; background:rgba(0,0,0,.28); border-radius:3px; position:relative; overflow:hidden; }
+    .bar-fill  {
+      height:100%; border-radius:3px; transition:width .5s cubic-bezier(.4,0,.2,1);
+      display:flex; align-items:center; justify-content:flex-end; padding-right:5px; min-width:26px;
+    }
+    .bar-val   { font-size:9px; font-weight:700; color:#fff; font-family:var(--font-d); letter-spacing:.5px; }
+
+    /* DETAIL */
+    .detail-panel {
+      height:200px; flex-shrink:0; background:var(--panel); border-top:1px solid var(--border); display:flex; overflow:hidden;
+    }
+    .d-empty {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:7px; color:var(--muted); font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    }
+    .d-empty-icon { font-size:26px; opacity:.25; }
+    .d-content { flex:1; display:none; padding:13px 17px; gap:20px; overflow-y:auto; }
+    .d-content.vis { display:flex; }
+    .d-content::-webkit-scrollbar { width:3px; }
+    .d-content::-webkit-scrollbar-thumb { background:var(--border); }
+    .d-col  { flex:1; }
+    .d-title { font-family:var(--font-d); font-size:17px; font-weight:700; color:var(--teal); letter-spacing:1px; margin-bottom:9px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .d-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .d-lbl  { font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:2px; }
+    .d-val  { font-size:11px; color:var(--text); word-break:break-word; }
+    .d-notes {
+      background:rgba(0,0,0,.2); border:1px solid var(--border); border-radius:4px;
+      padding:8px; font-size:10px; line-height:1.5; color:var(--text);
+      margin-top:6px; max-height:68px; overflow-y:auto;
+    }
+
+    /* Loading */
+    .loading-overlay {
+      position:absolute; inset:0; background:rgba(13,27,42,.88);
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:10px; z-index:100;
+      font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase;
+    }
+    .spinner { width:30px; height:30px; border:2px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="hdr-l">
+    <div class="hdr-logo">TR</div>
+    <div>
+      <div class="hdr-title">Permit Records</div>
+      <div class="hdr-sub">TRPA · Assignment &amp; Status Tracker</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <span id="rec-count">Loading…</span>
+    <div class="live-badge"><div class="live-dot"></div>Live</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="filter-sec">
+      <div class="sec-lbl">Filters</div>
+      <div class="f-row"><div class="f-lbl">APN</div><input id="f-apn" class="f-inp" type="text" placeholder="e.g. 1234-567-890-000"/></div>
+      <div class="f-row"><div class="f-lbl">Assigned To Staff</div><select id="f-staff" class="f-inp"><option value="">All Staff</option></select></div>
+      <div class="f-row"><div class="f-lbl">Record Status</div><select id="f-status" class="f-inp"><option value="">All Statuses</option></select></div>
+      <div class="f-row"><div class="f-lbl">CAP Type</div><select id="f-cap" class="f-inp"><option value="">All Types</option></select></div>
+      <div class="f-row">
+        <div class="f-lbl">Age Band</div>
+        <select id="f-age" class="f-inp">
+          <option value="">All Ages</option>
+          <option value="fresh">≤ 30 days</option>
+          <option value="warn">31 – 60 days</option>
+          <option value="amber">61 – 90 days</option>
+          <option value="danger">91 – 120 days</option>
+          <option value="overdue">&gt; 120 days</option>
+        </select>
+      </div>
+      <div class="f-btns">
+        <button class="btn btn-p" onclick="applyFilters()">Apply</button>
+        <button class="btn btn-g" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <div class="age-legend">
+      <div class="age-legend-title">Days Since Filed</div>
+      <div class="age-bands">
+        <div class="age-band" style="background:rgba(46,204,113,.06)">
+          <div class="ab-dot" style="background:var(--age-fresh)"></div>
+          <div class="ab-lbl">≤30</div>
+          <div class="ab-cnt" id="cnt-fresh" style="color:var(--age-fresh)">—</div>
+        </div>
+        <div class="age-band" style="background:rgba(241,196,15,.06)">
+          <div class="ab-dot" style="background:var(--age-warn)"></div>
+          <div class="ab-lbl">31-60</div>
+          <div class="ab-cnt" id="cnt-warn" style="color:var(--age-warn)">—</div>
+        </div>
+        <div class="age-band" style="background:rgba(230,126,34,.06)">
+          <div class="ab-dot" style="background:var(--age-amber)"></div>
+          <div class="ab-lbl">61-90</div>
+          <div class="ab-cnt" id="cnt-amber" style="color:var(--age-amber)">—</div>
+        </div>
+        <div class="age-band" style="background:rgba(231,76,60,.06)">
+          <div class="ab-dot" style="background:var(--age-danger)"></div>
+          <div class="ab-lbl">91-120</div>
+          <div class="ab-cnt" id="cnt-danger" style="color:var(--age-danger)">—</div>
+        </div>
+        <div class="age-band" style="background:rgba(155,89,182,.06)">
+          <div class="ab-dot" style="background:var(--age-overdue)"></div>
+          <div class="ab-lbl">&gt;120</div>
+          <div class="ab-cnt" id="cnt-overdue" style="color:var(--age-overdue)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="kpi-val" id="kpi-total"   style="color:var(--teal)">—</div><div class="kpi-lbl">Total</div></div>
+      <div class="kpi-tile"><div class="kpi-val" id="kpi-open"    style="color:var(--age-fresh)">—</div><div class="kpi-lbl">Open</div></div>
+      <div class="kpi-tile"><div class="kpi-val" id="kpi-overdue" style="color:var(--age-overdue)">—</div><div class="kpi-lbl">&gt;120 Days</div></div>
+      <div class="kpi-tile"><div class="kpi-val" id="kpi-staff"   style="color:var(--age-warn)">—</div><div class="kpi-lbl">Staff</div></div>
+    </div>
+
+    <div class="list-hdr">Records</div>
+    <div class="rec-list" id="rec-list"><div style="text-align:center;padding:20px;color:var(--muted);font-size:10px;">Loading records…</div></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="main-area">
+    <div id="mapDiv"></div>
+    <div class="loading-overlay" id="loading-overlay"><div class="spinner"></div><span>Loading Map</span></div>
+    <div class="detail-panel">
+      <div class="d-empty" id="d-empty"><div class="d-empty-icon">◈</div><span>Select a record to view details</span></div>
+      <div class="d-content" id="d-content"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: BAR CHART -->
+  <div class="right-panel">
+    <div class="chart-hdr">Projects by CAP Type</div>
+    <div class="chart-wrap" id="chart-wrap"><div style="color:var(--muted);font-size:10px;text-align:center;padding:16px;">Loading…</div></div>
+  </div>
+
+</div>
+
+<script>
+require(["esri/Map","esri/views/MapView","esri/layers/FeatureLayer"],
+function(Map, MapView, FeatureLayer) {
+
+  const NOW = Date.now();
+  const MS  = 86400000;
+
+  // ── Age helpers ──────────────────────────────
+  function ageBand(d) {
+    if (!d) return 'overdue';
+    const days = (NOW - d) / MS;
+    if (days <= 30)  return 'fresh';
+    if (days <= 60)  return 'warn';
+    if (days <= 90)  return 'amber';
+    if (days <= 120) return 'danger';
+    return 'overdue';
+  }
+  const AGE_COLOR = { fresh:'#2ecc71', warn:'#f1c40f', amber:'#e67e22', danger:'#e74c3c', overdue:'#9b59b6' };
+  const AGE_LABEL = { fresh:'≤30d', warn:'31-60d', amber:'61-90d', danger:'91-120d', overdue:'>120d' };
+
+  function fmtDate(ms) { return ms ? new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'; }
+  function ini(n) { return n ? n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() : '?'; }
+  function statusCls(s) {
+    if (!s) return 'closed';
+    const v = s.toLowerCase();
+    if (v.includes('open')||v.includes('active')||v.includes('issued')) return 'open';
+    if (v.includes('pend')||v.includes('review')) return 'pending';
+    if (v.includes('expir')||v.includes('void')||v.includes('cancel')) return 'expired';
+    return 'closed';
+  }
+
+  // ── State ────────────────────────────────────
+  let allRec=[], filtRec=[], selOID=null, parcelLayer, mapView;
+
+  // ── Map ──────────────────────────────────────
+  const map = new Map({ basemap:'dark-gray-vector' });
+  mapView = new MapView({ container:'mapDiv', map, center:[-119.9,39.1], zoom:10, ui:{components:['zoom']} });
+
+  parcelLayer = new FeatureLayer({
+    url:'https://maps.trpa.org/server/rest/services/Parcels/FeatureServer/0',
+    outFields:['*'], title:'Parcels', popupEnabled:false,
+    renderer:{ type:'simple', symbol:{ type:'simple-fill', color:[0,180,216,0.1], outline:{ color:[0,180,216,0.55], width:0.6 }}}
+  });
+  map.add(parcelLayer);
+  mapView.when(() => document.getElementById('loading-overlay').style.display='none');
+
+  // ── Fetch ────────────────────────────────────
+  async function fetchRec(where='1=1') {
+    const url = 'https://maps.trpa.org/server/rest/services/Permit_Records/MapServer/1/query';
+    const p = new URLSearchParams({ where, f:'json', returnGeometry:false, resultRecordCount:1000,
+      outFields:'OBJECTID,APN,Accela_ID,Key_One,Key_Two,Short_Notes,Detailed_Description,Record_Status,Accela_CAPType_Name,File_Date,Assigned_To_Staff',
+      orderByFields:'File_Date DESC' });
+    const r = await fetch(`${url}?${p}`);
+    const d = await r.json();
+    return (d.features||[]).map(f=>f.attributes);
+  }
+
+  async function init() {
+    allRec = await fetchRec();
+    filtRec = [...allRec];
+    populateDropdowns();
+    refresh(allRec);
+  }
+  init();
+
+  // ── Dropdowns ────────────────────────────────
+  function populateDropdowns() {
+    const ss=new Set(), ts=new Set(), cs=new Set();
+    allRec.forEach(r => {
+      if (r.Assigned_To_Staff) ss.add(r.Assigned_To_Staff);
+      if (r.Record_Status)     ts.add(r.Record_Status);
+      if (r.Accela_CAPType_Name) cs.add(r.Accela_CAPType_Name);
+    });
+    fillSel('f-staff',[...ss].sort());
+    fillSel('f-status',[...ts].sort());
+    fillSel('f-cap',[...cs].sort());
+  }
+  function fillSel(id, vals) {
+    const el = document.getElementById(id);
+    const first = el.options[0];
+    el.innerHTML=''; el.appendChild(first);
+    vals.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  }
+
+  // ── Filters ──────────────────────────────────
+  window.applyFilters = function() {
+    const apn    = document.getElementById('f-apn').value.trim().toLowerCase();
+    const staff  = document.getElementById('f-staff').value;
+    const status = document.getElementById('f-status').value;
+    const cap    = document.getElementById('f-cap').value;
+    const age    = document.getElementById('f-age').value;
+    filtRec = allRec.filter(r => {
+      if (apn    && !(r.APN||'').toLowerCase().includes(apn))  return false;
+      if (staff  && r.Assigned_To_Staff !== staff)              return false;
+      if (status && r.Record_Status !== status)                 return false;
+      if (cap    && r.Accela_CAPType_Name !== cap)              return false;
+      if (age    && ageBand(r.File_Date) !== age)               return false;
+      return true;
+    });
+    refresh(filtRec);
+    highlightParcels(filtRec);
+  };
+  window.clearFilters = function() {
+    ['f-apn','f-staff','f-status','f-cap','f-age'].forEach(id => {
+      const el = document.getElementById(id);
+      el.tagName==='INPUT' ? el.value='' : el.value='';
+    });
+    filtRec = [...allRec];
+    refresh(allRec);
+    parcelLayer.definitionExpression = '1=1';
+  };
+
+  // ── Refresh all views ────────────────────────
+  function refresh(recs) {
+    renderKPIs(recs);
+    renderAgeLegend(recs);
+    renderList(recs);
+    renderChart(recs);
+    document.getElementById('rec-count').textContent =
+      `${recs.length.toLocaleString()} record${recs.length!==1?'s':''}`;
+  }
+
+  // ── KPIs ─────────────────────────────────────
+  function renderKPIs(recs) {
+    const open    = recs.filter(r=>statusCls(r.Record_Status)==='open').length;
+    const overdue = recs.filter(r=>ageBand(r.File_Date)==='overdue').length;
+    const staff   = new Set(recs.map(r=>r.Assigned_To_Staff).filter(Boolean)).size;
+    document.getElementById('kpi-total').textContent   = recs.length;
+    document.getElementById('kpi-open').textContent    = open;
+    document.getElementById('kpi-overdue').textContent = overdue;
+    document.getElementById('kpi-staff').textContent   = staff;
+  }
+
+  // ── Age legend counts ────────────────────────
+  function renderAgeLegend(recs) {
+    const c={fresh:0,warn:0,amber:0,danger:0,overdue:0};
+    recs.forEach(r => c[ageBand(r.File_Date)]++);
+    Object.keys(c).forEach(k => document.getElementById(`cnt-${k}`).textContent = c[k]);
+  }
+
+  // ── Records list ─────────────────────────────
+  function renderList(recs) {
+    const c = document.getElementById('rec-list');
+    if (!recs.length) {
+      c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:10px;">No records match filters.</div>';
+      return;
+    }
+    c.innerHTML = recs.map(r => {
+      const band  = ageBand(r.File_Date);
+      const color = AGE_COLOR[band];
+      const days  = r.File_Date ? Math.floor((NOW - r.File_Date) / MS) : null;
+      const dstr  = days !== null ? `${days}d ago` : 'No date';
+      return `
+        <div class="rec-card ${selOID===r.OBJECTID?'sel':''}"
+             style="--age-color:${color}"
+             onclick="selectRec(${r.OBJECTID})">
+          <div class="rc-id">${r.Accela_ID||r.Key_One||'N/A'}</div>
+          <div class="rc-apn">APN: ${r.APN||'—'} · ${r.Accela_CAPType_Name||'—'}</div>
+          <div class="rc-meta">
+            <div class="rc-who"><div class="rc-av">${ini(r.Assigned_To_Staff)}</div>${r.Assigned_To_Staff||'Unassigned'}</div>
+            <span class="age-pill ap-${band}" title="Filed ${fmtDate(r.File_Date)}">${dstr}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Bar chart ────────────────────────────────
+  function renderChart(recs) {
+    const counts = {};
+    recs.forEach(r => {
+      const k = r.Accela_CAPType_Name || 'Unknown';
+      counts[k] = (counts[k]||0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const max = sorted[0] ? sorted[0][1] : 1;
+    const cw = document.getElementById('chart-wrap');
+    if (!sorted.length) { cw.innerHTML='<div style="color:var(--muted);font-size:10px;text-align:center;padding:16px;">No data</div>'; return; }
+
+    cw.innerHTML = sorted.map(([label, count]) => {
+      const pct = Math.max(9, Math.round((count / max) * 100));
+      // Colour bar by dominant age band for that cap type
+      const typeRecs = recs.filter(r=>(r.Accela_CAPType_Name||'Unknown')===label);
+      const bc = {fresh:0,warn:0,amber:0,danger:0,overdue:0};
+      typeRecs.forEach(r => bc[ageBand(r.File_Date)]++);
+      const dom = Object.entries(bc).sort((a,b)=>b[1]-a[1])[0][0];
+      const col = AGE_COLOR[dom];
+      return `
+        <div class="bar-row">
+          <div class="bar-label" title="${label}">${label}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${col}dd,${col}88)">
+              <span class="bar-val">${count}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Parcel operations ────────────────────────
+  async function highlightParcels(recs) {
+    const apns = [...new Set(recs.map(r=>r.APN).filter(Boolean))];
+    if (!apns.length) { parcelLayer.definitionExpression='1=0'; return; }
+    const list = apns.slice(0,200).map(a=>`'${a.replace(/'/g,"''")}'`).join(',');
+    parcelLayer.definitionExpression = `APN IN (${list})`;
+    const q = parcelLayer.createQuery();
+    q.where = parcelLayer.definitionExpression; q.returnGeometry=true;
+    try { const res=await parcelLayer.queryFeatures(q); if(res.features.length) mapView.goTo(res.features,{duration:700}); } catch(e){}
+  }
+  async function zoomAPN(apn) {
+    if (!apn) return;
+    const q = parcelLayer.createQuery();
+    q.where=`APN='${apn.replace(/'/g,"''")}'`; q.returnGeometry=true;
+    try { const res=await parcelLayer.queryFeatures(q); if(res.features.length) mapView.goTo({target:res.features,zoom:16},{duration:600}); } catch(e){}
+  }
+
+  // ── Select record ────────────────────────────
+  window.selectRec = function(oid) {
+    selOID = oid;
+    const r = filtRec.find(r=>r.OBJECTID===oid);
+    renderList(filtRec);
+    if (r) {
+      showDetail(r);
+      zoomAPN(r.APN);
+      if (r.APN) parcelLayer.definitionExpression=`APN='${r.APN.replace(/'/g,"''")}'`;
+    }
+  };
+
+  // ── Detail panel ─────────────────────────────
+  function showDetail(r) {
+    const band  = ageBand(r.File_Date);
+    const color = AGE_COLOR[band];
+    const days  = r.File_Date ? Math.floor((NOW-r.File_Date)/MS) : null;
+    document.getElementById('d-empty').style.display='none';
+    const dc = document.getElementById('d-content');
+    dc.classList.add('vis');
+    dc.innerHTML=`
+      <div class="d-col">
+        <div class="d-title">
+          <span>${r.Accela_ID||r.Key_One||'No ID'}</span>
+          <span class="age-pill ap-${band}">${days!==null?days+'d ago':'No date'} · ${AGE_LABEL[band]}</span>
+        </div>
+        <div class="d-grid">
+          <div><div class="d-lbl">APN</div><div class="d-val">${r.APN||'—'}</div></div>
+          <div><div class="d-lbl">CAP Type</div><div class="d-val">${r.Accela_CAPType_Name||'—'}</div></div>
+          <div><div class="d-lbl">Assigned To</div><div class="d-val" style="color:${color}">${r.Assigned_To_Staff||'Unassigned'}</div></div>
+          <div><div class="d-lbl">File Date</div><div class="d-val">${fmtDate(r.File_Date)}</div></div>
+          <div><div class="d-lbl">Status</div><div class="d-val">${r.Record_Status||'—'}</div></div>
+          <div><div class="d-lbl">Key Two</div><div class="d-val">${r.Key_Two||'—'}</div></div>
+        </div>
+      </div>
+      <div class="d-col">
+        <div><div class="d-lbl">Short Notes</div><div class="d-notes">${r.Short_Notes||'No notes.'}</div></div>
+        <div style="margin-top:8px"><div class="d-lbl">Detailed Description</div><div class="d-notes">${r.Detailed_Description||'No description.'}</div></div>
+      </div>`;
+  }
+});
+</script>
+</body>
+</html>

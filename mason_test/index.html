@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lake Tahoe Projects Dashboard</title>
+
+    <!-- Chart.js MUST load before ArcGIS SDK to avoid Dojo AMD multipleDefine conflict -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- ArcGIS Maps SDK 4.32 -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+    <!-- ArcGIS Map Components (replaces widgets) -->
+    <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
+
+    <!-- Calcite Components 3.x — matches what SDK 4.32 bundles internally -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@esri/calcite-components@3.0.3/dist/calcite/calcite.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@esri/calcite-components@3.0.3/dist/calcite/calcite.esm.js"></script>
+
+    <style>
+      html, body {
+        margin: 0; padding: 0;
+        height: 100%; width: 100%;
+        overflow: hidden;
+        font-family: var(--calcite-font-family);
+      }
+      calcite-shell { height: 100%; }
+
+      /* Map container fills calcite-shell content area */
+      #map-container {
+        position: relative;
+        height: 100%;
+        width: 100%;
+      }
+      arcgis-map {
+        height: 100%;
+        width: 100%;
+      }
+
+      /* ── Loading overlay ── */
+      #loading-overlay {
+        position: absolute; inset: 0;
+        background: rgba(0,0,0,0.55);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 100;
+        pointer-events: none;
+      }
+
+      /* ── Left panel internals ── */
+      .panel-section {
+        border-bottom: 1px solid var(--calcite-color-border-3);
+        padding: 10px 12px;
+      }
+
+      /* Stats row */
+      .stats-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .stat-box {
+        flex: 1;
+        background: var(--calcite-color-foreground-2);
+        border-radius: 6px;
+        padding: 6px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .stat-label {
+        font-size: 10px;
+        color: var(--calcite-color-text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .stat-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--calcite-color-text-1);
+        line-height: 1.2;
+      }
+      .stat-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+        vertical-align: middle;
+      }
+
+      /* Chart */
+      #chart-container {
+        height: 120px;
+        padding: 4px 0;
+      }
+      #chart-canvas { width: 100% !important; height: 100% !important; }
+
+      /* Filter chips */
+      #filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--calcite-color-border-3);
+      }
+
+      /* Search */
+      #search-wrap { padding: 8px 12px; }
+
+      /* List */
+      #project-list { overflow-y: auto; }
+      calcite-list-item { cursor: pointer; }
+
+      /* ── Popup detail rows ── */
+      .detail-row {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--calcite-color-border-3);
+      }
+      .detail-row-label {
+        font-size: 10px;
+        color: var(--calcite-color-text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .detail-row-value {
+        font-size: 13px;
+        color: var(--calcite-color-text-1);
+        word-break: break-word;
+        margin-top: 2px;
+      }
+      .geom-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+
+  <body>
+    <calcite-shell content-behind theme="dark">
+
+      <!-- ── Header ── -->
+      <calcite-navigation slot="header" label="Dashboard">
+        <calcite-navigation-logo
+          slot="logo"
+          heading="Lake Tahoe Projects"
+          description="EIP Project Dashboard"
+          thumbnail="https://www.trpa.gov/wp-content/uploads/TRPA-Favicon.png"
+        ></calcite-navigation-logo>
+        <div slot="content-end" style="display:flex;gap:8px;align-items:center;padding-right:12px;">
+          <calcite-chip id="chip-count" kind="brand" icon="layers">Loading…</calcite-chip>
+          <calcite-button id="btn-zoom-all" icon-start="zoom-to-object" appearance="outline" kind="neutral" scale="s">
+            Zoom to All
+          </calcite-button>
+        </div>
+      </calcite-navigation>
+
+      <!-- ── Left Panel ── -->
+      <calcite-shell-panel slot="panel-start" display-mode="float" width-scale="m">
+        <calcite-panel heading="Projects">
+
+          <!-- Stats + Donut Chart -->
+          <div class="panel-section">
+            <div class="stats-row">
+              <div class="stat-box">
+                <span class="stat-label">Total</span>
+                <span class="stat-value" id="stat-total">—</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label"><span class="stat-dot" style="background:#F0AB00"></span>Points</span>
+                <span class="stat-value" id="stat-point" style="color:#F0AB00">—</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label"><span class="stat-dot" style="background:#00A3C7"></span>Lines</span>
+                <span class="stat-value" id="stat-line" style="color:#00A3C7">—</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label"><span class="stat-dot" style="background:#56A033"></span>Polygons</span>
+                <span class="stat-value" id="stat-polygon" style="color:#56A033">—</span>
+              </div>
+            </div>
+
+            <div id="chart-container">
+              <canvas id="chart-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Geometry type filter chips -->
+          <div id="filter-chips">
+            <calcite-chip-group id="geom-filter" selection-mode="multiple" label="Filter by geometry">
+              <calcite-chip value="point" selected scale="s">
+                <span slot="image" class="stat-dot" style="background:#F0AB00;margin:0"></span>
+                Points
+              </calcite-chip>
+              <calcite-chip value="line" selected scale="s">
+                <span slot="image" class="stat-dot" style="background:#00A3C7;margin:0"></span>
+                Lines
+              </calcite-chip>
+              <calcite-chip value="polygon" selected scale="s">
+                <span slot="image" class="stat-dot" style="background:#56A033;margin:0"></span>
+                Polygons
+              </calcite-chip>
+            </calcite-chip-group>
+          </div>
+
+          <!-- Search -->
+          <div id="search-wrap">
+            <calcite-input-text id="search" placeholder="Search projects…" icon="search" clearable></calcite-input-text>
+          </div>
+
+          <!-- Project List -->
+          <calcite-list id="project-list" selection-mode="single"></calcite-list>
+
+        </calcite-panel>
+      </calcite-shell-panel>
+
+      <!-- ── Map (ArcGIS Map Component) ── -->
+      <div id="map-container">
+        <arcgis-map
+          id="the-map"
+          basemap="dark-gray-vector"
+          center="-120.0,39.09"
+          zoom="10"
+        >
+          <!-- UI components declared as children — no view.ui.add() needed -->
+          <arcgis-zoom position="top-left"></arcgis-zoom>
+          <arcgis-home position="top-left"></arcgis-home>
+          <arcgis-expand position="top-right" expand-icon="legend" expand-tooltip="Legend">
+            <arcgis-legend></arcgis-legend>
+          </arcgis-expand>
+          <arcgis-expand position="top-right" expand-icon="basemap" expand-tooltip="Basemaps">
+            <arcgis-basemap-gallery></arcgis-basemap-gallery>
+          </arcgis-expand>
+        </arcgis-map>
+
+        <div id="loading-overlay">
+          <calcite-loader label="Loading projects…" type="indeterminate"></calcite-loader>
+        </div>
+      </div>
+
+    </calcite-shell>
+
+    <script>
+      // Only require what we can't get from map components
+      require(["esri/config", "esri/layers/GeoJSONLayer", "esri/request"], function (esriConfig, GeoJSONLayer, esriRequest) {
+
+        // ── Constants ──────────────────────────────────────────────────────
+        const SERVICE_URL =
+          "https://www.laketahoeinfo.org/WebServices/GetProjectDetailedLocationsAsFeatureCollection/JSON/e17aeb86-85e3-4260-83fd-a2b32501c476";
+
+        // The laketahoeinfo.org service doesn't send CORS headers.
+        // In dev, Vite proxies /lti-proxy/* → https://www.laketahoeinfo.org
+        // so no third-party CORS proxy is needed.
+        esriConfig.request.interceptors.push({
+          urls: "https://www.laketahoeinfo.org",
+          before(params) {
+            params.url = params.url.replace(
+              "https://www.laketahoeinfo.org",
+              "/lti-proxy"
+            );
+          },
+        });
+
+        const GEOM = {
+          point:   { color: "#F0AB00", rgb: [240, 171,   0], label: "Point"   },
+          line:    { color: "#00A3C7", rgb: [  0, 163, 199], label: "Line"    },
+          polygon: { color: "#56A033", rgb: [ 86, 160,  51], label: "Polygon" },
+        };
+
+        // ── State ──────────────────────────────────────────────────────────
+        let view, map;
+        let allFeatures        = [];
+        let layers             = {};
+        let layerViews         = {};
+        let highlightHandle;
+        let activeGeomFilters  = new Set(["point", "line", "polygon"]);
+        let searchTerm         = "";
+
+        // ── Bootstrap from arcgis-map component ───────────────────────────
+        const mapEl = document.getElementById("the-map");
+
+        mapEl.addEventListener("arcgisViewReadyChange", async () => {
+          view = mapEl.view;
+          map  = mapEl.map;
+          // Disable default popup click (we handle selection ourselves)
+          view.popupEnabled = true;
+
+          loadData().catch((err) => {
+            console.error(err);
+            document.getElementById("loading-overlay").innerHTML =
+              `<calcite-notice kind="danger" open><div slot="message">Failed to load project data.</div></calcite-notice>`;
+          });
+        });
+
+        // ── Project detail service ────────────────────────────────────────
+        const DETAIL_BASE =
+          "https://www.laketahoeinfo.org/WebServices/GetProject/JSON/e17aeb86-85e3-4260-83fd-a2b32501c476/";
+
+        function detailRow(label, value) {
+          if (value == null || value === "") return "";
+          return `<div class="detail-row">
+            <span class="detail-row-label">${label}</span>
+            <span class="detail-row-value">${value}</span>
+          </div>`;
+        }
+
+        function buildPopupContent(feature) {
+          const attrs  = feature.graphic.attributes;
+          const gKey   = normalizeType(attrs.GeomType || "");
+          const g      = GEOM[gKey] || {};
+          const geomChip = `<span class="geom-chip" style="background:${g.color}22;color:${g.color};border:1px solid ${g.color}55">
+            <span class="stat-dot" style="background:${g.color}"></span>${g.label || gKey}
+          </span>`;
+
+          const div = document.createElement("div");
+          div.style.minWidth = "260px";
+          div.innerHTML = `<div style="padding:8px 14px;color:var(--calcite-color-text-3);font-size:13px;">Loading…</div>`;
+
+          esriRequest(DETAIL_BASE + encodeURIComponent(attrs.EIPProjectNumber), { responseType: "json" })
+            .then(res => {
+              const d = Array.isArray(res.data) ? res.data[0] : (res.data || {});
+              const fmtCost   = v => v != null ? `$${Number(v).toLocaleString()}` : null;
+              const dateRange = [d.ImplementationStartDate, d.EndDate].filter(Boolean).join(" – ") || null;
+              div.innerHTML = `
+                ${detailRow("EIP Number",       attrs.EIPProjectNumber)}
+                ${detailRow("Geometry",         geomChip)}
+                ${detailRow("Stage",            d.Stage)}
+                ${detailRow("Lead Implementer", d.LeadImplementer)}
+                ${detailRow("Jurisdiction",     d.ProjectJurisdiction)}
+                ${detailRow("Watershed",        d.ProjectWatershed)}
+                ${detailRow("Focus Area",       d.EIPFocusArea)}
+                ${detailRow("Program",          d.EIPProgram)}
+                ${detailRow("Dates",            dateRange)}
+                ${detailRow("Est. Total Cost",  fmtCost(d.EstimatedTotalCost))}
+                ${d.ProjectDescription ? `<div class="detail-row">
+                  <span class="detail-row-label">Description</span>
+                  <span class="detail-row-value" style="font-size:12px;line-height:1.5">${d.ProjectDescription}</span>
+                </div>` : ""}
+                ${d.ProjectSummaryUrl ? `<div class="detail-row" style="display:flex;gap:8px;padding:10px 14px;">
+                  <a href="${d.ProjectSummaryUrl}" target="_blank" rel="noopener"
+                     style="padding:5px 12px;border-radius:4px;background:var(--calcite-color-brand);
+                            color:#fff;font-size:12px;text-decoration:none;">View Project ↗</a>
+                  ${d.ProjectFactSheetUrl ? `<a href="${d.ProjectFactSheetUrl}" target="_blank" rel="noopener"
+                     style="padding:5px 12px;border-radius:4px;border:1px solid var(--calcite-color-border-1);
+                            color:var(--calcite-color-text-1);font-size:12px;text-decoration:none;">Fact Sheet ↗</a>` : ""}
+                </div>` : ""}
+              `;
+            })
+            .catch(() => {
+              div.innerHTML = `<div style="padding:8px 14px;color:var(--calcite-color-danger)">Failed to load details.</div>`;
+            });
+
+          return div;
+        }
+
+        // ── Geometry type normalization ────────────────────────────────────
+        function normalizeType(geojsonType) {
+          if (!geojsonType) return "unknown";
+          const t = geojsonType.toLowerCase();
+          if (t.includes("point"))   return "point";
+          if (t.includes("line"))    return "line";
+          if (t.includes("polygon")) return "polygon";
+          return "unknown";
+        }
+
+        // ── Renderers ─────────────────────────────────────────────────────
+        function makeRenderer(geomKey) {
+          const c = GEOM[geomKey];
+          if (geomKey === "point") {
+            return {
+              type: "simple",
+              symbol: {
+                type: "simple-marker",
+                style: "circle",
+                color: [...c.rgb, 0.85],
+                size: 10,
+                outline: { color: [255, 255, 255, 0.8], width: 1.2 },
+              },
+            };
+          }
+          if (geomKey === "line") {
+            return {
+              type: "simple",
+              symbol: {
+                type: "simple-line",
+                color: [...c.rgb, 0.9],
+                width: 2.5,
+                style: "solid",
+              },
+            };
+          }
+          return {
+            type: "simple",
+            symbol: {
+              type: "simple-fill",
+              color: [...c.rgb, 0.25],
+              outline: { color: [...c.rgb, 0.9], width: 1.8 },
+            },
+          };
+        }
+
+        // Maps our geomKey to the ArcGIS geometry type string required by GeoJSONLayer.
+        // Without this, GeoJSONLayer defaults to the type of the first feature and silently
+        // drops any features with a different GeoJSON geometry type (e.g. MultiLineString
+        // in a LineString layer, or MultiPolygon in a Polygon layer).
+        const ESRI_GEOM_TYPE = { point: "point", line: "polyline", polygon: "polygon" };
+
+        // ── Build a GeoJSONLayer from a filtered feature set ──────────────
+        function makeLayer(features, geomKey) {
+          const fc   = { type: "FeatureCollection", features };
+          const blob = new Blob([JSON.stringify(fc)], { type: "application/json" });
+          return new GeoJSONLayer({
+            url: URL.createObjectURL(blob),
+            geometryType: ESRI_GEOM_TYPE[geomKey],
+            title: `${GEOM[geomKey].label} Projects`,
+            outFields: ["*"],
+            renderer: makeRenderer(geomKey),
+            popupTemplate: {
+              title: "{ProjectName}",
+              outFields: ["*"],
+              content: buildPopupContent,
+            },
+          });
+        }
+
+        function tagFeatures(features, geomKey) {
+          return features.map(f => ({
+            ...f,
+            properties: { ...f.properties, GeomType: GEOM[geomKey]?.label || geomKey },
+          }));
+        }
+
+        // ── Load data ─────────────────────────────────────────────────────
+        async function loadData() {
+          const res     = await esriRequest(SERVICE_URL, { responseType: "json" });
+          const geojson = res.data;
+          allFeatures   = geojson.features || [];
+
+          const byType = { point: [], line: [], polygon: [] };
+          allFeatures.forEach(f => {
+            const t = normalizeType(f.geometry?.type);
+            if (byType[t]) byType[t].push(f);
+          });
+
+          allFeatures = [];
+          for (const [key, feats] of Object.entries(byType)) {
+            const tagged = tagFeatures(feats, key);
+            byType[key]  = tagged;
+            allFeatures.push(...tagged);
+          }
+
+          const total = allFeatures.length;
+          document.getElementById("stat-total").textContent   = total;
+          document.getElementById("stat-point").textContent   = byType.point.length;
+          document.getElementById("stat-line").textContent    = byType.line.length;
+          document.getElementById("stat-polygon").textContent = byType.polygon.length;
+          document.getElementById("chip-count").textContent   = `${total} Projects`;
+
+          await buildChart(byType);
+          buildList(allFeatures);
+          addLayers(byType);
+          document.getElementById("loading-overlay").style.display = "none";
+        }
+
+        // ── Bar Chart ─────────────────────────────────────────────────────
+        let chart;
+        async function buildChart(byType) {
+          await customElements.whenDefined("calcite-panel");
+          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => requestAnimationFrame(r));
+
+          const canvas = document.getElementById("chart-canvas");
+          if (!canvas) return;
+
+          chart = new Chart(canvas, {
+            type: "bar",
+            data: {
+              labels: ["Points", "Lines", "Polygons"],
+              datasets: [{
+                data: [byType.point.length, byType.line.length, byType.polygon.length],
+                backgroundColor: [GEOM.point.color, GEOM.line.color, GEOM.polygon.color],
+                borderRadius: 4,
+                borderSkipped: false,
+              }],
+            },
+            options: {
+              indexAxis: "x",
+              plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: {
+                  label: ctx => ` ${ctx.parsed.y} (${Math.round(ctx.parsed.y / allFeatures.length * 100)}%)`,
+                }},
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#bbb", font: { size: 11 } },
+                  grid: { display: false },
+                  border: { display: false },
+                },
+                y: {
+                  ticks: { color: "#bbb", font: { size: 10 }, maxTicksLimit: 4 },
+                  grid: { color: "rgba(255,255,255,0.07)" },
+                  border: { display: false },
+                },
+              },
+              animation: { duration: 600 },
+            },
+          });
+        }
+
+        // ── Add layers to map ─────────────────────────────────────────────
+        function addLayers(byType) {
+          for (const [key, feats] of Object.entries(byType)) {
+            if (!feats.length) continue;
+            const layer = makeLayer(feats, key);
+            layers[key] = layer;
+            map.add(layer);
+          }
+
+          const readyAll = Object.values(layers).map(l => l.when());
+          Promise.all(readyAll).then(async () => {
+            const extents = Object.values(layers).map(l => l.fullExtent).filter(Boolean);
+            if (extents.length) view.goTo(extents.reduce((a, b) => a.union(b))).catch(() => {});
+
+            for (const [key, layer] of Object.entries(layers)) {
+              layerViews[key] = await view.whenLayerView(layer);
+            }
+
+            // Sync list selection + highlight when popup opens on a feature click
+            view.popup.watch("selectedFeature", async (graphic) => {
+              if (!graphic) return;
+              const pid = graphic.attributes?.ProjectID;
+              if (pid) {
+                selectListItem(pid);
+                await highlightFeature(pid);
+              }
+            });
+          }).catch(err => console.error("GeoJSONLayer failed to load:", err));
+        }
+
+        // ── List ──────────────────────────────────────────────────────────
+        function buildList(features) {
+          const list = document.getElementById("project-list");
+          list.innerHTML = "";
+
+          features.forEach(f => {
+            const p    = f.properties;
+            const gKey = normalizeType(f.geometry?.type);
+            const col  = GEOM[gKey]?.color || "#888";
+
+            const item = document.createElement("calcite-list-item");
+            item.label            = p.ProjectName || `Project ${p.ProjectID}`;
+            item.description      = p.EIPProjectNumber || "";
+            item.dataset.id       = p.ProjectID;
+            item.dataset.name     = (p.ProjectName || "").toLowerCase();
+            item.dataset.geomtype = gKey;
+
+            const dot       = document.createElement("calcite-icon");
+            dot.slot        = "content-start";
+            dot.icon        = "map-pin";
+            dot.style.color = col;
+            dot.scale       = "s";
+            item.appendChild(dot);
+
+            list.appendChild(item);
+          });
+
+          list.addEventListener("calciteListChange", async (e) => {
+            const sel = e.target.selectedItems;
+            if (!sel || sel.length === 0) return;
+            const pid = parseInt(sel[0].dataset.id);
+            // Zoom, then open the popup on the feature (which triggers the content function)
+            for (const [key, layer] of Object.entries(layers)) {
+              const q = layer.createQuery();
+              q.where = `ProjectID = ${pid}`;
+              q.returnGeometry = true;
+              const res = await layer.queryFeatures(q);
+              if (res.features.length > 0) {
+                const graphic = res.features[0];
+                await view.goTo({ target: graphic, zoom: 14 });
+                view.openPopup({ features: [graphic], fetchFeatures: true });
+                break;
+              }
+            }
+          });
+        }
+
+        function selectListItem(projectId) {
+          document.getElementById("project-list")
+            .querySelectorAll("calcite-list-item")
+            .forEach(item => { item.selected = parseInt(item.dataset.id) === projectId; });
+        }
+
+        // ── Highlight ─────────────────────────────────────────────────────
+        async function highlightFeature(projectId) {
+          if (highlightHandle) { highlightHandle.remove(); highlightHandle = null; }
+          for (const [key, layer] of Object.entries(layers)) {
+            const q = layer.createQuery();
+            q.where = `ProjectID = ${projectId}`;
+            q.returnGeometry = true;
+            const res = await layer.queryFeatures(q);
+            if (res.features.length > 0 && layerViews[key]) {
+              highlightHandle = layerViews[key].highlight(res.features);
+              break;
+            }
+          }
+        }
+
+        // ── Geometry Filter ───────────────────────────────────────────────
+        function applyFilters() {
+          document.getElementById("project-list").querySelectorAll("calcite-list-item").forEach(item => {
+            const geomMatch = activeGeomFilters.has(item.dataset.geomtype);
+            const nameMatch = !searchTerm || item.dataset.name.includes(searchTerm);
+            item.hidden = !(geomMatch && nameMatch);
+          });
+          for (const [key, layer] of Object.entries(layers)) {
+            layer.visible = activeGeomFilters.has(key);
+          }
+        }
+
+        // Use click + rAF so Calcite has time to update chip.selected before we read it.
+        // This avoids depending on a specific Calcite event name.
+        document.getElementById("geom-filter").addEventListener("click", () => {
+          requestAnimationFrame(() => {
+            const chips = [...document.querySelectorAll("#geom-filter calcite-chip[value]")];
+            const specific = new Set(
+              chips.filter(c => c.selected).map(c => c.getAttribute("value"))
+            );
+            activeGeomFilters = specific.size > 0 ? specific : new Set(["point", "line", "polygon"]);
+            applyFilters();
+          });
+        });
+
+        // ── Search ────────────────────────────────────────────────────────
+        document.getElementById("search").addEventListener("calciteInputTextInput", (e) => {
+          searchTerm = (e.target.value || "").toLowerCase();
+          applyFilters();
+        });
+
+        // ── Zoom to All ───────────────────────────────────────────────────
+        document.getElementById("btn-zoom-all").addEventListener("click", () => {
+          if (view) view.goTo({ center: [-120.0, 39.09], zoom: 10 });
+        });
+
+      });
+    </script>
+  </body>
+</html>
