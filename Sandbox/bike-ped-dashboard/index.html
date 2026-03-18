@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bike &amp; Pedestrian Counter Dashboard – TRPA</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://js.arcgis.com/5.0/esri/themes/light/main.css" />
+  <script type="module" src="https://js.arcgis.com/5.0/"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/styles/ag-grid.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/styles/ag-theme-alpine.css" />
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --navy:       #0b1f41;
+      --green:      #6ebe44;
+      --blue:       #007dc3;
+      --orange:     #f16022;
+      --purple:     #7b4f9e;
+      --yellow:     #e8c014;
+      --amber:      #e8a514;
+      --bg:         #f4f6f9;
+      --surface:    #ffffff;
+      --border:     #d5dde8;
+      --text-dark:  #0b1f41;
+      --text-mid:   #4a5b73;
+      --text-light: #8a9bb2;
+      --shadow:     0 2px 16px rgba(11,31,65,.09);
+      --font:       'Lexend Deca', 'Avenir Next', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--bg); color: var(--text-dark); }
+    arcgis-map { display: block; width: 100%; height: 100%; }
+
+    /* ── App shell ── */
+    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Header ── */
+    .app-header {
+      flex-shrink: 0; display: flex; align-items: center;
+      background: var(--navy); height: 52px; position: relative; z-index: 50;
+      box-shadow: 0 2px 8px rgba(0,0,0,.35);
+    }
+    .app-header::before {
+      content: ''; width: 6px; height: 100%; flex-shrink: 0;
+      background: linear-gradient(to bottom, var(--green), var(--blue), var(--orange));
+    }
+    .header-inner { display: flex; align-items: center; gap: 12px; padding: 0 20px; flex: 1; min-width: 0; }
+    .header-icon-wrap {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(110,190,68,.18); border: 1.5px solid rgba(110,190,68,.4);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header-titles { line-height: 1.25; }
+    .header-eyebrow { font-size: .58rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--green); }
+    .header-title { font-size: .95rem; font-weight: 700; color: #fff; }
+    .header-title span { color: var(--blue); }
+    .header-spacer { flex: 1; }
+
+    #selected-chip {
+      display: none; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+      border-radius: 20px; padding: 4px 10px 4px 8px;
+      font-size: .7rem; font-weight: 600; color: #fff;
+    }
+    #clear-btn { cursor: pointer; opacity: .65; transition: opacity .15s; }
+    #clear-btn:hover { opacity: 1; }
+
+    #loading-indicator { display: flex; align-items: center; gap: 7px; color: rgba(255,255,255,.75); font-size: .7rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Run Update button ── */
+    #run-update-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(110,190,68,.15); border: 1.5px solid rgba(110,190,68,.45);
+      color: var(--green); border-radius: 6px; padding: 5px 12px;
+      font-family: var(--font); font-size: .72rem; font-weight: 600; cursor: pointer;
+      transition: background .15s, border-color .15s; white-space: nowrap;
+      margin-right: 14px;
+    }
+    #run-update-btn:hover  { background: rgba(110,190,68,.28); border-color: var(--green); }
+    #run-update-btn:disabled { opacity: .45; cursor: not-allowed; }
+    #run-update-btn.running { border-color: var(--amber); color: var(--amber); background: rgba(232,165,20,.12); }
+    #run-update-btn.error   { border-color: #e05;        color: #e05;        background: rgba(220,0,80,.1); }
+
+    /* ── Update modal ── */
+    #update-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(11,31,65,.55); backdrop-filter: blur(3px);
+      align-items: center; justify-content: center;
+    }
+    #update-modal-overlay.open { display: flex; }
+    #update-modal {
+      background: var(--surface); border-radius: 12px; width: 520px; max-width: 95vw;
+      box-shadow: 0 8px 40px rgba(11,31,65,.28); overflow: hidden;
+    }
+    .modal-header {
+      background: var(--navy); padding: 16px 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .modal-header-title { color: #fff; font-size: .9rem; font-weight: 700; flex: 1; }
+    .modal-close-btn {
+      background: none; border: none; color: rgba(255,255,255,.6); font-size: 1.1rem;
+      cursor: pointer; line-height: 1; padding: 2px 4px; transition: color .15s;
+    }
+    .modal-close-btn:hover { color: #fff; }
+    .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .modal-field label { display: block; font-size: .72rem; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; }
+    .modal-field input {
+      width: 100%; border: 1px solid var(--border); border-radius: 6px;
+      padding: 7px 10px; font-family: var(--font); font-size: .8rem; color: var(--text-dark);
+      outline: none; transition: border-color .15s;
+    }
+    .modal-field input:focus { border-color: var(--blue); }
+    .modal-field input.invalid { border-color: #e05; }
+    .modal-hint { font-size: .66rem; color: var(--text-light); margin-top: 3px; }
+    .modal-footer { padding: 0 20px 20px; display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-btn {
+      border-radius: 6px; padding: 7px 16px; font-family: var(--font);
+      font-size: .8rem; font-weight: 600; cursor: pointer; border: none; transition: opacity .15s;
+    }
+    .modal-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .modal-btn.primary { background: var(--blue); color: #fff; }
+    .modal-btn.primary:hover:not(:disabled) { opacity: .85; }
+    .modal-btn.secondary { background: var(--bg); color: var(--text-mid); border: 1px solid var(--border); }
+    .modal-btn.secondary:hover { background: var(--border); }
+    .modal-dry-run-row { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--text-mid); }
+    .modal-dry-run-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--blue); cursor: pointer; }
+
+    /* ── GP status log ── */
+    #gp-status-log {
+      display: none; background: #0b1428; border-radius: 8px;
+      padding: 10px 12px; max-height: 180px; overflow-y: auto;
+      font-family: 'Courier New', monospace; font-size: .72rem; line-height: 1.6;
+    }
+    #gp-status-log.visible { display: block; }
+    .log-line { color: #a8c4e0; }
+    .log-line.warn  { color: var(--amber); }
+    .log-line.error { color: #ff6b8a; }
+    .log-line.ok    { color: var(--green); }
+
+    /* ── Stats bar ── */
+    .stats-bar { flex-shrink: 0; display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .kpi-card { flex: 1; padding: 8px 18px; border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+    .kpi-card:last-child { border-right: none; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi-card:nth-child(1)::before { background: var(--blue); }
+    .kpi-card:nth-child(2)::before { background: var(--green); }
+    .kpi-card:nth-child(3)::before { background: var(--orange); }
+    .kpi-card:nth-child(4)::before { background: var(--purple); }
+    .kpi-value { font-size: 1.55rem; font-weight: 700; color: var(--navy); line-height: 1; }
+    .kpi-label { font-size: .58rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-light); margin-top: 2px; }
+
+    /* ── 3-column main layout ── */
+    .main-content { flex: 1; display: flex; min-height: 0; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      flex: 0 0 256px; display: flex; flex-direction: column;
+      background: var(--surface); border-right: 1px solid var(--border);
+      min-height: 0; overflow: hidden; z-index: 10;
+    }
+    .sidebar-head {
+      flex-shrink: 0; padding: 10px 10px 0;
+      display: flex; flex-direction: column; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-search-wrap { position: relative; }
+    .sidebar-search {
+      width: 100%; padding: 6px 10px 6px 28px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      font-family: var(--font); font-size: .73rem; color: var(--text-dark);
+      background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%238a9bb2' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 7px center;
+      outline: none; transition: border-color .15s;
+    }
+    .sidebar-search:focus { border-color: var(--blue); background-color: #fff; }
+
+    .type-filters { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 10px; }
+    .type-chip {
+      padding: 3px 9px; border-radius: 10px; font-size: .6rem; font-weight: 700;
+      border: 1.5px solid var(--border); background: var(--bg); color: var(--text-mid);
+      cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .type-chip:hover { border-color: var(--text-mid); }
+    .type-chip.active                       { background: var(--navy);    border-color: var(--navy);    color: #fff; }
+    .type-chip.active[data-type="permanent"]{ background: #3a7a12;           border-color: #3a7a12; }
+    .type-chip.active[data-type="pneumatic"]{ background: var(--blue);       border-color: var(--blue); }
+    .type-chip.active[data-type="retired"]  { background: var(--text-light); border-color: var(--text-light); }
+
+    .sidebar-legend {
+      flex-shrink: 0; display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: .62rem; color: var(--text-mid); white-space: nowrap; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.9); box-shadow: 0 0 0 1px rgba(0,0,0,.18); flex-shrink: 0; }
+
+    .counter-list { flex: 1; overflow-y: auto; }
+    .counter-list::-webkit-scrollbar { width: 4px; }
+    .counter-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .counter-list-empty { padding: 20px 14px; font-size: .74rem; color: var(--text-light); font-style: italic; text-align: center; }
+
+    .counter-item {
+      padding: 9px 12px; cursor: pointer;
+      border-bottom: 1px solid #eef1f6;
+      border-left: 3px solid transparent;
+      transition: background .1s, border-color .1s;
+    }
+    .counter-item:hover { background: #f0f6ff; }
+    .counter-item.selected { background: #ddeeff; border-left-color: var(--blue); }
+
+    .counter-item-top { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; }
+    .counter-item-name { font-size: .74rem; font-weight: 600; color: var(--navy); line-height: 1.3; flex: 1; }
+    .counter-type-badge {
+      flex-shrink: 0; padding: 2px 5px; border-radius: 3px;
+      font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; line-height: 1.4;
+    }
+    .badge-permanent { background: #e2f4d0; color: #2e6b0a; }
+    .badge-pneumatic { background: #d6eef9; color: #005a9e; }
+    .badge-trend     { background: #fef3cc; color: #7a5200; }
+    .badge-retired   { background: #eef0f3; color: #5a6575; }
+
+    .counter-item-meta { display: flex; align-items: center; gap: 8px; }
+    .counter-item-count { font-size: .65rem; font-weight: 700; color: var(--blue); }
+    .counter-item-date  { font-size: .62rem; color: var(--text-light); margin-left: auto; }
+
+    /* ── Map container ── */
+    #map-container { flex: 1; position: relative; min-width: 0; }
+
+    /* ── Right panel ── */
+    .right-panel {
+      flex: 0 0 430px; min-width: 380px;
+      display: flex; flex-direction: column;
+      background: var(--bg); border-left: 1px solid var(--border); overflow: hidden;
+    }
+
+    /* ── Tabs ── */
+    .tab-nav {
+      flex-shrink: 0; display: flex; align-items: flex-end;
+      background: var(--surface); border-bottom: 1.5px solid var(--border);
+      padding: 0 12px; gap: 2px;
+    }
+    .tab-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 10px 14px 9px; border: none; background: transparent;
+      font-family: var(--font); font-size: .72rem; font-weight: 600;
+      color: var(--text-light); cursor: pointer;
+      border-bottom: 3px solid transparent; transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-dark); }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); }
+    .tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .tab-panel.active { display: flex; }
+
+    /* ── Chart tab ── */
+    .chart-tab { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px 14px; gap: 10px; }
+    .chart-controls {
+      flex-shrink: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 7px 12px; box-shadow: var(--shadow);
+    }
+    .ctrl-label { font-size: .65rem; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    .ctrl-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+    .year-btns { display: flex; flex-wrap: wrap; gap: 3px; }
+    .year-btn {
+      padding: 2px 7px; border-radius: 4px; font-size: .62rem; font-weight: 700;
+      border: 1.5px solid var(--border); background: var(--bg); color: var(--text-mid);
+      cursor: pointer; transition: all .12s;
+    }
+    .year-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .year-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .year-btn[data-year="all"].active { background: var(--navy); border-color: var(--navy); }
+
+    .chart-card {
+      flex: 1; min-height: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; box-shadow: var(--shadow);
+      padding: 12px 14px; display: flex; flex-direction: column;
+    }
+    .chart-card-title { flex-shrink: 0; font-size: .68rem; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+    .canvas-wrap { flex: 1; min-height: 0; position: relative; }
+
+    /* ── Seasonal tab ── */
+    .seasonal-tab { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px 14px; gap: 10px; }
+
+    /* ── Grid tab ── */
+    .grid-tab { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .grid-toolbar {
+      flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .grid-toolbar-spacer { flex: 1; }
+    .btn-icon {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 4px;
+      background: var(--surface); font-family: var(--font); font-size: .7rem; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .btn-icon:hover { border-color: var(--blue); color: var(--blue); }
+    #grid-search-input {
+      flex: 0 0 200px; padding: 5px 10px 5px 28px;
+      border: 1.5px solid var(--border); border-radius: 4px;
+      font-family: var(--font); font-size: .7rem; color: var(--text-dark);
+      background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%238a9bb2' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 7px center;
+      outline: none; transition: border-color .15s;
+    }
+    #grid-search-input:focus { border-color: var(--blue); }
+    #grid-search-input::placeholder { color: var(--text-light); }
+    #agGrid { flex: 1; min-height: 0; }
+
+    /* ── AG Grid overrides ── */
+    .ag-theme-alpine {
+      --ag-font-family: var(--font); --ag-font-size: 12px;
+      --ag-header-background-color: var(--bg); --ag-header-foreground-color: var(--text-mid);
+      --ag-border-color: var(--border); --ag-row-hover-color: #f0f6ff;
+      --ag-selected-row-background-color: #ddeeff; --ag-odd-row-background-color: #fafcff;
+      --ag-cell-horizontal-padding: 10px;
+    }
+    .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── Documents tab ── */
+    .docs-tab {
+      flex: 1; min-height: 0; overflow-y: auto;
+      padding: 14px 14px 20px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .docs-tab::-webkit-scrollbar { width: 4px; }
+    .docs-tab::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .docs-intro {
+      font-size: .73rem; color: var(--text-mid); line-height: 1.55;
+      padding: 10px 12px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 7px; margin-bottom: 6px;
+    }
+    .docs-intro a { color: var(--blue); text-decoration: none; font-weight: 600; }
+    .docs-intro a:hover { text-decoration: underline; }
+
+    .docs-section-label {
+      font-size: .6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--text-light);
+      padding: 10px 2px 4px; margin-top: 4px;
+    }
+    .docs-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 2px; }
+
+    .doc-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      text-decoration: none; color: inherit;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .doc-card:hover { border-color: var(--blue); box-shadow: 0 2px 10px rgba(0,125,195,.1); }
+    .doc-card:hover .doc-dl { color: var(--blue); }
+
+    .doc-icon {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .58rem; font-weight: 700; letter-spacing: .04em;
+    }
+    .doc-icon-pdf { background: #fff0ed; color: #c0330b; border: 1px solid #ffd5cc; }
+    .doc-icon-xls { background: #edfaf2; color: #1a7a40; border: 1px solid #c3ecd4; }
+
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-title { font-size: .74rem; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+    .doc-desc  { font-size: .65rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .doc-dl { color: var(--text-light); flex-shrink: 0; transition: color .15s; }
+
+    .docs-open-data {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 14px; padding: 12px 14px; border-radius: 8px;
+      background: linear-gradient(135deg, #0b1f41 0%, #0b3d6e 100%);
+      color: white;
+    }
+    .docs-open-data svg { color: rgba(255,255,255,.6); flex-shrink: 0; }
+    .docs-open-data-title { font-size: .75rem; font-weight: 700; }
+    .docs-open-data-sub   { font-size: .63rem; color: rgba(255,255,255,.65); margin-top: 1px; }
+    .docs-open-data-btn {
+      margin-left: auto; flex-shrink: 0;
+      padding: 5px 14px; border-radius: 5px;
+      background: var(--green); color: var(--navy);
+      font-family: var(--font); font-size: .7rem; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .docs-open-data-btn:hover { background: #82d455; }
+
+    /* ── Loading overlay ── */
+    #data-loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(11,31,65,.5);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+    }
+    .loading-card { background: white; border-radius: 10px; padding: 26px 34px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,.22); min-width: 210px; }
+    .loading-bar-track { height: 3px; background: var(--border); border-radius: 2px; margin-top: 14px; overflow: hidden; }
+    .loading-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--green)); animation: loadpulse 1.4s ease-in-out infinite; width: 40%; }
+    @keyframes loadpulse { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+    .loading-title { font-size: .82rem; font-weight: 700; color: var(--navy); margin-top: 10px; }
+    .loading-sub   { font-size: .68rem; color: var(--text-light); margin-top: 3px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6ebe44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+          <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 6H5"/>
+          <path d="M15 6l-3 5.5H18.5"/>
+        </svg>
+      </div>
+      <div class="header-titles">
+        <div class="header-eyebrow">TRPA Monitoring Network</div>
+        <div class="header-title">Bike &amp; Pedestrian <span>Counter Dashboard</span></div>
+      </div>
+      <div class="header-spacer"></div>
+      <button id="run-update-btn" title="Run data update via GP service">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Run Update
+      </button>
+      <div id="selected-chip">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="#6ebe44" stroke="none"><circle cx="12" cy="12" r="10"/></svg>
+        <span id="selected-name"></span>
+        <span id="clear-btn" title="Clear filter">✕</span>
+      </div>
+      <div id="loading-indicator">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        <span>Loading…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI bar -->
+  <div class="stats-bar">
+    <div class="kpi-card"><div class="kpi-value" id="kpi-records">–</div><div class="kpi-label">Count Records</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="kpi-sites">–</div><div class="kpi-label">Counter Sites</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="kpi-total">–</div><div class="kpi-label">Total Counted</div></div>
+    <div class="kpi-card"><div class="kpi-value" id="kpi-years">–</div><div class="kpi-label">Year Range</div></div>
+  </div>
+
+  <!-- 3-column main -->
+  <div class="main-content">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-search-wrap">
+          <input type="text" id="sidebar-search" class="sidebar-search" placeholder="Search counters…" />
+        </div>
+        <div class="type-filters" id="type-filters">
+          <button class="type-chip active" data-type="all">All</button>
+          <button class="type-chip" data-type="permanent">Permanent</button>
+          <button class="type-chip" data-type="pneumatic">Pneumatic</button>
+          <button class="type-chip" data-type="retired">Retired</button>
+        </div>
+      </div>
+      <div class="sidebar-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#6ebe44;"></span>Permanent</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#007dc3;"></span>Pneumatic</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#8a9bb2;"></span>Retired</div>
+      </div>
+      <div id="counter-list" class="counter-list">
+        <div class="counter-list-empty">Loading counters…</div>
+      </div>
+    </aside>
+
+    <!-- ── Map ── -->
+    <div id="map-container">
+      <arcgis-map id="arcgis-map" basemap="gray-vector" center="-119.98, 39.09" zoom="11">
+        <arcgis-home           slot="top-left"></arcgis-home>
+        <arcgis-scale-bar      slot="bottom-left" unit="dual"></arcgis-scale-bar>
+        <arcgis-basemap-toggle slot="bottom-right" next-basemap="hybrid"></arcgis-basemap-toggle>
+        <arcgis-expand         slot="top-right">
+          <arcgis-legend></arcgis-legend>
+        </arcgis-expand>
+      </arcgis-map>
+      <div id="data-loading-overlay">
+        <div class="loading-card">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#007dc3" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 6H5"/>
+            <path d="M15 6l-3 5.5H18.5"/>
+          </svg>
+          <div class="loading-title">Loading Dashboard</div>
+          <div class="loading-sub">Fetching counter data…</div>
+          <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right panel ── -->
+    <div class="right-panel">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="chart">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Count Trend
+        </button>
+        <button class="tab-btn" data-tab="seasonal">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+          Seasonal
+        </button>
+        <button class="tab-btn" data-tab="table">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+          Summary Table
+        </button>
+        <button class="tab-btn" data-tab="docs">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Documents
+        </button>
+      </div>
+
+      <!-- Chart panel -->
+      <div class="tab-panel active" id="panel-chart">
+        <div class="chart-tab">
+          <div class="chart-controls">
+            <span class="ctrl-label">Group</span>
+            <calcite-select id="groupBy" scale="s" style="width:100px;">
+              <calcite-option value="day">Day</calcite-option>
+              <calcite-option value="month" selected>Month</calcite-option>
+              <calcite-option value="year">Year</calcite-option>
+            </calcite-select>
+            <div class="ctrl-sep"></div>
+            <span class="ctrl-label">Years</span>
+            <div class="year-btns" id="year-btns">
+              <button class="year-btn active" data-year="all">All</button>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title" id="chart-title">All Counter Sites – Monthly Count</div>
+            <div class="canvas-wrap"><canvas id="myChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seasonal panel -->
+      <div class="tab-panel" id="panel-seasonal">
+        <div class="seasonal-tab">
+          <div class="chart-controls">
+            <span class="ctrl-label">View</span>
+            <calcite-select id="seasonalMode" scale="s" style="width:155px;">
+              <calcite-option value="avg" selected>Monthly Average</calcite-option>
+              <calcite-option value="years">By Year</calcite-option>
+            </calcite-select>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title" id="seasonal-title">Seasonal Pattern – Monthly Avg Daily Count</div>
+            <div class="canvas-wrap"><canvas id="seasonalChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table panel -->
+      <div class="tab-panel" id="panel-table">
+        <div class="grid-tab">
+          <div class="grid-toolbar">
+            <input type="text" id="grid-search-input" placeholder="Search counters…" />
+            <div class="grid-toolbar-spacer"></div>
+            <button class="btn-icon" id="export-csv">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+          </div>
+          <div id="agGrid" class="ag-theme-alpine"></div>
+        </div>
+      </div>
+
+      <!-- Documents panel -->
+      <div class="tab-panel" id="panel-docs">
+        <div class="docs-tab">
+
+          <div class="docs-intro">
+            <p>Reports, protocols, and tools from the TRPA Bike &amp; Pedestrian Monitoring Program. Raw count data is also available on the
+            <a href="https://www.tahoeopendata.org/datasets/bike-and-pedestrian-counts/explore" target="_blank" rel="noopener">Tahoe Open Data Portal</a>.</p>
+          </div>
+
+          <div class="docs-section-label">Annual Reports</div>
+          <div class="docs-list">
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/8d9f2e98-3e56-42de-a014-184238a0d93f" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">2023 Annual Summary</div>
+                <div class="doc-desc">Summary of TRPA Bike &amp; Pedestrian monitoring data</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/9e8dee84-3d5e-410b-bbb3-604f3e3e3f4c" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">2018 Annual Report</div>
+                <div class="doc-desc">Summary of 2018 TRPA monitoring activities</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/ce846a97-d27f-4af4-9c8d-5d1e07459dc2" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">2017 Annual Report</div>
+                <div class="doc-desc">Summary of 2017 TRPA monitoring efforts</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/872b1e9c-e82c-483e-af33-8ef7e0a60f38" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">2016 Annual Report</div>
+                <div class="doc-desc">2016 Data Collection Report</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+          </div>
+
+          <div class="docs-section-label">Protocol &amp; Methods</div>
+          <div class="docs-list">
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/044a4591-aef9-417f-8764-13ae6670cd4e" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">Monitoring Protocol</div>
+                <div class="doc-desc">Final Bike &amp; Pedestrian Monitoring Protocol</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+          </div>
+
+          <div class="docs-section-label">Trail User Model</div>
+          <div class="docs-list">
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/2193d50a-ae80-498c-b6b9-af74fa561ccd" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-xls">XLS</span>
+              <div class="doc-info">
+                <div class="doc-title">Bike–Ped Trail User Model</div>
+                <div class="doc-desc">Estimates use on shared-use paths and bike lanes</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/34b4d3f3-287d-4ffb-9d75-6fb631eb6442" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">Model Demo</div>
+                <div class="doc-desc">Demonstration of the Bike Trail User Model</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+            <a class="doc-card" href="https://monitoring.laketahoeinfo.org/FileResource/DisplayResource/a6d1bb90-7042-4149-98f9-1e66f82d2458" target="_blank" rel="noopener">
+              <span class="doc-icon doc-icon-pdf">PDF</span>
+              <div class="doc-info">
+                <div class="doc-title">Model Instructions</div>
+                <div class="doc-desc">Step-by-step instructions for the Trail User Model</div>
+              </div>
+              <svg class="doc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </a>
+          </div>
+
+          <div class="docs-open-data">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <div>
+              <div class="docs-open-data-title">Tahoe Open Data Portal</div>
+              <div class="docs-open-data-sub">Download the full raw count dataset</div>
+            </div>
+            <a class="docs-open-data-btn" href="https://www.tahoeopendata.org/datasets/bike-and-pedestrian-counts/explore" target="_blank" rel="noopener">Open →</a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+
+  const [
+    FeatureLayer, SimpleRenderer, UniqueValueRenderer,
+    SimpleMarkerSymbol, PopupTemplate, Color, reactiveUtils,
+  ] = await $arcgis.import([
+    "@arcgis/core/layers/FeatureLayer.js",
+    "@arcgis/core/renderers/SimpleRenderer.js",
+    "@arcgis/core/renderers/UniqueValueRenderer.js",
+    "@arcgis/core/symbols/SimpleMarkerSymbol.js",
+    "@arcgis/core/PopupTemplate.js",
+    "@arcgis/core/Color.js",
+    "@arcgis/core/core/reactiveUtils.js",
+  ]);
+
+  const POINTS_URL = "https://maps.trpa.org/server/rest/services/LTInfo_Monitoring/MapServer/5";
+  const COUNT_URL  = "https://maps.trpa.org/server/rest/services/LTInfo_Monitoring/MapServer/1";
+
+  const PALETTE = [
+    "#007dc3","#6ebe44","#f16022","#7b4f9e","#e8c014",
+    "#0b5997","#3da35d","#c84b11","#5a3578","#b89800",
+    "#00a3d4","#89cc5a","#ff7043","#9c6fba","#f5d43a"
+  ];
+
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const TYPE_COLORS = {
+    permanent: "#6ebe44",
+    pneumatic: "#007dc3",
+    trend:     "#e8a514",
+    retired:   "#8a9bb2"
+  };
+
+  // ── State ──
+  let allData         = [];
+  let filteredData    = [];
+  let selectedId      = null;
+  let chart           = null;
+  let seasonalChart   = null;
+  let popupChart      = null;
+  let gridApi         = null;
+  let highlightHandle = null;
+  let counterGeoms      = {};
+  let counterPointAttrs = {};  // counter_id → raw attributes from points layer
+  let counterTypeMap    = {};  // counter_id → 'permanent'|'pneumatic'|'trend'|'retired'
+  let counterAgg        = {};  // counter_id → aggregate stats
+  let sidebarTypeFilter = "all";
+  let sidebarSearch   = "";
+  let activeYears     = new Set(); // empty = all years
+
+  // ── Map setup ──
+  const mapEl = document.getElementById("arcgis-map");
+  await mapEl.viewOnReady();
+  const view = mapEl.view;
+  view.popup.dockEnabled      = false;
+  view.popup.highlightEnabled = false;
+
+
+  reactiveUtils.watch(
+    () => view.popup.visible,
+    visible => { if (!visible && popupChart) { popupChart.destroy(); popupChart = null; } }
+  );
+
+  // ── Helpers ──
+  function fmtDate(d) { return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`; }
+  function fmtCount(n) {
+    if (n >= 1e6) return (n/1e6).toFixed(1)+"M";
+    if (n >= 1e3) return (n/1e3).toFixed(0)+"K";
+    return n.toLocaleString();
+  }
+  // Try common field names for the LTInfo monitoring site primary key
+  const DETAIL_BASE = "https://monitoring.laketahoeinfo.org/MonitoringSite/Detail/";
+  function getDetailUrl(cid) {
+    const a = counterPointAttrs[cid];
+    if (!a) return null;
+    const id = a.monitoring_site_id ?? a.MonitoringSiteId ?? a.site_id
+             ?? a.monitoringsiteid  ?? a.MONITORINGSITEID ?? a.OBJECTID;
+    return id != null ? DETAIL_BASE + id : null;
+  }
+
+  // Primary rule: "pneumatic" in the counter name = short-term tube counter.
+  // Everything else is permanent by default. Retired is determined separately in buildTypeMap.
+  function classifyType(name, category) {
+    const n = (name     || "").toLowerCase();
+    const c = (category || "").toLowerCase();
+    if (n.includes("pneumatic") || c.includes("pneumatic") || c.includes("tube")) return "pneumatic";
+    return "permanent";
+  }
+  function makeMarker(hexColor, size = 13) {
+    return new SimpleMarkerSymbol({
+      style: "circle", size,
+      color: new Color(hexColor),
+      outline: { color: [255,255,255,0.95], width: 2 }
+    });
+  }
+
+  // ── Initial placeholder renderer ──
+  const counterLayer = new FeatureLayer({
+    url: POINTS_URL,
+    outFields: ["*"],
+    renderer: new SimpleRenderer({ symbol: makeMarker("#8a9bb2") }),
+    popupTemplate: new PopupTemplate({
+      title: "{counter_name}",
+      outFields: ["*"],
+      content: buildPopupContent,
+      overwriteActions: true,
+      actions: []
+    }),
+    effect: "drop-shadow(0px 2px 5px rgba(0,0,0,0.28))"
+  });
+  mapEl.map.add(counterLayer);
+
+  // ── Load geometries + point attributes ──
+  async function loadGeometries() {
+    await counterLayer.load();
+    const result = await counterLayer.queryFeatures({
+      where: "1=1", outFields: ["*"], returnGeometry: true
+    });
+    result.features.forEach(f => {
+      const a = f.attributes;
+      counterGeoms[a.counter_id]      = f.geometry;
+      counterPointAttrs[a.counter_id] = a; // store all fields for detail link lookup
+    });
+    // Log available fields once so the detail-link field can be confirmed
+    if (result.features.length)
+      console.info("Points layer fields:", Object.keys(result.features[0].attributes));
+  }
+
+  function zoomToCounter(counterId) {
+    const geom = counterGeoms[counterId];
+    if (geom) view.goTo({ target: geom, zoom: 15 }, { duration: 650, easing: "ease-in-out" });
+  }
+
+  // ── Build type map ──
+  // Rules (in priority order):
+  //  1. Points-layer status field (will work once user adds that column)
+  //  2. "pneumatic" in counter_name → pneumatic
+  //  3. Default → permanent
+  //  4. Last record is 2+ years before dataset's own max date → retired
+  //     (dataset-relative so a 2023 dataset doesn't retire everything vs wall-clock 2026)
+  function buildTypeMap() {
+    const allLast  = Object.values(counterAgg).map(e => e.last).filter(Boolean);
+    const maxDate  = allLast.length ? Math.max(...allLast) : Date.now();
+    const retiredCutoff = maxDate - 2 * 365.25 * 24 * 3600 * 1000;
+
+    const seenCats = new Set();
+    Object.values(counterAgg).forEach(e => {
+      seenCats.add(e.category);
+      const ptAttrs = counterPointAttrs[e.counter_id] || {};
+
+      // Base type from name + category
+      let type = classifyType(e.counter_name, e.category);
+
+      // Retire counters whose last record is 2+ years behind the most-recent in the dataset
+      if (e.last && e.last < retiredCutoff) type = "retired";
+
+      // Points-layer explicit status overrides everything (ready for when user adds the column)
+      const statusRaw = ptAttrs.monitoring_status ?? ptAttrs.status
+                      ?? ptAttrs.network         ?? ptAttrs.monitor_type
+                      ?? ptAttrs.monitortype     ?? null;
+      if (statusRaw != null) {
+        const s = String(statusRaw).toLowerCase();
+        if      (s.includes("retired") || s.includes("inactive") || s.includes("discontinued")) type = "retired";
+        else if (s.includes("pneumatic") || s.includes("tube") || s.includes("short"))         type = "pneumatic";
+        else if (s.includes("permanent") || s.includes("auto") || s.includes("active"))        type = "permanent";
+      }
+
+      counterTypeMap[e.counter_id] = type;
+    });
+
+    console.info("counter_category values seen:", [...seenCats]);
+    console.info("Type counts:", Object.values(counterTypeMap).reduce(
+      (acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {}
+    ));
+  }
+
+  // ── Build typed renderer after data loads ──
+  function applyTypedRenderer() {
+    // Use Arcade valueExpression so we can look up our JS-derived type
+    // without depending on any specific field in the points layer
+    const mapJson = JSON.stringify(counterTypeMap);
+    counterLayer.renderer = new UniqueValueRenderer({
+      valueExpression: `
+        var types = ${mapJson};
+        var cid = $feature.counter_id;
+        if (HasKey(types, cid)) return types[cid];
+        return "permanent";
+      `,
+      uniqueValueInfos: [
+        { value: "permanent", symbol: makeMarker(TYPE_COLORS.permanent, 14) },
+        { value: "pneumatic", symbol: makeMarker(TYPE_COLORS.pneumatic, 13) },
+        { value: "retired",   symbol: makeMarker(TYPE_COLORS.retired,   11) }
+      ],
+      defaultSymbol: makeMarker(TYPE_COLORS.permanent, 14)
+    });
+  }
+
+  // ── Fetch all count records (paginated) ──
+  async function fetchAll() {
+    const records = [];
+    let offset = 0;
+    while (true) {
+      const qs = new URLSearchParams({
+        where: "1=1",
+        outFields: "counter_id,counter_name,count_of_bike_ped,count_date,season_of_year,counter_category",
+        resultRecordCount: 2000, resultOffset: offset,
+        orderByFields: "count_date ASC", f: "json"
+      });
+      const json = await fetch(`${COUNT_URL}/query?${qs}`).then(r => r.json());
+      if (!json.features?.length) break;
+      records.push(...json.features.map(f => f.attributes));
+      if (!json.exceededTransferLimit) break;
+      offset += 2000;
+    }
+    return records;
+  }
+
+  // ── Build aggregate summary per counter ──
+  function buildAggregates() {
+    const map = {};
+    allData.forEach(r => {
+      const cid = r.counter_id;
+      if (!map[cid]) map[cid] = {
+        counter_id: cid, counter_name: r.counter_name,
+        total: 0, days: 0, peak: 0, peak_date: null,
+        first: null, last: null, seasons: new Set(), category: r.counter_category || ""
+      };
+      const e = map[cid], v = r.count_of_bike_ped || 0;
+      e.total += v; e.days++;
+      if (v > e.peak) { e.peak = v; e.peak_date = r.count_date; }
+      if (!e.first || r.count_date < e.first) e.first = r.count_date;
+      if (!e.last  || r.count_date > e.last)  e.last  = r.count_date;
+      if (r.season_of_year) e.seasons.add(r.season_of_year);
+    });
+    counterAgg = map;
+  }
+
+
+  // ── Init ──
+  try {
+    [allData] = await Promise.all([fetchAll(), loadGeometries()]);
+    filteredData = [...allData];
+
+    buildAggregates();
+    buildTypeMap();
+    applyTypedRenderer();
+    buildYearButtons();
+    buildCounterList();
+    updateStats(allData);
+    initGrid();
+    updateChart(allData);
+
+    document.getElementById("loading-indicator").style.display    = "none";
+    document.getElementById("data-loading-overlay").style.display = "none";
+  } catch (err) {
+    console.error("Failed to load data:", err);
+    document.getElementById("loading-indicator").innerHTML = `<span style="color:#ffb3b3;">⚠ Load failed</span>`;
+    document.getElementById("data-loading-overlay").style.display = "none";
+  }
+
+  // ── Year filter buttons ──
+  function buildYearButtons() {
+    const years = [...new Set(allData.map(r => r.count_date ? new Date(r.count_date).getFullYear() : null).filter(Boolean))].sort();
+    const container = document.getElementById("year-btns");
+    container.innerHTML = `<button class="year-btn active" data-year="all">All</button>`;
+    years.forEach(y => {
+      const btn = document.createElement("button");
+      btn.className = "year-btn";
+      btn.dataset.year = y;
+      btn.textContent = y;
+      container.appendChild(btn);
+    });
+    container.addEventListener("click", e => {
+      const btn = e.target.closest(".year-btn");
+      if (!btn) return;
+      const y = btn.dataset.year;
+      if (y === "all") {
+        activeYears.clear();
+        container.querySelectorAll(".year-btn").forEach(b => b.classList.toggle("active", b.dataset.year === "all"));
+      } else {
+        container.querySelector("[data-year='all']").classList.remove("active");
+        btn.classList.toggle("active");
+        if (btn.classList.contains("active")) activeYears.add(+y); else activeYears.delete(+y);
+        if (!activeYears.size) {
+          activeYears.clear();
+          container.querySelectorAll(".year-btn").forEach(b => b.classList.toggle("active", b.dataset.year === "all"));
+        }
+      }
+      updateChart(filteredData);
+    });
+  }
+
+  function yearFilter(data) {
+    if (!activeYears.size) return data;
+    return data.filter(r => r.count_date && activeYears.has(new Date(r.count_date).getFullYear()));
+  }
+
+  // ── Sidebar counter list ──
+  function buildCounterList() {
+    const list   = document.getElementById("counter-list");
+    const counters = Object.values(counterAgg).sort((a, b) => a.counter_name.localeCompare(b.counter_name));
+    list.innerHTML = "";
+    if (!counters.length) { list.innerHTML = `<div class="counter-list-empty">No counters found.</div>`; return; }
+    counters.forEach(e => {
+      const type  = counterTypeMap[e.counter_id] || "trend";
+      const last  = e.last  ? new Date(e.last).getFullYear()  : "–";
+      const item  = document.createElement("div");
+      item.className      = "counter-item";
+      item.dataset.id     = e.counter_id;
+      item.dataset.type   = type;
+      item.dataset.name   = e.counter_name.toLowerCase();
+      item.innerHTML = `
+        <div class="counter-item-top">
+          <span class="counter-item-name">${e.counter_name}</span>
+          <span class="counter-type-badge badge-${type}">${type}</span>
+        </div>
+        <div class="counter-item-meta">
+          <span class="counter-item-count">${fmtCount(e.total)}</span>
+          <span class="counter-item-date">Last: ${last}</span>
+        </div>`;
+      item.addEventListener("click", () => {
+        applyFilter(e.counter_id, e.counter_name);
+        zoomToCounter(e.counter_id);
+      });
+      list.appendChild(item);
+    });
+    updateSidebarVisibility();
+  }
+
+  function updateSidebarVisibility() {
+    document.querySelectorAll(".counter-item").forEach(item => {
+      const matchType = sidebarTypeFilter === "all" || item.dataset.type === sidebarTypeFilter;
+      const matchName = !sidebarSearch || item.dataset.name.includes(sidebarSearch);
+      item.style.display = (matchType && matchName) ? "" : "none";
+    });
+    const visible = [...document.querySelectorAll(".counter-item")].filter(i => i.style.display !== "none").length;
+    let empty = document.querySelector(".counter-list-empty");
+    if (!empty) {
+      empty = document.createElement("div");
+      empty.className = "counter-list-empty";
+      document.getElementById("counter-list").appendChild(empty);
+    }
+    empty.style.display = visible ? "none" : "";
+    empty.textContent   = "No counters match the current filter.";
+  }
+
+  function setSidebarSelected(counterId) {
+    document.querySelectorAll(".counter-item").forEach(i => {
+      i.classList.toggle("selected", i.dataset.id === counterId);
+    });
+    const sel = document.querySelector(`.counter-item[data-id="${counterId}"]`);
+    if (sel) sel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+
+  // Sidebar search
+  document.getElementById("sidebar-search").addEventListener("input", function () {
+    sidebarSearch = this.value.toLowerCase().trim();
+    updateSidebarVisibility();
+  });
+
+  // Type filter chips
+  document.getElementById("type-filters").addEventListener("click", e => {
+    const chip = e.target.closest(".type-chip");
+    if (!chip) return;
+    document.querySelectorAll(".type-chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    sidebarTypeFilter = chip.dataset.type;
+    updateSidebarVisibility();
+  });
+
+  // ── Stats ──
+  function updateStats(data) {
+    const sites = new Set(data.map(r => r.counter_id)).size;
+    const total = data.reduce((s, r) => s + (r.count_of_bike_ped || 0), 0);
+    const dates = data.map(r => r.count_date).filter(Boolean).sort();
+    const y1 = dates.length ? new Date(dates[0]).getFullYear()               : "–";
+    const y2 = dates.length ? new Date(dates[dates.length-1]).getFullYear()  : "–";
+    document.getElementById("kpi-records").textContent = data.length.toLocaleString();
+    document.getElementById("kpi-sites").textContent   = sites;
+    document.getElementById("kpi-total").textContent   = fmtCount(total);
+    document.getElementById("kpi-years").textContent   = y1 === y2 ? String(y1) : `${y1}–${y2}`;
+  }
+
+  // ── Filter ──
+  function applyFilter(counterId, counterName) {
+    selectedId   = counterId;
+    filteredData = allData.filter(r => r.counter_id === counterId);
+    document.getElementById("selected-chip").style.display = "flex";
+    document.getElementById("selected-name").textContent   = counterName || counterId;
+    updateStats(filteredData);
+    updateChart(filteredData);
+    updateSeasonalChart(filteredData);
+    highlightOnMap(counterId);
+    setSidebarSelected(counterId);
+    scrollToGridRow(counterId);
+    view.closePopup();
+  }
+
+  function clearFilter() {
+    selectedId   = null;
+    filteredData = [...allData];
+    document.getElementById("selected-chip").style.display = "none";
+    updateStats(allData);
+    updateChart(allData);
+    updateSeasonalChart(allData);
+    if (highlightHandle) { highlightHandle.remove(); highlightHandle = null; }
+    document.querySelectorAll(".counter-item").forEach(i => i.classList.remove("selected"));
+    gridApi?.deselectAll();
+  }
+
+  document.getElementById("clear-btn").addEventListener("click", clearFilter);
+
+  async function highlightOnMap(counterId) {
+    if (highlightHandle) { highlightHandle.remove(); highlightHandle = null; }
+    try {
+      const lv     = await mapEl.whenLayerView(counterLayer);
+      const result = await counterLayer.queryFeatures({ where: `counter_id = '${counterId}'`, returnGeometry: false });
+      if (result.features.length)
+        highlightHandle = lv.highlight(result.features.map(f => f.attributes.OBJECTID));
+    } catch(e) { console.warn("Highlight:", e); }
+  }
+
+  function scrollToGridRow(counterId) {
+    if (!gridApi) return;
+    gridApi.forEachNode(node => {
+      if (node.data?.counter_id === counterId) {
+        node.setSelected(true, true);
+        gridApi.ensureNodeVisible(node, "middle");
+      }
+    });
+  }
+
+  // ── Bucket helpers ──
+  // Build every expected month/year bucket between firstMs and lastMs so gaps show up
+  function buildBuckets(firstMs, lastMs, groupBy) {
+    const buckets = [];
+    if (groupBy === "day") return null; // don't try to fill every calendar day
+    const start = new Date(firstMs);
+    const end   = new Date(lastMs);
+    if (groupBy === "month") {
+      let d = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endD = new Date(end.getFullYear(), end.getMonth(), 1);
+      while (d <= endD) {
+        buckets.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`);
+        d.setMonth(d.getMonth() + 1);
+      }
+    } else {
+      for (let y = start.getFullYear(); y <= end.getFullYear(); y++)
+        buckets.push(`${y}-01-01`);
+    }
+    return buckets;
+  }
+
+  // x-axis bounds for trend/retired counters (date range clipped to actual data)
+  function getXBounds(cid, groupBy) {
+    const type = counterTypeMap[cid];
+    if (type !== "trend" && type !== "retired") return {};
+    const agg = counterAgg[cid];
+    if (!agg?.first || !agg?.last) return {};
+    const d1 = new Date(agg.first), d2 = new Date(agg.last);
+    if (groupBy === "month") {
+      return {
+        min: new Date(d1.getFullYear(), d1.getMonth() - 1, 15).toISOString(),
+        max: new Date(d2.getFullYear(), d2.getMonth() + 2, 15).toISOString()
+      };
+    }
+    if (groupBy === "year") {
+      return { min: `${d1.getFullYear()-1}-07-01`, max: `${d2.getFullYear()+1}-07-01` };
+    }
+    if (groupBy === "day") {
+      const lo = new Date(d1); lo.setDate(lo.getDate() - 7);
+      const hi = new Date(d2); hi.setDate(hi.getDate() + 7);
+      return { min: lo.toISOString().slice(0,10), max: hi.toISOString().slice(0,10) };
+    }
+    return {};
+  }
+
+  // ── Main chart ──
+  function updateChart(data) {
+    const src      = yearFilter(data);
+    const groupBy  = document.getElementById("groupBy").value;
+    const isSingle = selectedId !== null;
+    const grouped  = {};
+
+    src.forEach(r => {
+      if (!r.count_date || r.count_of_bike_ped == null) return;
+      const d = new Date(r.count_date);
+      const bucket = groupBy === "day"   ? d.toISOString().slice(0,10)
+                   : groupBy === "month" ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`
+                   :                       `${d.getFullYear()}-01-01`;
+      if (!grouped[r.counter_id]) grouped[r.counter_id] = { name: r.counter_name, pts: {} };
+      grouped[r.counter_id].pts[bucket] = (grouped[r.counter_id].pts[bucket] || 0) + r.count_of_bike_ped;
+    });
+
+    const ids       = Object.keys(grouped);
+    const allLabels = [...new Set(ids.flatMap(id => Object.keys(grouped[id].pts)))].sort();
+    const timeUnit  = groupBy === "day" ? "day" : groupBy === "month" ? "month" : "year";
+    const ttFmt     = groupBy === "day" ? "MMM d, yyyy" : groupBy === "month" ? "MMM yyyy" : "yyyy";
+    const dispFmt   = { day: "MMM d", month: "MMM yyyy", year: "yyyy" };
+
+    let datasets;
+    let xBounds       = {};    // { min?, max? } for trend/retired
+    let gapFlagMap    = null;  // Set of bucket labels that are gaps (no data within range)
+
+    if (isSingle || ids.length === 1) {
+      const cid   = ids[0];
+      const color = TYPE_COLORS[counterTypeMap[cid]] || "#007dc3";
+
+      if (groupBy === "day") {
+        // Daily → smooth gradient area line; gaps stay as breaks (spanGaps:false)
+        xBounds = getXBounds(cid, "day");
+        datasets = !cid ? [] : [{
+          label: grouped[cid].name,
+          data:  allLabels.map(l => ({
+            x: l,
+            y: Object.prototype.hasOwnProperty.call(grouped[cid].pts, l) ? grouped[cid].pts[l] : null
+          })),
+          borderColor: color,
+          backgroundColor: ctx => {
+            const { chart } = ctx; const { chartArea } = chart;
+            if (!chartArea) return color + "20";
+            const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            g.addColorStop(0, color + "55"); g.addColorStop(1, color + "00");
+            return g;
+          },
+          borderWidth: 2, fill: true, tension: 0.35,
+          pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: color,
+          spanGaps: false
+        }];
+      } else {
+        // Monthly / annual → bars, with gap-fill between first and last record
+        xBounds = getXBounds(cid, groupBy);
+        const agg      = counterAgg[cid];
+        const complete = (agg?.first && agg?.last)
+          ? buildBuckets(agg.first, agg.last, groupBy)
+          : allLabels;
+
+        const pts       = grouped[cid]?.pts || {};
+        const maxVal    = Math.max(...Object.values(pts), 1);
+        const stubH     = maxVal * 0.035; // short stub to make gap bars visible
+
+        gapFlagMap = new Set(complete.filter(l => !Object.prototype.hasOwnProperty.call(pts, l)));
+
+        const bgColors = complete.map(l =>
+          gapFlagMap.has(l) ? "rgba(190,202,218,0.45)" : color + "cc"
+        );
+        const hvColors = complete.map(l =>
+          gapFlagMap.has(l) ? "rgba(165,180,200,0.65)" : color
+        );
+
+        datasets = !cid ? [] : [{
+          label: grouped[cid].name,
+          data: complete.map(l => ({
+            x: l,
+            y: gapFlagMap.has(l) ? stubH : pts[l]
+          })),
+          backgroundColor:      bgColors,
+          hoverBackgroundColor: hvColors,
+          borderRadius: 4, borderSkipped: false, borderWidth: 0,
+          barPercentage: 0.75, categoryPercentage: 0.85
+        }];
+      }
+    } else {
+      const sorted   = ids.map(id => ({ id, tot: Object.values(grouped[id].pts).reduce((s,v)=>s+v,0) })).sort((a,b)=>b.tot-a.tot);
+      const topIds   = sorted.slice(0, 8).map(x => x.id);
+      const otherIds = sorted.slice(8).map(x => x.id);
+      datasets = topIds.map((cid, i) => ({
+        label: grouped[cid].name, stack: "total",
+        data:  allLabels.map(l => ({
+          x: l,
+          y: Object.prototype.hasOwnProperty.call(grouped[cid].pts, l) ? grouped[cid].pts[l] : 0
+        })),
+        backgroundColor: PALETTE[i % PALETTE.length] + "dd",
+        hoverBackgroundColor: PALETTE[i % PALETTE.length],
+        borderRadius: i === topIds.length - 1 && !otherIds.length ? 4 : 0,
+        borderSkipped: false, borderWidth: 0,
+        barPercentage: 0.75, categoryPercentage: 0.85
+      }));
+      if (otherIds.length) {
+        const op = {};
+        otherIds.forEach(cid => Object.entries(grouped[cid].pts).forEach(([l,v]) => op[l] = (op[l]||0)+v));
+        datasets.push({
+          label: `Other (${otherIds.length})`, stack: "total",
+          backgroundColor: "#b0bec5cc", hoverBackgroundColor: "#b0bec5",
+          borderRadius: 4, borderSkipped: false, borderWidth: 0,
+          barPercentage: 0.75, categoryPercentage: 0.85,
+          data: allLabels.map(l => ({ x: l, y: op[l] ?? 0 }))
+        });
+      }
+    }
+
+    const isBar     = !(isSingle || ids.length === 1) || groupBy !== "day";
+    const chartType = isBar ? "bar" : "line";
+    const yr        = activeYears.size ? ` (${[...activeYears].sort().join(", ")})` : "";
+    const grpLabel  = groupBy === "day" ? "Daily" : groupBy === "month" ? "Monthly" : "Annual";
+    document.getElementById("chart-title").textContent = isSingle
+      ? `${filteredData[0]?.counter_name || ""} – ${grpLabel} Count${yr}`
+      : `All Counter Sites – ${grpLabel} Count${yr}`;
+
+    if (chart) { chart.destroy(); chart = null; }
+    chart = new Chart(document.getElementById("myChart").getContext("2d"), {
+      type: chartType, data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: ids.length <= 9, position: "top", align: "start",
+            labels: { boxWidth: 10, boxHeight: 10, padding: 12, usePointStyle: true, pointStyle: "rectRounded",
+              font: { family: "'Lexend Deca',sans-serif", size: 10.5 }, color: "#4a5b73" } },
+          tooltip: {
+            backgroundColor: "rgba(11,31,65,.93)", cornerRadius: 8,
+            titleFont: { family: "'Lexend Deca',sans-serif", size: 11.5, weight: "700" },
+            bodyFont:  { family: "'Lexend Deca',sans-serif", size: 11 }, padding: 11,
+            callbacks: {
+              label: ctx => {
+                // Detect gap stub bars and show "No data" instead of the stub value
+                if (gapFlagMap) {
+                  const xVal = ctx.label || (ctx.raw?.x ?? "");
+                  // Normalise to YYYY-MM-DD for the set lookup
+                  const key = xVal.length >= 10 ? xVal.slice(0,10) : xVal;
+                  const bucket = groupBy === "month"
+                    ? `${key.slice(0,7)}-01`
+                    : groupBy === "year" ? `${key.slice(0,4)}-01-01` : key;
+                  if (gapFlagMap.has(bucket)) return " No data recorded";
+                }
+                return ctx.parsed.y != null
+                  ? ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
+                  : "";
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: "time", time: { unit: timeUnit, tooltipFormat: ttFmt, displayFormats: dispFmt },
+            stacked: chartType === "bar", grid: { display: false },
+            ...xBounds,
+            ticks: { font: { family: "'Lexend Deca',sans-serif", size: 10 }, maxTicksLimit: 16, maxRotation: 30, color: "#8a9bb2" },
+            border: { display: false }
+          },
+          y: {
+            stacked: chartType === "bar", beginAtZero: true,
+            grid: { color: "#eef1f6", drawTicks: false },
+            ticks: { font: { family: "'Lexend Deca',sans-serif", size: 10 }, color: "#8a9bb2",
+              callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+"M" : v >= 1000 ? (v/1000).toFixed(0)+"k" : v, padding: 6 },
+            title: { display: true, text: "Bike + Pedestrian Count",
+              font: { family: "'Lexend Deca',sans-serif", size: 10.5, weight: "600" }, color: "#8a9bb2", padding: { bottom: 4 } },
+            border: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  // ── Seasonal chart ──
+  function updateSeasonalChart(data) {
+    const mode = document.getElementById("seasonalMode").value;
+    const monthly = {}; // { year: { monthIdx: [dailyCounts] } }
+
+    data.forEach(r => {
+      if (!r.count_date || r.count_of_bike_ped == null) return;
+      const d = new Date(r.count_date);
+      const y = d.getFullYear(), m = d.getMonth();
+      if (!monthly[y]) monthly[y] = {};
+      if (!monthly[y][m]) monthly[y][m] = [];
+      monthly[y][m].push(r.count_of_bike_ped);
+    });
+
+    const years = Object.keys(monthly).sort();
+    let datasets;
+
+    if (mode === "avg") {
+      const avg = MONTHS.map((_, m) => {
+        const vals = years.flatMap(y => monthly[y]?.[m] || []);
+        return vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : null;
+      });
+      const color = selectedId ? (TYPE_COLORS[counterTypeMap[selectedId]] || "#007dc3") : "#007dc3";
+      datasets = [{
+        label: "Avg Daily Count",
+        data: avg,
+        borderColor: color, backgroundColor: color + "22",
+        borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: color
+      }];
+      document.getElementById("seasonal-title").textContent =
+        (selectedId ? (filteredData[0]?.counter_name || "") + " – " : "All Sites – ") + "Monthly Avg Daily Count";
+    } else {
+      datasets = years.map((y, i) => ({
+        label: String(y),
+        data: MONTHS.map((_, m) => {
+          const vals = monthly[y]?.[m] || [];
+          return vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : null;
+        }),
+        borderColor: PALETTE[i % PALETTE.length],
+        backgroundColor: "transparent",
+        borderWidth: 2, fill: false, tension: 0.4,
+        pointRadius: 4, spanGaps: true
+      }));
+      document.getElementById("seasonal-title").textContent =
+        (selectedId ? (filteredData[0]?.counter_name || "") + " – " : "All Sites – ") + "Seasonal Pattern by Year";
+    }
+
+    if (seasonalChart) { seasonalChart.destroy(); seasonalChart = null; }
+    seasonalChart = new Chart(document.getElementById("seasonalChart").getContext("2d"), {
+      type: "line", data: { labels: MONTHS, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: mode === "years", position: "top", labels: { boxWidth: 10, padding: 10, font: { family: "'Lexend Deca',sans-serif", size: 10 } } },
+          tooltip: {
+            backgroundColor: "rgba(11,31,65,.92)",
+            titleFont: { family: "'Lexend Deca',sans-serif", size: 11, weight: "700" },
+            bodyFont:  { family: "'Lexend Deca',sans-serif", size: 11 }, padding: 10,
+            callbacks: { label: ctx => ctx.raw != null ? ` ${ctx.dataset.label}: ${Math.round(ctx.raw).toLocaleString()}` : "" }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "'Lexend Deca',sans-serif", size: 10 } } },
+          y: { beginAtZero: true, grid: { color: "#eef1f6" }, ticks: { font: { family: "'Lexend Deca',sans-serif", size: 10 }, callback: v => v >= 1000 ? (v/1000).toFixed(0)+"k" : v }, title: { display: true, text: "Avg Daily Count", font: { family: "'Lexend Deca',sans-serif", size: 10, weight: "600" }, color: "#8a9bb2" } }
+        }
+      }
+    });
+  }
+
+  document.getElementById("seasonalMode").addEventListener("calciteSelectChange", () => updateSeasonalChart(filteredData));
+  document.getElementById("groupBy").addEventListener("calciteSelectChange", () => updateChart(filteredData));
+
+  // ── AG Grid ──
+  function initGrid() {
+    const dateFmt = p => p.value ? fmtDate(new Date(p.value)) : "";
+    const numCol  = { filter: "agNumberColumnFilter", type: "numericColumn", valueFormatter: p => p.value != null ? p.value.toLocaleString() : "" };
+
+    gridApi = agGrid.createGrid(document.getElementById("agGrid"), {
+      columnDefs: [
+        { headerName: "Counter",     field: "counter_name",  minWidth: 160, flex: 2, filter: "agTextColumnFilter", cellStyle: { fontWeight: "600", color: "#0b1f41" }, pinned: "left" },
+        { headerName: "Type",        field: "type",          minWidth: 90,  flex: 1, filter: "agTextColumnFilter",
+          cellRenderer: p => p.value ? `<span style="padding:2px 6px;border-radius:3px;font-size:.62rem;font-weight:700;text-transform:uppercase;background:${p.value==="permanent"?"#e2f4d0":p.value==="pneumatic"?"#d6eef9":p.value==="retired"?"#eef0f3":"#fef3cc"};color:${p.value==="permanent"?"#2e6b0a":p.value==="pneumatic"?"#005a9e":p.value==="retired"?"#5a6575":"#7a5200"}">${p.value}</span>` : "" },
+        { headerName: "Total Count", field: "total_count",   minWidth: 110, flex: 1, sort: "desc", ...numCol, cellStyle: { textAlign: "right", fontWeight: "700", color: "#007dc3" } },
+        { headerName: "Days",        field: "n_days",        minWidth: 70,  flex: 1, ...numCol, cellStyle: { textAlign: "right" } },
+        { headerName: "Avg / Day",   field: "avg_daily",     minWidth: 85,  flex: 1, ...numCol, cellStyle: { textAlign: "right", color: "#4a5b73" } },
+        { headerName: "Peak Day",    field: "peak_count",    minWidth: 90,  flex: 1, ...numCol, cellStyle: { textAlign: "right", color: "#f16022", fontWeight: "600" } },
+        { headerName: "Peak Date",   field: "peak_date",     minWidth: 100, flex: 1, valueFormatter: dateFmt, comparator: (a,b) => (a||0)-(b||0), filter: "agDateColumnFilter" },
+        { headerName: "First",       field: "first_date",    minWidth: 90,  flex: 1, valueFormatter: dateFmt, comparator: (a,b) => (a||0)-(b||0), filter: "agDateColumnFilter", cellStyle: { color: "#4a5b73" } },
+        { headerName: "Last",        field: "last_date",     minWidth: 90,  flex: 1, valueFormatter: dateFmt, comparator: (a,b) => (a||0)-(b||0), filter: "agDateColumnFilter", cellStyle: { color: "#4a5b73" } },
+        { headerName: "Seasons",     field: "seasons",       minWidth: 130, flex: 2, filter: "agTextColumnFilter", cellStyle: { color: "#4a5b73", fontSize: ".68rem" } }
+      ],
+      rowData: computeGridData(),
+      getRowId: p => p.data.counter_id,
+      defaultColDef: { sortable: true, resizable: true, filter: true },
+      animateRows: false,
+      rowSelection: "single",
+      suppressCellFocus: true,
+      onRowClicked: params => {
+        if (!params.data?.counter_id) return;
+        applyFilter(params.data.counter_id, params.data.counter_name);
+        zoomToCounter(params.data.counter_id);
+      }
+    });
+  }
+
+  function computeGridData() {
+    return Object.values(counterAgg).map(e => ({
+      counter_id:   e.counter_id,
+      counter_name: e.counter_name,
+      type:         counterTypeMap[e.counter_id] || "trend",
+      total_count:  e.total,
+      n_days:       e.days,
+      avg_daily:    e.days ? Math.round(e.total / e.days) : 0,
+      peak_count:   e.peak,
+      peak_date:    e.peak_date,
+      first_date:   e.first,
+      last_date:    e.last,
+      seasons:      [...e.seasons].sort().join(", ")
+    })).sort((a,b) => b.total_count - a.total_count);
+  }
+
+  document.getElementById("grid-search-input").addEventListener("input", function () {
+    gridApi?.setGridOption("quickFilterText", this.value || "");
+  });
+
+  document.getElementById("export-csv").addEventListener("click", () => {
+    gridApi?.exportDataAsCsv({
+      fileName: "trpa-bike-ped-summary.csv",
+      processCellCallback: p => {
+        if (["peak_date","first_date","last_date"].includes(p.column.getColId()) && p.value)
+          return fmtDate(new Date(p.value));
+        return p.value;
+      }
+    });
+  });
+
+  // ── Popup builder ──
+  const POPUP_CSS = `
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .pop-wrap { font-family: 'Lexend Deca','Avenir Next',sans-serif; font-size: 12.5px; }
+    .pop-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 12px; }
+    .pop-kpi { background: #f4f6f9; border: 1px solid #d5dde8; border-radius: 6px; padding: 9px 10px; text-align: center; }
+    .pop-kpi-val { font-size: 1.2rem; font-weight: 700; color: #0b1f41; }
+    .pop-kpi-lbl { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #8a9bb2; margin-top: 1px; }
+    .pop-meta { font-size: .69rem; color: #4a5b73; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #d5dde8; line-height: 1.6; }
+    .pop-type-badge { display:inline-block; padding:1px 6px; border-radius:3px; font-size:.58rem; font-weight:700; text-transform:uppercase; }
+    .pop-section-label { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #8a9bb2; margin-bottom: 5px; }
+    .pop-chart-wrap { position: relative; height: 110px; margin: 8px 0 4px; background: #f4f6f9; border-radius: 4px; overflow: hidden; }
+    .pop-season-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #f0f3f7; font-size: .71rem; }
+    .pop-season-row:last-child { border-bottom: none; }
+    .pop-season-name { color: #4a5b73; }
+    .pop-season-val  { font-weight: 700; color: #0b1f41; }
+    .pop-season-pct  { font-size: .62rem; color: #8a9bb2; margin-left: 5px; }
+    .pop-bar-wrap { height: 4px; background: #d5dde8; border-radius: 2px; flex: 1; max-width: 70px; margin: 0 8px; }
+    .pop-bar { height: 100%; border-radius: 2px; }
+    .pop-filter-btn {
+      width: 100%; margin-top: 10px; padding: 7px;
+      background: #0b1f41; color: white; border: none; border-radius: 5px;
+      font-family: 'Lexend Deca','Avenir Next',sans-serif; font-size: .71rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px; transition: background .15s;
+    }
+    .pop-filter-btn:hover { background: #007dc3; }
+    .pop-btn-row { display: flex; gap: 6px; margin-top: 10px; }
+    .pop-detail-link {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 7px; background: #f4f6f9; color: #007dc3;
+      border: 1px solid #d5dde8; border-radius: 5px;
+      font-family: 'Lexend Deca','Avenir Next',sans-serif; font-size: .71rem; font-weight: 600;
+      text-decoration: none; transition: background .15s, color .15s;
+    }
+    .pop-detail-link:hover { background: #ddeeff; }
+    .pop-photo-wrap {
+      width: 100%; margin-bottom: 12px; border-radius: 6px; overflow: hidden;
+      background: #eef1f6; position: relative;
+    }
+    .pop-photo {
+      width: 100%; height: 148px; object-fit: cover; display: block;
+      border-radius: 6px; transition: opacity .3s;
+    }
+    .pop-photo-shimmer {
+      height: 148px; border-radius: 6px;
+      background: linear-gradient(90deg, #eef1f6 25%, #e4e9f0 50%, #eef1f6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  `;
+
+  function buildPopupContent(feature) {
+    const attrs = feature.graphic.attributes;
+    const cid   = attrs.counter_id;
+    const name  = attrs.counter_name;
+    const el    = document.createElement("div");
+    el.className = "pop-wrap";
+    const style  = document.createElement("style");
+    style.textContent = POPUP_CSS;
+    el.appendChild(style);
+
+    if (!allData.length) {
+      el.innerHTML += `<p style="color:#8a9bb2;font-style:italic;font-size:.8rem;font-family:'Lexend Deca',sans-serif;">Count data still loading…</p>`;
+      return el;
+    }
+    const recs = allData.filter(r => r.counter_id === cid);
+    if (!recs.length) {
+      el.innerHTML += `<p style="color:#8a9bb2;font-size:.8rem;font-family:'Lexend Deca',sans-serif;">No count records found for this site.</p>`;
+      return el;
+    }
+
+    const e     = counterAgg[cid] || {};
+    const total = e.total || 0;
+    const avg   = e.days  ? Math.round(total / e.days) : 0;
+    const type  = counterTypeMap[cid] || "trend";
+    const typeColors = {
+      permanent: { bg: "#e2f4d0", fg: "#2e6b0a" },
+      pneumatic: { bg: "#d6eef9", fg: "#005a9e" },
+      trend:     { bg: "#fef3cc", fg: "#7a5200" },
+      retired:   { bg: "#eef0f3", fg: "#5a6575" }
+    };
+    const tc = typeColors[type] || typeColors.trend;
+    const typeStyle = `background:${tc.bg};color:${tc.fg}`;
+
+    const y1 = e.first ? new Date(e.first).getFullYear() : "–";
+    const y2 = e.last  ? new Date(e.last).getFullYear()  : "–";
+    const peakDate = e.peak_date ? fmtDate(new Date(e.peak_date)) : "–";
+
+    const seasons = {};
+    recs.forEach(r => { const s = r.season_of_year || "Unknown"; seasons[s] = (seasons[s]||0) + (r.count_of_bike_ped||0); });
+    const markerColor = TYPE_COLORS[type] || "#007dc3";
+    const seasonRows = Object.entries(seasons).sort((a,b) => b[1]-a[1]).map(([s,v]) => {
+      const pct = total ? Math.round(v/total*100) : 0;
+      return `<div class="pop-season-row">
+        <span class="pop-season-name">${s}</span>
+        <div style="display:flex;align-items:center;margin-left:auto;">
+          <div class="pop-bar-wrap"><div class="pop-bar" style="width:${pct}%;background:${markerColor}"></div></div>
+          <span class="pop-season-val">${v.toLocaleString()}</span>
+          <span class="pop-season-pct">${pct}%</span>
+        </div>
+      </div>`;
+    }).join("");
+
+    const chartId = `popup-chart-${cid}`;
+
+    el.innerHTML += `
+      <div class="pop-kpi-row">
+        <div class="pop-kpi"><div class="pop-kpi-val">${fmtCount(total)}</div><div class="pop-kpi-lbl">Total</div></div>
+        <div class="pop-kpi"><div class="pop-kpi-val">${(e.days||0).toLocaleString()}</div><div class="pop-kpi-lbl">Days</div></div>
+        <div class="pop-kpi"><div class="pop-kpi-val">${avg.toLocaleString()}</div><div class="pop-kpi-lbl">Avg/Day</div></div>
+        <div class="pop-kpi"><div class="pop-kpi-val">${(e.peak||0).toLocaleString()}</div><div class="pop-kpi-lbl">Peak Day</div></div>
+      </div>
+      <div class="pop-meta">
+        <span class="pop-type-badge" style="${typeStyle}">${type}</span>
+        &nbsp; Active: ${y1}–${y2} &nbsp;·&nbsp; Peak: ${peakDate}
+      </div>
+      <div class="pop-section-label">Monthly Trend</div>
+      <div class="pop-chart-wrap"><canvas id="${chartId}"></canvas></div>
+      <div class="pop-section-label" style="margin-top:10px;">By Season</div>
+      ${seasonRows}
+      <div class="pop-btn-row">
+        <button class="pop-filter-btn" id="popup-btn-${cid}" style="flex:1;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filter &amp; Zoom
+        </button>
+        ${getDetailUrl(cid) ? `
+        <a class="pop-detail-link" href="${getDetailUrl(cid)}" target="_blank" rel="noopener">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Site Details
+        </a>` : ""}
+      </div>`;
+
+    requestAnimationFrame(() => {
+      // el.querySelector works inside shadow DOM; document.getElementById does not
+      el.querySelector(`#popup-btn-${cid}`)
+        ?.addEventListener("click", () => { applyFilter(cid, name); zoomToCounter(cid); });
+      setTimeout(() => buildPopupChart(el.querySelector(`#${chartId}`), markerColor), 150);
+    });
+    return el;
+  }
+
+  function buildPopupChart(canvasEl, color = "#007dc3") {
+    if (popupChart) { popupChart.destroy(); popupChart = null; }
+    if (!canvasEl) return;
+    // Derive counter_id from the canvas element id: popup-chart-{cid}
+    const cid = canvasEl.id.replace("popup-chart-", "");
+    const monthly = {};
+    allData.filter(r => r.counter_id === cid).forEach(r => {
+      if (!r.count_date) return;
+      const d = new Date(r.count_date);
+      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
+      monthly[k] = (monthly[k] || 0) + (r.count_of_bike_ped || 0);
+    });
+    const labels = Object.keys(monthly).sort();
+    const safeP  = l => Object.prototype.hasOwnProperty.call(monthly, l) ? monthly[l] : null;
+    popupChart = new Chart(canvasEl.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          data: labels.map(safeP),
+          backgroundColor: color + "cc",
+          hoverBackgroundColor: color,
+          borderRadius: 3, borderSkipped: false, borderWidth: 0,
+          barPercentage: 0.75, categoryPercentage: 0.85
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(11,31,65,.92)", cornerRadius: 6,
+            titleFont: { family: "'Lexend Deca',sans-serif", size: 10, weight: "700" },
+            bodyFont:  { family: "'Lexend Deca',sans-serif", size: 10 }, padding: 7,
+            callbacks: {
+              title: ctx => new Date(ctx[0].label).toLocaleString("default", { month: "short", year: "numeric" }),
+              label: ctx => ctx.raw != null ? ` Count: ${ctx.raw.toLocaleString()}` : ""
+            }
+          }
+        },
+        scales: {
+          x: { type: "time", time: { unit: "year", displayFormats: { year: "'yy" } },
+               grid: { display: false }, border: { display: false },
+               ticks: { font: { size: 9 }, maxTicksLimit: 8, color: "#8a9bb2" } },
+          y: { beginAtZero: true, grid: { color: "#eef1f6", drawTicks: false },
+               border: { display: false },
+               ticks: { font: { size: 9 }, color: "#8a9bb2", padding: 4,
+                 callback: v => v >= 1000 ? (v/1000).toFixed(0)+"k" : v } }
+        }
+      }
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // ── Run Update / GP Service ──
+  // ══════════════════════════════════════════════════════════
+
+  // Placeholder — replace with your published GP service URL after publishing BikePedUpdate.pyt
+  const GP_SERVICE_URL = ""; // e.g. "https://maps.trpa.org/server/rest/services/BikePedUpdate/GPServer/Update%20Bike%20Ped%20Counts"
+
+  const runUpdateBtn      = document.getElementById("run-update-btn");
+  const modalOverlay      = document.getElementById("update-modal-overlay");
+  const modalCloseBtn     = document.getElementById("modal-close-btn");
+  const modalCancelBtn    = document.getElementById("modal-cancel-btn");
+  const modalSubmitBtn    = document.getElementById("modal-submit-btn");
+  const gpStatusLog       = document.getElementById("gp-status-log");
+  const dryRunCheck       = document.getElementById("gp-dry-run");
+
+  // Disable button until GP_SERVICE_URL is configured
+  if (!GP_SERVICE_URL) {
+    runUpdateBtn.title = "GP service URL not yet configured — publish BikePedUpdate.pyt first";
+    runUpdateBtn.disabled = true;
+  }
+
+  runUpdateBtn.addEventListener("click", () => {
+    gpStatusLog.innerHTML = "";
+    gpStatusLog.classList.remove("visible");
+    modalOverlay.classList.add("open");
+    modalSubmitBtn.textContent = "Run Update";
+    modalSubmitBtn.disabled = false;
+  });
+
+  [modalCloseBtn, modalCancelBtn].forEach(el => {
+    el.addEventListener("click", () => {
+      if (modalSubmitBtn.dataset.running === "1") return; // block close while running
+      modalOverlay.classList.remove("open");
+    });
+  });
+
+  modalOverlay.addEventListener("click", e => {
+    if (e.target === modalOverlay && modalSubmitBtn.dataset.running !== "1") {
+      modalOverlay.classList.remove("open");
+    }
+  });
+
+  function logLine(msg, cls = "") {
+    gpStatusLog.classList.add("visible");
+    const div = document.createElement("div");
+    div.className = "log-line" + (cls ? " " + cls : "");
+    div.textContent = msg;
+    gpStatusLog.appendChild(div);
+    gpStatusLog.scrollTop = gpStatusLog.scrollHeight;
+  }
+
+  modalSubmitBtn.addEventListener("click", async () => {
+    const trafx    = document.getElementById("gp-trafx").value.trim();
+    const ecovision = document.getElementById("gp-ecovision").value.trim();
+    const dryRun   = dryRunCheck.checked;
+
+    // Basic validation
+    let valid = true;
+    [["gp-trafx", trafx], ["gp-ecovision", ecovision]].forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (!val) { el.classList.add("invalid"); valid = false; }
+      else el.classList.remove("invalid");
+    });
+    if (!valid) return;
+
+    modalSubmitBtn.textContent = "Running…";
+    modalSubmitBtn.disabled = true;
+    modalSubmitBtn.dataset.running = "1";
+    modalCancelBtn.disabled = true;
+    modalCloseBtn.disabled = true;
+    gpStatusLog.innerHTML = "";
+    gpStatusLog.classList.add("visible");
+
+    runUpdateBtn.classList.remove("error");
+    runUpdateBtn.classList.add("running");
+    runUpdateBtn.disabled = true;
+
+    logLine("⏳ Submitting GP job…");
+
+    try {
+      const { default: Geoprocessor } = await $arcgis.import("esri/tasks/Geoprocessor");
+      const gp = new Geoprocessor({ url: GP_SERVICE_URL });
+      gp.outSpatialReference = { wkid: 4326 };
+
+      const params = {
+        trafx_csv:    trafx,
+        ecovision_csv: ecovision,
+        dry_run:      dryRun,
+      };
+
+      logLine(`   Trafx CSV: ${trafx}`);
+      logLine(`   Ecovision CSV: ${ecovision}`);
+      if (dryRun) logLine("   Mode: DRY RUN — no data will be written", "warn");
+
+      // submitJob for async execution (required for long-running tools)
+      const jobInfo = await gp.submitJob(params);
+      logLine(`✓ Job submitted — ID: ${jobInfo.jobId}`);
+
+      // Poll for status
+      const finalJob = await gp.waitForJobCompletion(jobInfo.jobId, {
+        interval: 3000,
+        statusCallback: (ji) => {
+          const msgs = ji.messages || [];
+          if (msgs.length) {
+            msgs.forEach(m => {
+              const cls = m.type === "esriJobMessageTypeWarning" ? "warn"
+                        : m.type === "esriJobMessageTypeError"   ? "error" : "";
+              logLine(m.description, cls);
+            });
+          }
+        }
+      });
+
+      if (finalJob.jobStatus === "esriJobSucceeded") {
+        logLine("✓ Update complete!", "ok");
+        runUpdateBtn.classList.remove("running");
+        runUpdateBtn.title = "Run data update via GP service";
+        // Reload data in the dashboard
+        logLine("⏳ Reloading dashboard data…");
+        await init();
+        logLine("✓ Dashboard data refreshed.", "ok");
+      } else {
+        logLine(`✗ Job ended with status: ${finalJob.jobStatus}`, "error");
+        runUpdateBtn.classList.remove("running");
+        runUpdateBtn.classList.add("error");
+      }
+    } catch (err) {
+      logLine(`✗ Error: ${err.message || err}`, "error");
+      runUpdateBtn.classList.remove("running");
+      runUpdateBtn.classList.add("error");
+    } finally {
+      modalSubmitBtn.textContent = "Run Update";
+      modalSubmitBtn.disabled = false;
+      delete modalSubmitBtn.dataset.running;
+      modalCancelBtn.disabled = false;
+      modalCloseBtn.disabled = false;
+      runUpdateBtn.disabled = !GP_SERVICE_URL;
+    }
+  });
+
+  // ── Tab switching ──
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const tab = this.dataset.tab;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      this.classList.add("active");
+      document.getElementById(`panel-${tab}`).classList.add("active");
+      if (tab === "chart"    && chart)         setTimeout(() => chart.resize(), 60);
+      if (tab === "seasonal") {
+        if (!seasonalChart) updateSeasonalChart(filteredData);
+        else setTimeout(() => seasonalChart.resize(), 60);
+      }
+      if (tab === "table" && gridApi) setTimeout(() => gridApi.sizeColumnsToFit(), 60);
+    });
+  });
+
+</script>
+
+<!-- ── Run Update modal ── -->
+<div id="update-modal-overlay">
+  <div id="update-modal">
+    <div class="modal-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ebe44" stroke-width="2.5">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      <span class="modal-header-title">Run Bike &amp; Ped Data Update</span>
+      <button class="modal-close-btn" id="modal-close-btn" title="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.78rem;color:var(--text-mid);line-height:1.5;">
+        Provide the CSV source paths or URLs. The GP service will read, validate, and load
+        the data into the counts feature layer.
+      </p>
+      <div class="modal-field">
+        <label for="gp-trafx">Trafx Daily CSV — path or URL</label>
+        <input id="gp-trafx" type="text" placeholder="https://… or \\server\share\trafx_daily.csv" />
+        <div class="modal-hint">Raw GitHub URL or ArcGIS Online hosted CSV URL also accepted.</div>
+      </div>
+      <div class="modal-field">
+        <label for="gp-ecovision">Ecovision Daily CSV — path or URL</label>
+        <input id="gp-ecovision" type="text" placeholder="https://… or \\server\share\ecovision_daily.csv" />
+      </div>
+      <label class="modal-dry-run-row">
+        <input type="checkbox" id="gp-dry-run" />
+        Dry run — validate and preview only, do not write data
+      </label>
+      <div id="gp-status-log"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" id="modal-cancel-btn">Cancel</button>
+      <button class="modal-btn primary"   id="modal-submit-btn">Run Update</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
