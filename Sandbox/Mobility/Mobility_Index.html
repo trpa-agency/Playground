@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PIA Composite Index · Lake Tahoe EIP</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <!-- Lexend Deca (EIP secondary typeface, available on Google Fonts) -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─────────────────────────────────────────────
+       EIP BRAND TOKENS
+       Navy  #0b1f41  (P 282 C)
+       Green #6ebe44  (P 802 C)
+       Blue  #007dc3  (P 285 C)
+       Orange#f16022  (P 1505 C)
+    ───────────────────────────────────────────── */
+    :root {
+      --navy:       #0b1f41;
+      --navy-mid:   #122650;
+      --navy-lt:    #1a3362;
+      --green:      #6ebe44;
+      --green-dk:   #52a030;
+      --blue:       #007dc3;
+      --blue-lt:    #1a90d4;
+      --orange:     #f16022;
+      --orange-lt:  #f47a42;
+
+      /* UI surface colors — light mode on navy */
+      --bg:         #f4f6f9;
+      --panel:      #ffffff;
+      --panel-dk:   #eef1f6;
+      --card:       #ffffff;
+      --border:     #d0d8e4;
+      --border-lt:  #e4eaf2;
+
+      --text:       #0b1f41;
+      --text-mid:   #3a5278;
+      --text-dim:   #7a90aa;
+
+      /* Calder Dark = primary display face (commercial); fallback chain */
+      --font-display: 'Calder Dark', 'Lexend Deca', 'Segoe UI', sans-serif;
+      /* Lexend Deca = secondary / body typeface */
+      --font-body:    'Lexend Deca', 'Segoe UI', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ───────────────────────────────── */
+    .app-header {
+      background: var(--navy);
+      height: 56px;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+      position: relative;
+    }
+    /* Green accent bar at bottom of header */
+    .app-header::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--green), var(--blue), var(--orange));
+    }
+
+    .hdr-l { display: flex; align-items: center; gap: 14px; }
+
+    /* EIP logo block */
+    .hdr-logo {
+      height: 36px; width: 36px;
+      border-radius: 4px;
+      background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .hdr-logo svg { width: 22px; height: 22px; }
+
+    .hdr-titles {}
+    .hdr-title {
+      font-family: var(--font-display);
+      font-size: 17px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .hdr-sub {
+      font-family: var(--font-body);
+      font-size: 10px; font-weight: 400;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hdr-r { display: flex; align-items: center; gap: 18px; }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(110,190,68,.5); }
+      50%      { opacity:.8; box-shadow: 0 0 0 5px rgba(110,190,68,0); }
+    }
+
+    #feat-count {
+      font-size: 11px; font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── LAYOUT ───────────────────────────────── */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── LEFT PANEL ───────────────────────────── */
+    .left-panel {
+      width: 316px; flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 2px 0 8px rgba(11,31,65,0.07);
+    }
+
+    /* ── section label ── */
+    .sec-lbl {
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--navy);
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .sec-lbl::before {
+      content: '';
+      width: 14px; height: 3px;
+      background: var(--green);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+
+
+    /* ── scrollable cards ── */
+    .cards-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 12px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .cards-scroll::-webkit-scrollbar { width: 4px; }
+    .cards-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── SUBINDEX CARD ── */
+    .si-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 1px 4px rgba(11,31,65,0.06);
+      transition: box-shadow .2s;
+    }
+    .si-card:hover { box-shadow: 0 3px 10px rgba(11,31,65,0.1); }
+
+    /* colored left accent bar */
+    .si-card::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--si-color, var(--blue));
+      border-radius: 0;
+    }
+
+    .si-head {
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 12px 10px 16px;
+      cursor: pointer; user-select: none;
+      border-bottom: 1px solid var(--border-lt);
+      transition: background .15s;
+    }
+    .si-head:hover { background: var(--panel-dk); }
+
+    .si-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+    .si-name {
+      font-family: var(--font-display);
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--navy);
+      flex: 1;
+    }
+    .si-badge {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700;
+      color: var(--blue);
+    }
+    .chevron { font-size: 9px; color: var(--text-dim); transition: transform .2s; }
+    .si-card.collapsed .chevron { transform: rotate(-90deg); }
+    .si-card.collapsed .si-body { display: none; }
+
+    .si-body { padding: 10px 12px 12px 16px; }
+
+    /* subindex weight slider row */
+    .si-wt-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-lt);
+    }
+    .si-wt-label {
+      font-size: 9px; font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      width: 88px; flex-shrink: 0;
+    }
+    .si-wt-val {
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 700;
+      color: var(--blue);
+      width: 34px; text-align: right; flex-shrink: 0;
+    }
+
+    /* variable rows */
+    .vars-lbl {
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.12em; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 7px;
+    }
+    .var-row { margin-bottom: 9px; }
+    .var-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .var-name-wrap { display: flex; align-items: center; gap: 6px; }
+    .var-lbl { font-size: 11px; font-weight: 500; color: var(--text); }
+    .var-wt-val {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* INV toggle pill */
+    .invert-pill {
+      font-family: var(--font-display);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.1em; padding: 2px 7px;
+      border-radius: 10px; border: 1px solid;
+      cursor: pointer; transition: all .15s;
+      text-transform: uppercase;
+    }
+    .invert-pill.off {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-dim);
+    }
+    .invert-pill.on {
+      background: rgba(241,96,34,0.1);
+      border-color: rgba(241,96,34,0.5);
+      color: var(--orange);
+    }
+
+    /* range sliders */
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,125,195,0.4);
+      cursor: pointer; transition: transform .1s, background .1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: var(--blue-lt);
+    }
+
+    /* variable weight sum */
+    .vsum-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 8px; padding: 5px 9px;
+      background: var(--panel-dk);
+      border-radius: 4px;
+      border: 1px solid var(--border-lt);
+    }
+    .vsum-label {
+      font-size: 9px; font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .vsum-val {
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700;
+      color: var(--green-dk);
+      transition: color .2s;
+    }
+    .vsum-val.warn { color: var(--orange); }
+
+    /* ── FOOTER ── */
+    .panel-footer {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--panel-dk);
+      display: flex; flex-direction: column; gap: 7px;
+      flex-shrink: 0;
+    }
+    .btn-row { display: flex; gap: 8px; }
+
+    .btn {
+      flex: 1; padding: 9px;
+      border-radius: 5px;
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; border: none; transition: all .18s;
+    }
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--blue-lt); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-mid);
+    }
+    .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+
+    .btn-export {
+      width: 100%;
+      background: rgba(110,190,68,0.08);
+      border: 1.5px solid rgba(110,190,68,0.4);
+      color: var(--green-dk);
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 9px; border-radius: 5px;
+      cursor: pointer; transition: all .18s;
+    }
+    .btn-export:hover { background: rgba(110,190,68,0.15); border-color: var(--green); }
+    .btn-export:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ── VARIABLE WEIGHTS COLLAPSIBLE ── */
+    .vars-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+      padding: 5px 0 5px 0;
+      border-top: 1px solid var(--border-lt);
+      margin-top: 4px;
+    }
+    .vars-toggle:hover .vars-lbl { color: var(--navy); }
+    .vars-chevron { font-size: 9px; color: var(--text-dim); transition: transform .2s; }
+    .vars-section { overflow: hidden; }
+    .vars-section.collapsed { display: none; }
+    .vars-section.collapsed + .vars-toggle .vars-chevron { transform: rotate(-90deg); }
+    .vars-toggle.closed .vars-chevron { transform: rotate(-90deg); }
+
+    /* ── MAP ── */
+    .main-area { flex: 1; position: relative; overflow: hidden; }
+    #viewDiv { width: 100%; height: 100%; }
+
+    /* ── MAP LEGEND ── */
+    .map-legend {
+      position: absolute; bottom: 20px; right: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px; width: 210px; z-index: 50;
+      box-shadow: 0 2px 12px rgba(11,31,65,0.12);
+    }
+    .legend-title {
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.14em; color: var(--navy);
+      text-transform: uppercase;
+      margin-bottom: 9px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .legend-title::before {
+      content: '';
+      width: 14px; height: 3px;
+      background: var(--green); border-radius: 2px; flex-shrink: 0;
+    }
+    .cbar {
+      height: 10px; border-radius: 3px; margin-bottom: 5px;
+      background: linear-gradient(to right,
+        rgba(11,31,65,0.15) 0%,
+        rgba(0,125,195,0.6) 45%,
+        #007dc3 100%);
+    }
+    .cbar-labels {
+      display: flex; justify-content: space-between;
+      font-size: 9px; font-weight: 600;
+      color: var(--text-dim); letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── LOADING ── */
+    .loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(244,246,249,0.92);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px; z-index: 200;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.14em; color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* subindex dot colors matching brand */
+    .dot-density { background: var(--blue); }
+    .dot-active  { background: var(--green); }
+    .dot-transit { background: var(--orange); }
+
+    /* ── SYMBOLOGY TOGGLE BAR ── */
+    .sym-bar {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      z-index: 50;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 2px 12px rgba(11,31,65,0.14);
+    }
+    .sym-lbl {
+      font-family: var(--font-display);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding: 0 6px 0 2px;
+      border-right: 1px solid var(--border);
+      margin-right: 2px;
+      white-space: nowrap;
+    }
+    .sym-btn {
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text-mid);
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex; align-items: center; gap: 5px;
+      white-space: nowrap;
+    }
+    .sym-btn:hover { border-color: var(--navy); color: var(--navy); background: var(--panel-dk); }
+    .sym-btn.active {
+      color: #fff;
+      border-color: transparent;
+      background: var(--navy);
+    }
+    .sym-btn .sym-swatch {
+      width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+    }
+    /* active state with subindex accent color */
+    .sym-btn[data-sym="composite"].active { background: var(--navy); }
+    .sym-btn[data-sym="density"].active   { background: var(--blue); }
+    .sym-btn[data-sym="active"].active    { background: var(--green-dk); }
+    .sym-btn[data-sym="transit"].active   { background: var(--orange); }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────── -->
+<div class="app-header">
+  <div class="hdr-l">
+    <!-- EIP-style leaf/mountain logo mark -->
+    <div class="hdr-logo">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3L3 19h18L12 3z" fill="white" opacity="0.9"/>
+        <path d="M12 10L7 19h10L12 10z" fill="#0b1f41" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="hdr-titles">
+      <div class="hdr-title">PIA Composite Index</div>
+      <div class="hdr-sub">Lake Tahoe EIP · Weighted Mobility Index</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <span id="feat-count">Loading…</span>
+    <div class="live-badge"><div class="live-dot"></div>Live</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- ── LEFT PANEL ──────────────────────────────────────── -->
+  <div class="left-panel">
+
+    <!-- Cards -->
+    <div class="cards-scroll">
+
+      <!-- ── DENSITY ── -->
+      <div class="si-card" id="card-density" style="--si-color: var(--blue)">
+        <div class="si-head" onclick="toggleCard('density')">
+          <div class="si-dot dot-density"></div>
+          <span class="si-name">Density</span>
+          <span class="si-badge" id="sidisp-density">0.33</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="si-body">
+          <div class="si-wt-row">
+            <span class="si-wt-label">Subindex Wt.</span>
+            <input type="range" id="siw-density" min="0" max="1" step="0.01" value="0.333" style="flex:1">
+            <span class="si-wt-val" id="siwv-density">0.33</span>
+          </div>
+          <div class="vars-toggle closed" onclick="toggleVars('density')">
+            <span class="vars-lbl">Variable Weights &amp; Invert</span>
+            <span class="vars-chevron">▼</span>
+          </div>
+          <div class="vars-section collapsed" id="vars-density">
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Total Housing Units (adj.)</span>
+                <button class="invert-pill off" id="inv-total_units_adjacent">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-total_units_adjacent">0.25</span>
+            </div>
+            <input type="range" id="vw-total_units_adjacent" min="0" max="1" step="0.01" value="0.25">
+          </div>
+
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Total TAU (adj.)</span>
+                <button class="invert-pill off" id="inv-total_tau_adjacent">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-total_tau_adjacent">0.25</span>
+            </div>
+            <input type="range" id="vw-total_tau_adjacent" min="0" max="1" step="0.01" value="0.25">
+          </div>
+
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Total CFA (adj.)</span>
+                <button class="invert-pill off" id="inv-total_cfa_adjacent">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-total_cfa_adjacent">0.25</span>
+            </div>
+            <input type="range" id="vw-total_cfa_adjacent" min="0" max="1" step="0.01" value="0.25">
+          </div>
+
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Number CFA (adj.)</span>
+                <button class="invert-pill off" id="inv-number_cfa_adjacent">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-number_cfa_adjacent">0.25</span>
+            </div>
+            <input type="range" id="vw-number_cfa_adjacent" min="0" max="1" step="0.01" value="0.25">
+          </div>
+
+          <div class="vsum-row">
+            <span class="vsum-label">Variable Σ</span>
+            <span class="vsum-val" id="vsum-density">1.00</span>
+          </div>
+          </div><!-- /vars-density -->
+        </div>
+      </div>
+
+      <!-- ── ACTIVE TRANSPORT ── -->
+      <div class="si-card" id="card-active" style="--si-color: var(--green)">
+        <div class="si-head" onclick="toggleCard('active')">
+          <div class="si-dot dot-active"></div>
+          <span class="si-name">Active Transport</span>
+          <span class="si-badge" id="sidisp-active">0.33</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="si-body">
+          <div class="si-wt-row">
+            <span class="si-wt-label">Subindex Wt.</span>
+            <input type="range" id="siw-active" min="0" max="1" step="0.01" value="0.333" style="flex:1">
+            <span class="si-wt-val" id="siwv-active">0.33</span>
+          </div>
+          <div class="vars-toggle closed" onclick="toggleVars('active')">
+            <span class="vars-lbl">Variable Weights &amp; Invert</span>
+            <span class="vars-chevron">▼</span>
+          </div>
+          <div class="vars-section collapsed" id="vars-active">
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Bike Infra within 500m</span>
+                <button class="invert-pill off" id="inv-bike_within_500">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-bike_within_500">0.33</span>
+            </div>
+            <input type="range" id="vw-bike_within_500" min="0" max="1" step="0.01" value="0.333">
+          </div>
+
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Intersection Stress</span>
+                <button class="invert-pill on" id="inv-Intesection_Stress">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-Intesection_Stress">0.33</span>
+            </div>
+            <input type="range" id="vw-Intesection_Stress" min="0" max="1" step="0.01" value="0.333">
+          </div>
+
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">BLTS Average</span>
+                <button class="invert-pill on" id="inv-blts_avg">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-blts_avg">0.33</span>
+            </div>
+            <input type="range" id="vw-blts_avg" min="0" max="1" step="0.01" value="0.333">
+          </div>
+
+          <div class="vsum-row">
+            <span class="vsum-label">Variable Σ</span>
+            <span class="vsum-val" id="vsum-active">1.00</span>
+          </div>
+          </div><!-- /vars-active -->
+        </div>
+      </div>
+
+      <!-- ── TRANSIT ── -->
+      <div class="si-card" id="card-transit" style="--si-color: var(--orange)">
+        <div class="si-head" onclick="toggleCard('transit')">
+          <div class="si-dot dot-transit"></div>
+          <span class="si-name">Transit</span>
+          <span class="si-badge" id="sidisp-transit">0.34</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="si-body">
+          <div class="si-wt-row">
+            <span class="si-wt-label">Subindex Wt.</span>
+            <input type="range" id="siw-transit" min="0" max="1" step="0.01" value="0.334" style="flex:1">
+            <span class="si-wt-val" id="siwv-transit">0.34</span>
+          </div>
+          <div class="vars-toggle closed" onclick="toggleVars('transit')">
+            <span class="vars-lbl">Variable Weights &amp; Invert</span>
+            <span class="vars-chevron">▼</span>
+          </div>
+          <div class="vars-section collapsed" id="vars-transit">
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Microtransit</span>
+                <button class="invert-pill off" id="inv-microtransit">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-microtransit">0.50</span>
+            </div>
+            <input type="range" id="vw-microtransit" min="0" max="1" step="0.01" value="0.5">
+          </div>
+
+          <div class="var-row">
+            <div class="var-top">
+              <div class="var-name-wrap">
+                <span class="var-lbl">Transit Stop (¼ mi)</span>
+                <button class="invert-pill off" id="inv-transit_stop_quarter_mile">INV</button>
+              </div>
+              <span class="var-wt-val" id="vwv-transit_stop_quarter_mile">0.50</span>
+            </div>
+            <input type="range" id="vw-transit_stop_quarter_mile" min="0" max="1" step="0.01" value="0.5">
+          </div>
+
+          <div class="vsum-row">
+            <span class="vsum-label">Variable Σ</span>
+            <span class="vsum-val" id="vsum-transit">1.00</span>
+          </div>
+          </div><!-- /vars-transit -->
+        </div>
+      </div>
+
+    </div><!-- /cards-scroll -->
+
+    <!-- Footer -->
+    <div class="panel-footer">
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="resetBtn">↺ Reset</button>
+        <button class="btn btn-primary" id="applyBtn">▶ Apply</button>
+      </div>
+      <button class="btn-export" id="exportBtn" disabled>⬇ Export Z-Scores CSV</button>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- ── MAP ─────────────────────────────────────────────── -->
+  <div class="main-area">
+    <div id="viewDiv"></div>
+
+    <!-- Symbology toggle -->
+    <div class="sym-bar">
+      <span class="sym-lbl">Map View</span>
+      <button class="sym-btn active" data-sym="composite">
+        <span class="sym-swatch" style="background:var(--navy)"></span>
+        Composite
+      </button>
+      <button class="sym-btn" data-sym="density">
+        <span class="sym-swatch" style="background:var(--blue)"></span>
+        Density
+      </button>
+      <button class="sym-btn" data-sym="active">
+        <span class="sym-swatch" style="background:var(--green)"></span>
+        Active Transport
+      </button>
+      <button class="sym-btn" data-sym="transit">
+        <span class="sym-swatch" style="background:var(--orange)"></span>
+        Transit
+      </button>
+    </div>
+
+    <div class="map-legend">
+      <div class="legend-title" id="legend-title">Composite Index</div>
+      <div class="cbar" id="legend-cbar"></div>
+      <div class="cbar-labels"><span>Low</span><span>High</span></div>
+    </div>
+
+    <div class="loading-overlay" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-msg">Loading features…</div>
+    </div>
+  </div>
+
+</div><!-- /app-body -->
+
+<script>
+require(["esri/Map","esri/views/MapView","esri/layers/FeatureLayer","esri/popup/content/CustomContent"], (Map, MapView, FeatureLayer, CustomContent) => {
+
+  // ═══════════════════════════════════════════════════════
+  //  SUBINDEX DEFINITIONS
+  // ═══════════════════════════════════════════════════════
+  const SUBINDEX_DEFS = [
+    {
+      key: "density", label: "Density",
+      vars: [
+        { field: "total_units_adjacent",  label: "Total Housing Units (adj.)", invert: false },
+        { field: "total_tau_adjacent",    label: "Total TAU (adj.)",           invert: false },
+        { field: "total_cfa_adjacent",    label: "Total CFA (adj.)",           invert: false },
+        { field: "number_cfa_adjacent",   label: "Number CFA (adj.)",          invert: false }
+      ]
+    },
+    {
+      key: "active", label: "Active Transport",
+      vars: [
+        { field: "bike_within_500",         label: "Bike Infra within 500m", invert: false },
+        { field: "Intesection_Stress",      label: "Intersection Stress",    invert: true  },
+        { field: "blts_avg",                label: "BLTS Average",           invert: true  }
+      ]
+    },
+    {
+      key: "transit", label: "Transit",
+      vars: [
+        { field: "microtransit",              label: "Microtransit",        invert: false },
+        { field: "transit_stop_quarter_mile", label: "Transit Stop (¼ mi)", invert: false }
+      ]
+    }
+  ];
+
+  const LAYER_URL = "https://services5.arcgis.com/fXXSUzHD5JjcOt1v/arcgis/rest/services/PIA_Index/FeatureServer";
+
+  // ── State ────────────────────────────────────────────────
+  const subWeights  = { density: 1/3, active: 1/3, transit: 1/3 };
+  const varWeights  = {
+    density: { total_units_adjacent: 0.25, total_tau_adjacent: 0.25, total_cfa_adjacent: 0.25, number_cfa_adjacent: 0.25 },
+    active:  { bike_within_500: 1/3, Intesection_Stress: 1/3, blts_avg: 1/3 },
+    transit: { microtransit: 0.5, transit_stop_quarter_mile: 0.5 }
+  };
+  const invertFlags = {
+    density: { total_units_adjacent: false, total_tau_adjacent: false, total_cfa_adjacent: false, number_cfa_adjacent: false },
+    active:  { bike_within_500: false, Intesection_Stress: true, blts_avg: true },
+    transit: { microtransit: false, transit_stop_quarter_mile: false }
+  };
+
+  const fieldStats  = {};
+  let   compStats   = { mean: 0, std: 1 };
+  let   allFeatures = [];
+  let   featureLayer;
+  let   currentSym  = "composite"; // "composite" | "density" | "active" | "transit"
+
+  // Colors per symbology mode
+  const SYM_COLORS = {
+    composite: { lo: "rgba(11,31,65,0.1)",   mid: "rgba(0,125,195,0.6)",    hi: "rgba(0,125,195,0.95)",  grad: "rgba(11,31,65,0.15) 0%, rgba(0,125,195,0.6) 45%, #007dc3 100%",   label: "Composite Index" },
+    density:   { lo: "rgba(11,31,65,0.08)",  mid: "rgba(0,125,195,0.45)",   hi: "rgba(0,125,195,0.9)",   grad: "rgba(11,31,65,0.1) 0%, rgba(0,125,195,0.45) 45%, #007dc3 100%",  label: "Density Sub-Index" },
+    active:    { lo: "rgba(82,160,48,0.08)", mid: "rgba(110,190,68,0.55)",  hi: "rgba(82,160,48,0.95)",  grad: "rgba(82,160,48,0.08) 0%, rgba(110,190,68,0.55) 45%, #52a030 100%", label: "Active Transport Sub-Index" },
+    transit:   { lo: "rgba(241,96,34,0.08)", mid: "rgba(241,96,34,0.5)",    hi: "rgba(241,96,34,0.95)",  grad: "rgba(241,96,34,0.08) 0%, rgba(241,96,34,0.5) 45%, #f16022 100%",  label: "Transit Sub-Index" }
+  };
+
+  const allVarFields = SUBINDEX_DEFS.flatMap(si => si.vars.map(v => v.field));
+
+  // ═══════════════════════════════════════════════════════
+  //  SLIDER LOGIC
+  // ═══════════════════════════════════════════════════════
+  function onSubSlider(key) {
+    const newVal = parseFloat(document.getElementById(`siw-${key}`).value);
+    const others = SUBINDEX_DEFS.map(s => s.key).filter(k => k !== key);
+    const sumOther = others.reduce((s, k) => s + subWeights[k], 0);
+    if (sumOther === 0) {
+      others.forEach(k => subWeights[k] = (1 - newVal) / others.length);
+    } else {
+      const scale = (1 - newVal) / sumOther;
+      others.forEach(k => subWeights[k] = subWeights[k] * scale);
+    }
+    subWeights[key] = newVal;
+    syncSubSliders();
+    updateMap();
+  }
+
+  function onVarSlider(siKey, changedField) {
+    const newVal = parseFloat(document.getElementById(`vw-${changedField}`).value);
+    const si = SUBINDEX_DEFS.find(s => s.key === siKey);
+    const others = si.vars.map(v => v.field).filter(f => f !== changedField);
+    const sumOther = others.reduce((s, f) => s + (varWeights[siKey][f] || 0), 0);
+    if (others.length === 0) {
+      varWeights[siKey][changedField] = 1;
+    } else if (sumOther === 0) {
+      others.forEach(f => varWeights[siKey][f] = (1 - newVal) / others.length);
+      varWeights[siKey][changedField] = newVal;
+    } else {
+      const scale = (1 - newVal) / sumOther;
+      others.forEach(f => varWeights[siKey][f] = varWeights[siKey][f] * scale);
+      varWeights[siKey][changedField] = newVal;
+    }
+    syncVarSliders(siKey);
+    updateMap();
+  }
+
+  function syncSubSliders() {
+    let total = 0;
+    SUBINDEX_DEFS.forEach(si => {
+      const v = Math.max(0, subWeights[si.key]);
+      subWeights[si.key] = v;
+      document.getElementById(`siw-${si.key}`).value          = v.toFixed(3);
+      document.getElementById(`sidisp-${si.key}`).textContent = v.toFixed(2);
+      document.getElementById(`siwv-${si.key}`).textContent   = v.toFixed(2);
+      total += v;
+    });
+
+  }
+
+  function syncVarSliders(siKey) {
+    const si = SUBINDEX_DEFS.find(s => s.key === siKey);
+    let total = 0;
+    si.vars.forEach(v => {
+      const w = varWeights[siKey][v.field];
+      document.getElementById(`vw-${v.field}`).value         = w.toFixed(3);
+      document.getElementById(`vwv-${v.field}`).textContent  = w.toFixed(2);
+      total += w;
+    });
+    const el = document.getElementById(`vsum-${siKey}`);
+    if (el) {
+      el.textContent = total.toFixed(2);
+      el.className   = `vsum-val${Math.abs(total - 1) > 0.05 ? ' warn' : ''}`;
+    }
+  }
+
+  // ── Wire all controls ────────────────────────────────────
+  SUBINDEX_DEFS.forEach(si => {
+    document.getElementById(`siw-${si.key}`).addEventListener("input", () => onSubSlider(si.key));
+    si.vars.forEach(v => {
+      document.getElementById(`vw-${v.field}`).addEventListener("input", () => onVarSlider(si.key, v.field));
+      document.getElementById(`inv-${v.field}`).addEventListener("click", e => {
+        e.stopPropagation();
+        invertFlags[si.key][v.field] = !invertFlags[si.key][v.field];
+        document.getElementById(`inv-${v.field}`).className =
+          `invert-pill ${invertFlags[si.key][v.field] ? 'on' : 'off'}`;
+        updateMap();
+      });
+    });
+  });
+
+  window.toggleCard = key => document.getElementById(`card-${key}`).classList.toggle("collapsed");
+
+  window.toggleVars = key => {
+    const section = document.getElementById(`vars-${key}`);
+    const toggle  = section.previousElementSibling;
+    section.classList.toggle("collapsed");
+    toggle.classList.toggle("closed");
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  STATS
+  // ═══════════════════════════════════════════════════════
+  function computeFieldStats() {
+    allVarFields.forEach(field => {
+      const vals = allFeatures.map(f => f.attributes[field]).filter(v => v != null && !isNaN(v));
+      if (!vals.length) { fieldStats[field] = { mean: 0, std: 1 }; return; }
+      const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const std  = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length) || 1;
+      fieldStats[field] = { mean, std };
+    });
+  }
+
+  function computeCompStats() {
+    const composites = allFeatures.map(f => calcComposite(f.attributes));
+    const n    = composites.length;
+    const mean = composites.reduce((a, b) => a + b, 0) / n;
+    const std  = Math.sqrt(composites.reduce((a, b) => a + (b - mean) ** 2, 0) / n) || 1;
+    compStats  = { mean, std };
+  }
+
+  function calcComposite(attrs) {
+    let comp = 0;
+    SUBINDEX_DEFS.forEach(si => {
+      let siScore = 0;
+      si.vars.forEach(v => {
+        const st  = fieldStats[v.field] || { mean: 0, std: 1 };
+        const raw = attrs[v.field] != null ? attrs[v.field] : st.mean;
+        const z   = (raw - st.mean) / st.std;
+        siScore  += (invertFlags[si.key][v.field] ? -z : z) * (varWeights[si.key][v.field] || 0);
+      });
+      comp += siScore * subWeights[si.key];
+    });
+    return comp;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  ARCADE EXPRESSIONS
+  // ═══════════════════════════════════════════════════════
+  function buildArcade() {
+    const lines = [];
+    SUBINDEX_DEFS.forEach(si => {
+      const terms = si.vars.map(v => {
+        const st = fieldStats[v.field] || { mean: 0, std: 1 };
+        const z  = `(($feature.${v.field} - ${st.mean}) / ${st.std})`;
+        const zt = invertFlags[si.key][v.field] ? `(-1 * ${z})` : z;
+        return `(${zt} * ${(varWeights[si.key][v.field] || 0).toFixed(6)})`;
+      });
+      lines.push(`var si_${si.key} = ${terms.join(" + ")};`);
+    });
+    const ct = SUBINDEX_DEFS.map(si => `(si_${si.key} * ${subWeights[si.key].toFixed(6)})`);
+    lines.push(`var composite = ${ct.join(" + ")};`);
+    lines.push("return composite;");
+    return lines.join("\n");
+  }
+
+  // Build arcade for a single subindex
+  function buildSubArcade(siKey) {
+    const si = SUBINDEX_DEFS.find(s => s.key === siKey);
+    const lines = [];
+    const terms = si.vars.map(v => {
+      const st = fieldStats[v.field] || { mean: 0, std: 1 };
+      const z  = `(($feature.${v.field} - ${st.mean}) / ${st.std})`;
+      const zt = invertFlags[siKey][v.field] ? `(-1 * ${z})` : z;
+      return `(${zt} * ${(varWeights[siKey][v.field] || 0).toFixed(6)})`;
+    });
+    lines.push(`var score = ${terms.join(" + ")};`);
+    lines.push("return score;");
+    return lines.join("\n");
+  }
+
+  // Return the arcade expression for currentSym
+  function getActiveArcade() {
+    return currentSym === "composite" ? buildArcade() : buildSubArcade(currentSym);
+  }
+
+  // Compute stats for the active symbology
+  function getActiveStats() {
+    if (currentSym === "composite") {
+      computeCompStats();
+      return compStats;
+    }
+    const si = SUBINDEX_DEFS.find(s => s.key === currentSym);
+    const scores = allFeatures.map(f => {
+      const attrs = f.attributes;
+      let score = 0;
+      si.vars.forEach(v => {
+        const st = fieldStats[v.field] || { mean: 0, std: 1 };
+        const raw = attrs[v.field] != null ? attrs[v.field] : st.mean;
+        const z   = (raw - st.mean) / st.std;
+        score += (invertFlags[currentSym][v.field] ? -z : z) * (varWeights[currentSym][v.field] || 0);
+      });
+      return score;
+    });
+    const n    = scores.length;
+    const mean = scores.reduce((a,b) => a+b, 0) / n;
+    const std  = Math.sqrt(scores.reduce((a,b) => a + (b-mean)**2, 0) / n) || 1;
+    return { mean, std };
+  }
+
+  // Build styled HTML popup content from feature attributes
+  function buildPopupHTML(attrs) {
+    function zScore(field) {
+      const st = fieldStats[field] || { mean: 0, std: 1 };
+      const raw = attrs[field] != null ? attrs[field] : st.mean;
+      return (raw - st.mean) / st.std;
+    }
+    function siScore(si) {
+      return si.vars.reduce((s, v) => {
+        const z = zScore(v.field);
+        return s + (invertFlags[si.key][v.field] ? -z : z) * (varWeights[si.key][v.field] || 0);
+      }, 0);
+    }
+
+    const style = `font-family:'Lexend Deca','Segoe UI',sans-serif;font-size:12px;color:#0b1f41;line-height:1.6;`;
+    const hrStyle = `border:none;border-top:1px solid #d0d8e4;margin:6px 0;`;
+    const scoreStyle = `font-size:15px;font-weight:700;color:#007dc3;`;
+    const siHeaderStyle = `font-weight:700;text-decoration:underline;color:#0b1f41;`;
+    const varStyle = `color:#3a5278;padding-left:10px;`;
+    const zStyle = `color:#7a90aa;font-size:11px;`;
+
+    let html = `<div style="${style}">`;
+
+    if (currentSym === "composite") {
+      const compScore = SUBINDEX_DEFS.reduce((s, si) => s + siScore(si) * subWeights[si.key], 0);
+      html += `<div>Composite Score: <span style="${scoreStyle}">${compScore.toFixed(3)}</span></div>`;
+      html += `<hr style="${hrStyle}">`;
+      SUBINDEX_DEFS.forEach(si => {
+        const score = siScore(si);
+        const siColor = si.key === 'density' ? '#007dc3' : si.key === 'active' ? '#52a030' : '#f16022';
+        html += `<div style="${siHeaderStyle};color:${siColor};">${si.label} <span style="font-weight:400;font-size:11px;color:#7a90aa;">(wt=${subWeights[si.key].toFixed(2)})</span>: ${score.toFixed(3)}</div>`;
+        si.vars.forEach(v => {
+          const raw = attrs[v.field] != null ? Number(attrs[v.field]).toFixed(2) : 'N/A';
+          const z   = zScore(v.field).toFixed(2);
+          const inv = invertFlags[si.key][v.field] ? ' ↕' : '';
+          html += `<div style="${varStyle}">${v.label}${inv}: ${raw} <span style="${zStyle}">(z=${z})</span></div>`;
+        });
+      });
+    } else {
+      const si = SUBINDEX_DEFS.find(s => s.key === currentSym);
+      const score = siScore(si);
+      const siColor = currentSym === 'density' ? '#007dc3' : currentSym === 'active' ? '#52a030' : '#f16022';
+      html += `<div style="font-weight:700;font-size:14px;color:${siColor};">${si.label} Score: <span style="${scoreStyle};color:${siColor};">${score.toFixed(3)}</span></div>`;
+      html += `<hr style="${hrStyle}">`;
+      si.vars.forEach(v => {
+        const raw = attrs[v.field] != null ? Number(attrs[v.field]).toFixed(2) : 'N/A';
+        const z   = zScore(v.field).toFixed(2);
+        const inv = invertFlags[si.key][v.field] ? ' ↕' : '';
+        html += `<div>${v.label}${inv}: <strong>${raw}</strong> <span style="${zStyle}">(z=${z})</span></div>`;
+      });
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  UPDATE MAP RENDERER
+  // ═══════════════════════════════════════════════════════
+  function updateMap() {
+    if (!featureLayer || !Object.keys(fieldStats).length) return;
+    const stats = getActiveStats();
+    const lo    = stats.mean - 1.8 * stats.std;
+    const hi    = stats.mean + 1.8 * stats.std;
+    const mid   = (lo + hi) / 2;
+    const arcade = getActiveArcade();
+    const c     = SYM_COLORS[currentSym];
+
+    featureLayer.renderer = {
+      type: "simple",
+      symbol: { type: "simple-fill", outline: { color: "rgba(11,31,65,0.06)", width: 0.5 } },
+      visualVariables: [
+        {
+          type: "color",
+          valueExpression: arcade,
+          stops: [
+            { value: lo,  color: c.lo  },
+            { value: mid, color: c.mid },
+            { value: hi,  color: c.hi  }
+          ]
+        },
+        {
+          type: "opacity",
+          valueExpression: arcade,
+          stops: [
+            { value: lo, opacity: 0.2 },
+            { value: hi, opacity: 0.95 }
+          ]
+        }
+      ]
+    };
+
+    // Update legend
+    const legendTitle = document.getElementById("legend-title");
+    const legendCbar  = document.getElementById("legend-cbar");
+    if (legendTitle) legendTitle.textContent = c.label;
+    if (legendCbar)  legendCbar.style.background = `linear-gradient(to right, ${c.grad})`;
+
+    featureLayer.popupTemplate = {
+      title: "{GRID_ID}",
+      content: [new CustomContent({
+        outFields: ["*"],
+        creator: (event) => {
+          const attrs = event.graphic.attributes;
+          const div = document.createElement("div");
+          div.innerHTML = buildPopupHTML(attrs);
+          return div;
+        }
+      })],
+      actions: []
+    };
+  }
+
+  // ── Symbology toggle buttons ─────────────────────────────
+  document.querySelectorAll(".sym-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentSym = btn.dataset.sym;
+      document.querySelectorAll(".sym-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      updateMap();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════
+  //  ESRI SETUP
+  // ═══════════════════════════════════════════════════════
+  featureLayer = new FeatureLayer({
+    url: LAYER_URL,
+    outFields: ["GRID_ID", "OBJECTID", ...allVarFields],
+    definitionExpression: allVarFields.map(f => `${f} IS NOT NULL`).join(" AND ")
+  });
+
+  // Use light basemap to complement the light panel
+  const map  = new Map({ basemap: "gray-vector", layers: [featureLayer] });
+  const view = new MapView({
+    container: "viewDiv", map,
+    center: [-120, 39.1], zoom: 10,
+    popup: { defaultPopupTemplateEnabled: false }
+  });
+
+  featureLayer.queryFeatures({
+    where: "1=1",
+    outFields: ["GRID_ID", "OBJECTID", ...allVarFields],
+    returnGeometry: false
+  }).then(res => {
+    allFeatures = res.features;
+    computeFieldStats();
+    syncSubSliders();
+    SUBINDEX_DEFS.forEach(si => syncVarSliders(si.key));
+    updateMap();
+    document.getElementById("feat-count").textContent =
+      `${allFeatures.length.toLocaleString()} features`;
+    document.getElementById("exportBtn").disabled = false;
+    document.getElementById("loading").style.display = "none";
+  }).catch(err => {
+    document.getElementById("loading").innerHTML =
+      `<div class="spinner" style="border-top-color:#f16022"></div>
+       <div class="loading-text" style="color:#f16022">Error: ${err.message}</div>`;
+  });
+
+  // ── Buttons ──────────────────────────────────────────────
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    SUBINDEX_DEFS.forEach(si => {
+      subWeights[si.key] = 1 / SUBINDEX_DEFS.length;
+      const M = si.vars.length;
+      si.vars.forEach(v => {
+        varWeights[si.key][v.field]  = 1 / M;
+        invertFlags[si.key][v.field] = v.invert;
+        const btn = document.getElementById(`inv-${v.field}`);
+        if (btn) btn.className = `invert-pill ${v.invert ? 'on' : 'off'}`;
+      });
+    });
+    syncSubSliders();
+    SUBINDEX_DEFS.forEach(si => syncVarSliders(si.key));
+    updateMap();
+  });
+
+  document.getElementById("applyBtn").addEventListener("click", updateMap);
+
+  // ═══════════════════════════════════════════════════════
+  //  CSV EXPORT
+  // ═══════════════════════════════════════════════════════
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    if (!allFeatures.length) return;
+
+    const header = ["GRID_ID","OBJECTID"];
+    allVarFields.forEach(f => header.push(`${f}_raw`));
+    allVarFields.forEach(f => header.push(`${f}_zscore`));
+    SUBINDEX_DEFS.forEach(si => header.push(`${si.key}_subindex_score`));
+    header.push("composite_index");
+    SUBINDEX_DEFS.forEach(si => {
+      header.push(`wt_subindex_${si.key}`);
+      si.vars.forEach(v => header.push(`wt_var_${v.field}`));
+      si.vars.forEach(v => header.push(`inverted_${v.field}`));
+    });
+
+    const rows = [header.join(",")];
+    allFeatures.forEach(feat => {
+      const a = feat.attributes;
+      const row = [a.GRID_ID || "", a.OBJECTID || ""];
+      allVarFields.forEach(f => row.push(a[f] != null ? a[f] : ""));
+      const zs = {};
+      allVarFields.forEach(f => {
+        const st = fieldStats[f] || { mean: 0, std: 1 };
+        zs[f] = a[f] != null ? (a[f] - st.mean) / st.std : 0;
+        row.push(zs[f].toFixed(6));
+      });
+      const siScores = {};
+      SUBINDEX_DEFS.forEach(si => {
+        let score = 0;
+        si.vars.forEach(v => {
+          const z = zs[v.field] || 0;
+          score += (invertFlags[si.key][v.field] ? -z : z) * (varWeights[si.key][v.field] || 0);
+        });
+        siScores[si.key] = score;
+        row.push(score.toFixed(6));
+      });
+      const comp = SUBINDEX_DEFS.reduce((s, si) => s + siScores[si.key] * subWeights[si.key], 0);
+      row.push(comp.toFixed(6));
+      SUBINDEX_DEFS.forEach(si => {
+        row.push(subWeights[si.key].toFixed(4));
+        si.vars.forEach(v => row.push(varWeights[si.key][v.field].toFixed(4)));
+        si.vars.forEach(v => row.push(invertFlags[si.key][v.field] ? "1" : "0"));
+      });
+      rows.push(row.join(","));
+    });
+
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `PIA_ZScores_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+});
+</script>
+</body>
+</html>

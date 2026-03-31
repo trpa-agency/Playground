@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRPA Project Impact Assessment (PIA) Tool</title>
+
+  <!-- ═══════════════════════════════════════════════════
+       ArcGIS Maps SDK for JavaScript 5.0
+       Single script tag — includes core API, map-components,
+       calcite-components, and all other packages at once.
+       type="module" is REQUIRED.
+  ═══════════════════════════════════════════════════ -->
+  <script type="module" src="https://js.arcgis.com/5.0/"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Segoe UI', Arial, sans-serif;
+                 background: #1a1a1a; color: #eee; overflow: hidden; }
+
+    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    #header {
+      background: #0b1a2e; border-bottom: 2px solid #0072bc;
+      padding: 7px 14px; display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0; z-index: 50;
+    }
+    #header .logo {
+      width: 34px; height: 34px; background: #0072bc; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    #header h1 { font-size: 15px; font-weight: 600; color: #fff; }
+    .tab-bar { margin-left: auto; display: flex; gap: 4px; }
+    .tab-btn {
+      background: rgba(255,255,255,.1); border: none; color: #bbb;
+      padding: 5px 13px; border-radius: 4px; cursor: pointer; font-size: 12px;
+      transition: all .15s;
+    }
+    .tab-btn.active { background: #0072bc; color: #fff; font-weight: 600; }
+    .tab-btn:hover:not(.active) { background: rgba(255,255,255,.18); color: #fff; }
+
+    #body { display: flex; flex: 1; overflow: hidden; }
+
+    #sidebar {
+      width: 300px; flex-shrink: 0; background: #1e1e1e;
+      overflow-y: auto; padding: 8px 8px 14px;
+      display: flex; flex-direction: column; gap: 7px;
+      border-right: 1px solid #2e2e2e;
+    }
+    .panel { background: #272727; border-radius: 6px; padding: 9px 11px; }
+    .panel-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .9px;
+      color: #777; margin-bottom: 7px; border-bottom: 1px solid #363636;
+      padding-bottom: 4px; display: flex; align-items: center; gap: 5px;
+    }
+    .step-badge {
+      background: #0072bc; color: #fff; border-radius: 50%;
+      width: 16px; height: 16px; display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+    }
+    label { font-size: 11.5px; color: #b0b0b0; display: block; margin-top: 7px; margin-bottom: 2px; }
+    label:first-of-type { margin-top: 0; }
+    select, input[type="text"], input[type="number"] {
+      width: 100%; padding: 5px 7px; background: #1a1a1a; border: 1px solid #3c3c3c;
+      color: #eee; border-radius: 4px; font-size: 12px; appearance: none;
+    }
+    select:focus, input:focus { outline: none; border-color: #0072bc; }
+    .radio-row { display: flex; gap: 12px; margin-top: 4px; }
+    .radio-row label { display: flex; align-items: center; gap: 5px; margin: 0; cursor: pointer; }
+    .check-item { display: flex; align-items: flex-start; gap: 6px; margin: 4px 0; cursor: pointer; }
+    .check-item label { margin: 0; cursor: pointer; line-height: 1.4; }
+    input[type="range"] { width: 100%; accent-color: #0072bc; margin-top: 2px; }
+    .range-row { display: flex; justify-content: space-between; font-size: 10.5px; color: #777; }
+    .callout {
+      background: #0d2040; border-left: 3px solid #0072bc;
+      padding: 7px 9px; font-size: 11px; color: #8db8de; line-height: 1.55;
+      border-radius: 0 4px 4px 0;
+    }
+    .callout strong { color: #4db8ff; }
+    .mu-divider { border: none; border-top: 1px solid #363636; margin: 9px 0; }
+
+    .btn { width: 100%; padding: 8px; border: none; border-radius: 5px;
+           cursor: pointer; font-size: 13px; font-weight: 600; transition: background .15s; }
+    .btn-primary { background: #0072bc; color: #fff; }
+    .btn-primary:hover { background: #005fa3; }
+    .btn-reset { background: #333; color: #aaa; margin-top: 3px; }
+    .btn-reset:hover { background: #444; color: #ddd; }
+
+    #zone-info-lines { font-size: 11.5px; line-height: 1.9; color: #aaa; }
+    #zone-info-lines strong { color: #ddd; }
+
+    #map-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #tab-tool { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* arcgis-map web component — must be a block element with explicit dimensions */
+    arcgis-map { display: block; flex: 1; width: 100%; }
+
+    #results-bar {
+      background: #0b1a2e; border-top: 2px solid #0072bc;
+      display: flex; gap: 5px; padding: 7px 8px; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .res-card {
+      flex: 1; min-width: 105px; background: #0d2745;
+      border-radius: 5px; padding: 7px 10px; text-align: center;
+    }
+    .res-card .rv { font-size: 18px; font-weight: 700; color: #fff; }
+    .res-card .rl { font-size: 10px; color: #6a9bc0; margin-top: 2px;
+                    text-transform: uppercase; letter-spacing: .4px; }
+    .res-card.good { background: #0d3d1c; }
+    .res-card.bad  { background: #4a1515; }
+
+    #tab-guidelines { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    #tab-guidelines iframe { flex: 1; border: none; }
+    #tab-guidelines .guide-footer {
+      background: #1a1a1a; border-top: 1px solid #2e2e2e;
+      padding: 8px 14px; font-size: 11px; color: #777;
+    }
+    #tab-guidelines .guide-footer a { color: #4db8ff; }
+
+    #modal-bg {
+      position: fixed; inset: 0; background: rgba(0,0,0,.88);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+    }
+    #modal {
+      background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 8px;
+      width: 600px; max-width: 95vw; max-height: 88vh;
+      display: flex; flex-direction: column; box-shadow: 0 16px 48px rgba(0,0,0,.7);
+    }
+    #modal-head { background: #0b2545; padding: 13px 16px; border-radius: 8px 8px 0 0; }
+    #modal-head h2 { font-size: 14px; color: #fff; }
+    #modal-body { padding: 14px 16px; overflow-y: auto; font-size: 12px; line-height: 1.7; color: #aaa; flex: 1; }
+    #modal-body p { margin-bottom: 9px; }
+    #modal-body strong { color: #ddd; }
+    #modal-foot { padding: 11px 16px; border-top: 1px solid #2e2e2e; display: flex; justify-content: flex-end; }
+    #modal-foot button { background: #0072bc; color: #fff; border: none;
+                         padding: 7px 20px; border-radius: 4px; cursor: pointer;
+                         font-size: 13px; font-weight: 600; }
+    #modal-foot button:hover { background: #005fa3; }
+
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-track { background: #1a1a1a; }
+    #sidebar::-webkit-scrollbar-thumb { background: #3c3c3c; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- TERMS MODAL -->
+<div id="modal-bg">
+  <div id="modal">
+    <div id="modal-head"><h2>⚠️ TRPA Project Impact Assessment Tool — Terms of Use</h2></div>
+    <div id="modal-body">
+      <p>Welcome to the TRPA Project Impact Assessment (PIA) Tool. This tool provides initial screening and VMT analysis for projects within the Lake Tahoe Region.</p>
+      <p><strong>How to use:</strong><br>
+        1) Select your proposed project type.<br>
+        2) Click the map to select your project's PIA Zone.<br>
+        3) Enter the project size.<br>
+        4) Optionally select mitigation strategies.<br>
+        5) Click Calculate VMT to see results.
+      </p>
+      <p><strong>Disclaimer:</strong> This tool is provided <strong>"AS IS"</strong> without warranty. Results are <strong>preliminary only</strong> and must be verified with TRPA staff before formal submission. TRPA shall have no liability for any losses arising from use of this tool.</p>
+      <p>By clicking "I Accept," you agree to these terms. Questions: <strong>msloan@trpa.gov</strong> | (775) 589-5208</p>
+    </div>
+    <div id="modal-foot"><button id="accept-btn">I Accept</button></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+  <div id="header">
+    <div class="logo">T</div>
+    <h1>Project Impact Assessment (PIA) Tool — Tahoe Regional Planning Agency</h1>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="btn-tab-tool"       onclick="showTab('tool')">🗺 PIA Tool</button>
+      <button class="tab-btn"        id="btn-tab-guidelines" onclick="showTab('guidelines')">📋 Guidelines</button>
+    </div>
+  </div>
+
+  <div id="body">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="panel">
+        <div class="panel-title"><span class="step-badge">1</span> Project Information</div>
+        <label>Project Name</label>
+        <input type="text" id="proj_name" placeholder="Enter project name…">
+        <label>Proposed Project Type</label>
+        <select id="proj_type" onchange="onProjTypeChange()">
+          <option value="">— Select a type —</option>
+          <optgroup label="Residential">
+            <option>Residential (Market-Rate)</option>
+            <option>Residential (Affordable)</option>
+          </optgroup>
+          <optgroup label="Tourist Accommodation">
+            <option>Hotel</option>
+            <option>Motel</option>
+            <option>Timeshare</option>
+          </optgroup>
+          <optgroup label="Commercial">
+            <option>Auto Parts and Service Center</option>
+            <option>Building Materials/Lumber</option>
+            <option>Drinking Place</option>
+            <option>Drive-In Bank</option>
+            <option>Fast Food Restaurant</option>
+            <option>Free-Standing Discount Store</option>
+            <option>Furniture Store</option>
+            <option>General retail</option>
+            <option>High Turnover Sit-Down Restaurant</option>
+            <option>Pharmacy/Drugstore</option>
+            <option>Quality Restaurant</option>
+            <option>Supermarket</option>
+          </optgroup>
+          <optgroup label="Office / Industrial">
+            <option>General Office Building</option>
+            <option>Light industrial</option>
+            <option>Medical-Dental Office Building</option>
+            <option>Warehouse</option>
+          </optgroup>
+          <optgroup label="Recreation">
+            <option>Bowling Alley</option>
+            <option>Golf Course</option>
+            <option>Health and Fitness Club</option>
+            <option>Marina</option>
+            <option>Movie Theater</option>
+            <option>Public Park</option>
+          </optgroup>
+          <optgroup label="Public Service">
+            <option>Church</option>
+            <option>Daycare Center</option>
+            <option>Elementary School</option>
+            <option>High School</option>
+            <option>Hospital</option>
+            <option>Library</option>
+            <option>Middle School / Junior High</option>
+            <option>Private School (K-12)</option>
+            <option>Recreational Community Center</option>
+            <option>University / College</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option>Developed Campground / RV Park</option>
+            <option>Mixed-Use</option>
+            <option>Unique Project Type</option>
+          </optgroup>
+        </select>
+        <div id="size-wrapper"></div>
+        <div id="redev-wrapper" style="display:none">
+          <label>Redevelopment / Change in operation?</label>
+          <div class="radio-row">
+            <label><input type="radio" name="redev" value="No" checked onchange="onRedevChange()"> No</label>
+            <label><input type="radio" name="redev" value="Yes" onchange="onRedevChange()"> Yes</label>
+          </div>
+          <div id="redev-inner" style="display:none">
+            <label>Existing Use</label>
+            <select id="current_use" onchange="renderRedevSize()"></select>
+            <div id="redev-size-wrapper"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mu-panel" class="panel" style="display:none">
+        <div class="panel-title"><span class="step-badge">1</span> Mixed-Use Land Use Components</div>
+        <div id="mu-1"></div>
+        <hr class="mu-divider">
+        <div id="mu-2"></div>
+        <hr class="mu-divider">
+        <div id="mu-3"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><span class="step-badge">2</span> Select Project Location</div>
+        <div class="callout"><strong>Click the map</strong> to select your project's PIA Zone. The zone highlights and its VMT data appears below.</div>
+      </div>
+
+      <div id="zone-panel" class="panel" style="display:none">
+        <div class="panel-title">📍 Selected Zone Data</div>
+        <div id="zone-info-lines"></div>
+      </div>
+
+      <div id="mit-panel" class="panel" style="display:none">
+        <div class="panel-title"><span class="step-badge">3</span> Mitigation Strategies</div>
+        <div id="mit-cb"></div>
+        <div id="mit-sliders"></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="calculate()">⚡ Calculate VMT</button>
+      <button class="btn btn-reset"   onclick="resetTool()">↺ Reset</button>
+    </div>
+
+    <!-- MAP + RESULTS -->
+    <div id="map-container">
+      <div id="tab-tool">
+
+        <!--
+          arcgis-map web component (SDK 5.0)
+          - No separate CSS import needed when using the 5.0 CDN entry point
+          - Child elements with slot="" are positioned inside the map UI
+          - viewOnReady() and arcgisViewClick event are used in the script below
+        -->
+        <arcgis-map
+          id="arcgis-map-el"
+          basemap="streets-navigation-vector"
+          center="-120.03,39.09"
+          zoom="11">
+          <arcgis-zoom             slot="top-left"></arcgis-zoom>
+          <arcgis-home             slot="top-left"></arcgis-home>
+          <arcgis-search           slot="top-right"></arcgis-search>
+          <arcgis-layer-list       slot="top-right"></arcgis-layer-list>
+          <arcgis-legend           slot="bottom-right"></arcgis-legend>
+          <arcgis-scale-bar        slot="bottom-left" unit="dual"></arcgis-scale-bar>
+
+        </arcgis-map>
+
+        <div id="results-bar">
+          <div class="res-card" id="rc-zone">  <div class="rv" id="rv-zone">—</div>  <div class="rl">PIA Zone</div></div>
+          <div class="res-card" id="rc-vmt">   <div class="rv" id="rv-vmt">—</div>   <div class="rl">Total Daily VMT</div></div>
+          <div class="res-card" id="rc-sos">   <div class="rv" id="rv-sos">—</div>   <div class="rl">Standard of Significance</div></div>
+          <div class="res-card" id="rc-screen"><div class="rv" id="rv-screen">—</div><div class="rl">Screened?</div></div>
+          <div class="res-card" id="rc-mit">   <div class="rv" id="rv-mit">—</div>   <div class="rl">Mitigation VMT Needed</div></div>
+          <div class="res-card" id="rc-fee">   <div class="rv" id="rv-fee">—</div>   <div class="rl">Mobility Mitigation Fee</div></div>
+        </div>
+      </div>
+
+      <div id="tab-guidelines">
+        <iframe src="PIA_Guidelines_Final.pdf" title="PIA User Guidelines"></iframe>
+        <div class="guide-footer">
+          Place <code>PIA_Guidelines_Final.pdf</code> in the same folder as this file if the PDF does not load. &nbsp;|&nbsp;
+          Contact: <a href="mailto:msloan@trpa.gov">msloan@trpa.gov</a> (775) 589-5208 &nbsp;·&nbsp;
+          <a href="mailto:dsegan@trpa.gov">dsegan@trpa.gov</a> (775) 589-5233
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!--
+  MAIN SCRIPT — ArcGIS Maps SDK for JavaScript 5.0 CDN patterns:
+
+  1. <script type="module"> — required for top-level await and $arcgis.import
+  2. Script placed AFTER the <arcgis-map> element in the DOM (community best practice)
+  3. viewOnReady()          — awaits the component + underlying MapView being ready
+  4. $arcgis.import([...])  — replaces AMD require(); returns module exports
+  5. arcgisViewClick event  — fired on the component; event.detail has mapPoint, x, y
+  6. viewElement.hitTest()  — hitTest on the COMPONENT (not view); pass event.detail
+  7. viewElement.view       — access the underlying MapView for whenLayerView/highlight
+-->
+<script type="module">
+
+document.getElementById("accept-btn").addEventListener("click", () => {
+  document.getElementById("modal-bg").style.display = "none";
+});
+
+// ─── PIA Zone data  (Appendix C, Guidelines August 2025) ─────────────────────
+// tl     = avg zone trip length (mi)
+// tlSOS  = trip length SOS: 15% below subregional average
+// vpc    = avg VMT per capita
+// vpcSOS = VMT/capita standard of significance
+const PIA_ZONES = {
+  "Zone 1":  { tl:9.147,  tlSOS:5.5335, vpc:22.733, vpcSOS:13.108 },
+  "Zone 2":  { tl:9.621,  tlSOS:5.6865, vpc:20.583, vpcSOS:14.507 },
+  "Zone 3":  { tl:11.379, tlSOS:5.6865, vpc:30.413, vpcSOS:14.507 },
+  "Zone 4":  { tl:13.896, tlSOS:5.6865, vpc:24.269, vpcSOS:14.507 },
+  "Zone 5":  { tl:14.045, tlSOS:5.6865, vpc:25.910, vpcSOS:14.507 },
+  "Zone 6":  { tl:4.973,  tlSOS:3.621,  vpc:8.098,  vpcSOS:9.245  },
+  "Zone 7":  { tl:11.136, tlSOS:5.6865, vpc:17.172, vpcSOS:14.507 },
+  "Zone 8":  { tl:3.964,  tlSOS:3.621,  vpc:9.631,  vpcSOS:9.245  },
+  "Zone 9":  { tl:4.508,  tlSOS:3.621,  vpc:11.948, vpcSOS:9.245  },
+  "Zone 10": { tl:4.506,  tlSOS:3.621,  vpc:11.948, vpcSOS:9.245  },
+  "Zone 11": { tl:8.513,  tlSOS:5.6865, vpc:17.426, vpcSOS:14.507 },
+  "Zone 12": { tl:4.109,  tlSOS:3.621,  vpc:10.315, vpcSOS:9.245  },
+  "Zone 13": { tl:3.670,  tlSOS:3.621,  vpc:10.428, vpcSOS:9.245  },
+  "Zone 14": { tl:5.306,  tlSOS:3.621,  vpc:13.436, vpcSOS:9.245  },
+  "Zone 15": { tl:3.855,  tlSOS:3.621,  vpc:10.763, vpcSOS:9.245  },
+  "Zone 16": { tl:8.126,  tlSOS:5.6865, vpc:null,   vpcSOS:14.507 },
+  "Zone 17": { tl:4.009,  tlSOS:3.621,  vpc:11.238, vpcSOS:9.245  },
+  "Zone 18": { tl:4.135,  tlSOS:3.621,  vpc:null,   vpcSOS:9.245  },
+  "Zone 19": { tl:4.208,  tlSOS:3.621,  vpc:10.872, vpcSOS:9.245  },
+  "Zone 20": { tl:3.915,  tlSOS:3.621,  vpc:12.359, vpcSOS:9.245  },
+  "Zone 21": { tl:4.416,  tlSOS:3.621,  vpc:8.659,  vpcSOS:9.248  },
+  "Zone 22": { tl:4.691,  tlSOS:5.6865, vpc:12.765, vpcSOS:14.507 },
+  "Zone 23": { tl:4.312,  tlSOS:3.621,  vpc:11.330, vpcSOS:9.245  },
+  "Zone 24": { tl:5.982,  tlSOS:5.6865, vpc:18.681, vpcSOS:14.507 },
+  "Zone 25": { tl:7.288,  tlSOS:5.6865, vpc:14.884, vpcSOS:14.507 },
+  "Zone 26": { tl:11.246, tlSOS:5.6865, vpc:38.783, vpcSOS:14.507 },
+  "Zone 27": { tl:6.376,  tlSOS:5.6865, vpc:15.265, vpcSOS:14.507 },
+  "Zone 28": { tl:5.801,  tlSOS:5.6865, vpc:17.567, vpcSOS:14.507 },
+  "Zone 29": { tl:null,   tlSOS:5.6865, vpc:null,   vpcSOS:14.507 },
+  "Zone 30": { tl:6.420,  tlSOS:5.6865, vpc:17.671, vpcSOS:14.507 },
+  "Zone 31": { tl:6.674,  tlSOS:5.6865, vpc:null,   vpcSOS:14.507 },
+  "Zone 32": { tl:4.775,  tlSOS:5.6865, vpc:14.926, vpcSOS:14.507 },
+  "Zone 33": { tl:7.196,  tlSOS:5.6865, vpc:20.050, vpcSOS:14.507 },
+  "Zone 34": { tl:8.760,  tlSOS:5.6865, vpc:23.145, vpcSOS:14.507 },
+  "Zone 35": { tl:null,   tlSOS:5.6865, vpc:null,   vpcSOS:14.507 },
+  "Zone 36": { tl:10.263, tlSOS:5.6865, vpc:23.775, vpcSOS:14.507 },
+  "Zone 37": { tl:9.899,  tlSOS:5.4145, vpc:25.557, vpcSOS:13.082 },
+  "Zone 38": { tl:6.527,  tlSOS:5.4145, vpc:16.314, vpcSOS:13.082 },
+  "Zone 39": { tl:4.834,  tlSOS:5.4145, vpc:13.152, vpcSOS:13.082 },
+  "Zone 40": { tl:7.108,  tlSOS:5.4145, vpc:16.570, vpcSOS:13.082 },
+  "Zone 41": { tl:4.961,  tlSOS:5.4145, vpc:11.435, vpcSOS:13.082 },
+  "Zone 42": { tl:4.778,  tlSOS:5.4145, vpc:12.315, vpcSOS:13.082 },
+  "Zone 43": { tl:6.199,  tlSOS:5.4145, vpc:4.896,  vpcSOS:13.082 },
+  "Zone 44": { tl:12.389, tlSOS:11.135, vpc:null,   vpcSOS:null   },
+  "Zone 45": { tl:6.421,  tlSOS:5.5335, vpc:15.204, vpcSOS:13.108 },
+  "Zone 46": { tl:6.254,  tlSOS:5.5335, vpc:17.991, vpcSOS:13.108 },
+  "Zone 47": { tl:6.460,  tlSOS:5.5335, vpc:14.147, vpcSOS:13.108 },
+  "Zone 48": { tl:5.059,  tlSOS:5.5335, vpc:14.827, vpcSOS:13.108 },
+  "Zone 49": { tl:5.377,  tlSOS:5.5335, vpc:13.567, vpcSOS:13.108 },
+  "Zone 50": { tl:6.788,  tlSOS:5.5335, vpc:16.269, vpcSOS:13.108 },
+  "Zone 51": { tl:6.009,  tlSOS:5.5335, vpc:16.703, vpcSOS:13.108 },
+  "Zone 52": { tl:6.332,  tlSOS:5.5335, vpc:17.545, vpcSOS:13.108 },
+  "Zone 53": { tl:6.346,  tlSOS:5.5335, vpc:16.467, vpcSOS:13.108 },
+  "Zone 54": { tl:7.711,  tlSOS:5.5335, vpc:15.443, vpcSOS:13.108 },
+  "Zone 55": { tl:7.482,  tlSOS:5.5335, vpc:12.144, vpcSOS:13.108 },
+  "Zone 56": { tl:6.699,  tlSOS:5.5335, vpc:11.836, vpcSOS:13.108 },
+  "Zone 57": { tl:6.891,  tlSOS:5.5335, vpc:20.031, vpcSOS:13.108 },
+  "Zone 58": { tl:6.438,  tlSOS:5.5335, vpc:15.015, vpcSOS:13.108 },
+  "Zone 59": { tl:10.216, tlSOS:5.5335, vpc:22.577, vpcSOS:13.108 },
+  "Zone 60": { tl:9.313,  tlSOS:5.5335, vpc:21.031, vpcSOS:13.108 },
+  "Zone 61": { tl:9.027,  tlSOS:5.5335, vpc:20.855, vpcSOS:13.108 },
+  "Zone 62": { tl:5.543,  tlSOS:4.726,  vpc:14.784, vpcSOS:11.015 },
+  "Zone 63": { tl:6.136,  tlSOS:4.726,  vpc:14.237, vpcSOS:11.015 },
+  "Zone 64": { tl:4.650,  tlSOS:4.726,  vpc:15.483, vpcSOS:11.015 },
+  "Zone 65": { tl:6.568,  tlSOS:4.726,  vpc:13.498, vpcSOS:11.015 },
+  "Zone 66": { tl:4.970,  tlSOS:4.726,  vpc:17.350, vpcSOS:11.015 },
+  "Zone 67": { tl:5.099,  tlSOS:4.726,  vpc:12.239, vpcSOS:11.015 },
+  "Zone 68": { tl:7.256,  tlSOS:4.726,  vpc:15.336, vpcSOS:11.015 },
+  "Zone 69": { tl:4.082,  tlSOS:4.726,  vpc:9.236,  vpcSOS:11.015 },
+  "Zone 70": { tl:6.275,  tlSOS:4.726,  vpc:11.644, vpcSOS:11.015 },
+  "Zone 71": { tl:4.786,  tlSOS:4.726,  vpc:13.709, vpcSOS:11.015 },
+  "Zone 72": { tl:6.519,  tlSOS:4.726,  vpc:16.586, vpcSOS:11.015 },
+  "Zone 73": { tl:10.654, tlSOS:5.6865, vpc:20.333, vpcSOS:14.507 },
+  "Zone 74": { tl:9.213,  tlSOS:5.6865, vpc:20.672, vpcSOS:14.507 },
+  "Zone 75": { tl:8.507,  tlSOS:5.4145, vpc:20.880, vpcSOS:13.082 },
+  "Zone 77": { tl:6.374,  tlSOS:5.4145, vpc:17.902, vpcSOS:13.082 },
+  "Zone 78": { tl:2.947,  tlSOS:5.6865, vpc:11.350, vpcSOS:14.507 },
+  "Zone 79": { tl:5.168,  tlSOS:5.6865, vpc:null,   vpcSOS:14.507 }
+};
+
+// ITE Trip Rates (11th Edition)
+const ITE = {
+  "Hotel":                             { rate:7.99,   unit:"TAUs"    },
+  "Motel":                             { rate:3.35,   unit:"TAUs"    },
+  "Timeshare":                         { rate:8.63,   unit:"TAUs"    },
+  "Developed Campground / RV Park":    { rate:6.11,   unit:"Sites"   },
+  "General retail":                    { rate:37.01,  unit:"KSF"     },
+  "Furniture Store":                   { rate:6.3,    unit:"KSF"     },
+  "Pharmacy/Drugstore":                { rate:90.08,  unit:"KSF"     },
+  "Supermarket":                       { rate:93.84,  unit:"KSF"     },
+  "Drive-In Bank":                     { rate:100.35, unit:"KSF"     },
+  "High Turnover Sit-Down Restaurant": { rate:107.2,  unit:"KSF"     },
+  "Fast Food Restaurant":              { rate:450.49, unit:"KSF"     },
+  "Quality Restaurant":                { rate:83.84,  unit:"KSF"     },
+  "Drinking Place":                    { rate:11.36,  unit:"KSF"     },
+  "Auto Parts and Service Center":     { rate:16.6,   unit:"KSF"     },
+  "Building Materials/Lumber":         { rate:17.05,  unit:"KSF"     },
+  "Free-Standing Discount Store":      { rate:53.87,  unit:"KSF"     },
+  "General Office Building":           { rate:10.84,  unit:"KSF"     },
+  "Medical-Dental Office Building":    { rate:36,     unit:"KSF"     },
+  "Light industrial":                  { rate:4.87,   unit:"KSF"     },
+  "Warehouse":                         { rate:1.71,   unit:"KSF"     },
+  "Public Park":                       { rate:0.78,   unit:"Acres"   },
+  "Marina":                            { rate:2.41,   unit:"Berths"  },
+  "Golf Course":                       { rate:30.38,  unit:"Holes"   },
+  "Bowling Alley":                     { rate:1.48,   unit:"Lanes"   },
+  "Movie Theater":                     { rate:220,    unit:"Screens" },
+  "Health and Fitness Club":           { rate:38.97,  unit:"KSF"     },
+  "Recreational Community Center":     { rate:28.82,  unit:"KSF"     },
+  "University / College":              { rate:1.15,   unit:"Students"},
+  "High School":                       { rate:1.94,   unit:"Students"},
+  "Middle School / Junior High":       { rate:2.1,    unit:"Students"},
+  "Elementary School":                 { rate:2.27,   unit:"Students"},
+  "Private School (K-12)":             { rate:2.48,   unit:"Students"},
+  "Church":                            { rate:7.6,    unit:"KSF"     },
+  "Daycare Center":                    { rate:47.62,  unit:"KSF"     },
+  "Library":                           { rate:72.05,  unit:"KSF"     },
+  "Hospital":                          { rate:10.77,  unit:"KSF"     }
+};
+
+const RPU          = 2.3;
+const RES_FEE      = 213.76;
+const COMM_FEE     = 23.75;
+const LOW_VMT_CTR  = 1300;
+const LOW_VMT_OTH  = 715;
+
+// ── App state ────────────────────────────────────────────────
+let selectedZoneId  = null;
+let piaZoneLayer    = null;
+let markerLayer     = null;
+let highlightHandle = null;
+
+// ── Get reference to <arcgis-map> component ──────────────────
+const mapEl = document.getElementById("arcgis-map-el");
+
+// ── viewOnReady(): await the component and its MapView being fully ready ──
+await mapEl.viewOnReady();
+
+// ── $arcgis.import(): SDK 5.0 CDN replacement for AMD require() ──
+const [
+  FeatureLayer,
+  GraphicsLayer,
+  Graphic,
+  SimpleMarkerSymbol,
+  SimpleFillSymbol,
+  SimpleLineSymbol
+] = await $arcgis.import([
+  "@arcgis/core/layers/FeatureLayer.js",
+  "@arcgis/core/layers/GraphicsLayer.js",
+  "@arcgis/core/Graphic.js",
+  "@arcgis/core/symbols/SimpleMarkerSymbol.js",
+  "@arcgis/core/symbols/SimpleFillSymbol.js",
+  "@arcgis/core/symbols/SimpleLineSymbol.js"
+]);
+
+// Access the underlying MapView via the component's .view property
+const view = mapEl.view;
+
+// ── Build layers ─────────────────────────────────────────────
+markerLayer = new GraphicsLayer({ title: "Project Location" });
+
+const boundaryLayer = new FeatureLayer({
+  url: "https://maps.trpa.org/server/rest/services/Boundaries/FeatureServer/4",
+  title: "TRPA Basin Boundary",
+  renderer: { type: "simple", symbol: new SimpleFillSymbol({ color:[0,0,0,0], outline: new SimpleLineSymbol({ color:[20,20,20,1], width:2 }) }) },
+  popupEnabled: false
+});
+
+const jurLayer = new FeatureLayer({
+  url: "https://maps.trpa.org/server/rest/services/Boundaries/FeatureServer/10",
+  title: "Jurisdictions",
+  renderer: { type: "simple", symbol: new SimpleFillSymbol({ color:[255,255,255,0], outline: new SimpleLineSymbol({ color:[200,200,60,1], width:1.5 }) }) },
+  visible: false, popupEnabled: false
+});
+
+piaZoneLayer = new FeatureLayer({
+  url: "https://maps.trpa.org/server/rest/services/Transportation_Planning/MapServer/9",
+  title: "PIA Zones",
+  outFields: ["*"],
+  renderer: { type: "simple", symbol: new SimpleFillSymbol({ color:[100,149,237,50], outline: new SimpleLineSymbol({ color:[255,255,255,0.7], width:1 }) }) }
+});
+
+view.map.addMany([boundaryLayer, jurLayer, piaZoneLayer, markerLayer]);
+
+// ── arcgisViewClick ─────────────────────────────────────────────────────────
+// SDK 5.0: event fired on the <arcgis-map> component element
+// event.detail = { mapPoint, x, y, button, buttons, ... }
+// hitTest called on component (mapEl.hitTest), not on view directly
+mapEl.addEventListener("arcgisViewClick", async (event) => {
+  const { mapPoint } = event.detail;
+
+  // Drop a pin marker at click point
+  markerLayer.removeAll();
+  markerLayer.add(new Graphic({
+    geometry: mapPoint,
+    symbol: new SimpleMarkerSymbol({ style:"circle", color:[220,53,69,1], size:12, outline:{ color:[255,255,255,1], width:2 } })
+  }));
+
+  // hitTest on the component — pass event.detail directly (contains x, y screen coords)
+  const hit = await mapEl.hitTest(event.detail, { include: piaZoneLayer });
+  if (!hit.results.length) return;
+
+  const graphic = hit.results[0].graphic;
+  const attrs   = graphic.attributes;
+
+  // Probe common field name variants for zone ID
+  const zid = attrs.zone_id ?? attrs.Zone_ID ?? attrs.ZONE_ID ??
+               attrs.ZoneID ?? attrs.Zone_Name ?? attrs.NAME ?? null;
+
+  // Highlight selected zone — access view via mapEl.view for whenLayerView
+  if (highlightHandle) { highlightHandle.remove(); highlightHandle = null; }
+  const lv = await view.whenLayerView(piaZoneLayer);
+  highlightHandle = lv.highlight(graphic);
+
+  selectedZoneId = zid;
+  displayZoneInfo(zid);
+  calculate();
+});
+
+// ── Display zone info panel ──────────────────────────────────
+function displayZoneInfo(zid) {
+  const d = zid ? PIA_ZONES[zid] : null;
+  document.getElementById("zone-panel").style.display = "block";
+  document.getElementById("zone-info-lines").innerHTML = d
+    ? `<strong>Zone:</strong> ${zid}<br>
+       <strong>Avg Trip Length:</strong> ${d.tl != null ? d.tl.toFixed(3)+' mi' : 'N/A'}<br>
+       <strong>Trip Length SOS:</strong> ${d.tlSOS != null ? d.tlSOS.toFixed(4)+' mi' : 'N/A'}<br>
+       <strong>Avg VMT/Capita:</strong> ${d.vpc != null ? d.vpc.toFixed(3) : 'N/A'}<br>
+       <strong>VMT/Capita SOS:</strong> ${d.vpcSOS != null ? d.vpcSOS.toFixed(3) : 'N/A'}`
+    : `<strong>Zone:</strong> ${zid ?? "Unknown"}<br><em style="color:#f90">Zone VMT data not found.</em>`;
+  setCard("rv-zone", zid ?? "?", "rc-zone", null);
+}
+
+// ── Form helpers ─────────────────────────────────────────────
+function sizeLabel(lu) {
+  const ite = ITE[lu];
+  if (["Residential (Market-Rate)","Residential (Affordable)"].includes(lu)) return "# of Residential Units";
+  if (!ite) return "Amount";
+  return { TAUs:"# of TAUs", Sites:"# of Sites", Acres:"# of Acres", Berths:"# of Berths",
+           Holes:"# of Holes", Lanes:"# of Lanes", Screens:"# of Screens",
+           Students:"# of Students", KSF:"Square Footage (sf)" }[ite.unit] ?? "Amount";
+}
+
+function buildSizeHTML(lu, pfx) {
+  if (!lu || lu === "Mixed-Use") return "";
+  let h = `<label>${sizeLabel(lu)}</label>
+    <input type="number" id="${pfx}sz" min="0" value="0" oninput="calculate()">`;
+  if (lu === "Unique Project Type")
+    h += `<label>Custom Project Name</label><input type="text" id="${pfx}ctype" placeholder="e.g. Winery">
+          <label>Daily Trip Rate (trips/unit)</label>
+          <input type="number" id="${pfx}crate" min="0" value="0" oninput="calculate()">`;
+  return h;
+}
+
+function getMitOpts(lu) {
+  const res = ["Residential (Market-Rate)","Residential (Affordable)"];
+  const tau = ["Hotel","Motel","Timeshare"];
+  const pub = ["Church","Daycare Center","Elementary School","High School","Hospital",
+               "Library","Middle School / Junior High","Private School (K-12)",
+               "Recreational Community Center","University / College"];
+  if (res.includes(lu)) return ["Unbundle Parking","Traffic Calming","Private Shuttle"];
+  if (tau.includes(lu)) return ["Traffic Calming","End of Trip Facilities","Employee Shuttle","Private Shuttle","CTR Program (Voluntary)","CTR Program (Required)"];
+  if (pub.includes(lu)) return ["Traffic Calming","End of Trip Facilities","Employee Shuttle"];
+  return ["Traffic Calming","End of Trip Facilities","Employee Shuttle","CTR Program (Voluntary)","CTR Program (Required)"];
+}
+const mKey = o => o.replace(/[\s\(\)\/\-]/g,"_");
+
+function buildMitHTML(lu, pfx) {
+  return getMitOpts(lu).map(o =>
+    `<div class="check-item">
+      <input type="checkbox" id="${pfx}m_${mKey(o)}" onchange="onMitChange('${pfx}')">
+      <label for="${pfx}m_${mKey(o)}">${o}</label>
+    </div>`).join("");
+}
+
+function buildSlidersHTML(pfx) {
+  const chk = k => document.getElementById(`${pfx}m_${k}`)?.checked ?? false;
+  const needElig = chk("CTR_Program__Voluntary_") || chk("CTR_Program__Required_") || chk("Employee_Shuttle");
+  const needVmt  = chk("CTR_Program__Voluntary_") || chk("CTR_Program__Required_") || chk("Employee_Shuttle") || chk("Private_Shuttle");
+  let h = "";
+  if (needElig)
+    h += `<label>% Employees Eligible for CTR/Shuttle</label>
+      <input type="range" id="${pfx}elig" min="0" max="100" value="0"
+        oninput="document.getElementById('${pfx}eligv').textContent=this.value+'%';calculate()">
+      <div class="range-row"><span>0%</span><span id="${pfx}eligv">0%</span><span>100%</span></div>`;
+  if (needVmt)
+    h += `<label>Employee % of Total VMT</label>
+      <input type="range" id="${pfx}evmt" min="0" max="100" value="0"
+        oninput="document.getElementById('${pfx}evmtv').textContent=this.value+'%';calculate()">
+      <div class="range-row"><span>0%</span><span id="${pfx}evmtv">0%</span><span>100%</span></div>`;
+  return h;
+}
+
+// ── Mitigation factor (CAPCOA multiplicative dampening) ──────
+function mitFactor(pfx, inCenter) {
+  const chk = k  => document.getElementById(`${pfx}m_${k}`)?.checked ?? false;
+  const sv  = id => (parseFloat(document.getElementById(`${pfx}${id}`)?.value) || 0) / 100;
+  let f = 1;
+  if (chk("Unbundle_Parking"))         f *= (1-0.026);
+  if (chk("Traffic_Calming"))          f *= (1-0.01);
+  if (chk("End_of_Trip_Facilities"))   f *= (1-0.00625);
+  if (chk("Employee_Shuttle"))         f *= (1-0.05*sv("evmt"));
+  if (chk("Private_Shuttle"))          f *= (1-0.05*(1-sv("evmt")));
+  if (chk("CTR_Program__Voluntary_"))  f *= (1-0.05*sv("elig")*sv("evmt"));
+  if (chk("CTR_Program__Required_"))   f *= (1-0.21*sv("elig")*sv("evmt"));
+  const maxR = inCenter ? 0.20 : 0.15;
+  if ((1-f) > maxR) f = 1-maxR;
+  return f;
+}
+
+// ── VMT calculations ─────────────────────────────────────────
+function rawVMT(lu, size, zd, pfx) {
+  if (!lu || !zd || size <= 0) return 0;
+  if (lu === "Residential (Market-Rate)") return (zd.vpc||0) * RPU * size;
+  if (lu === "Residential (Affordable)")  return (zd.vpc||0) * RPU * size * 0.9;
+  if (lu === "Unique Project Type") {
+    const rate = parseFloat(document.getElementById(`${pfx}crate`)?.value) || 0;
+    return (zd.tl||0) * size * rate;
+  }
+  const ite = ITE[lu]; if (!ite) return 0;
+  const qty = ite.unit === "KSF" ? size/1000 : size;
+  return (zd.tl||0) * qty * ite.rate;
+}
+
+const NO_SOS = new Set([
+  "Auto Parts and Service Center","Building Materials/Lumber","Drinking Place","Drive-In Bank",
+  "Fast Food Restaurant","Free-Standing Discount Store","Furniture Store","General retail",
+  "General Office Building","Health and Fitness Club","Light industrial","Medical-Dental Office Building",
+  "Pharmacy/Drugstore","Quality Restaurant","Supermarket","Warehouse","Marina","Golf Course",
+  "Bowling Alley","Movie Theater","Developed Campground / RV Park","Unique Project Type"
+]);
+
+function sosVMT(lu, size, zd) {
+  if (!lu || !zd || size <= 0 || NO_SOS.has(lu)) return 0;
+  const res = ["Residential (Market-Rate)","Residential (Affordable)"];
+  if (res.includes(lu)) return (zd.vpcSOS||0) * RPU * size;
+  const ite = ITE[lu]; if (!ite) return 0;
+  const qty = ite.unit === "KSF" ? size/1000 : size;
+  return (zd.tlSOS||0) * ite.rate * qty;
+}
+
+function isScreened(lu, vmt, inCenter) {
+  if (lu === "Residential (Affordable)") return true;
+  return vmt <= (inCenter ? LOW_VMT_CTR : LOW_VMT_OTH);
+}
+function mobFee(lu, vmt) {
+  return vmt * (["Residential (Market-Rate)","Residential (Affordable)","Hotel","Motel","Timeshare","Developed Campground / RV Park"].includes(lu) ? RES_FEE : COMM_FEE);
+}
+
+// ── Calculate ────────────────────────────────────────────────
+window.calculate = function () {
+  const pt = document.getElementById("proj_type").value;
+  if (!pt || !selectedZoneId) return;
+  const zd = PIA_ZONES[selectedZoneId];
+  if (!zd) return;
+  const inCenter = false; // conservative default; full spatial query not implemented
+
+  if (pt === "Mixed-Use") {
+    let tVMT=0, tSOS=0, tFee=0, anyUnscr=false;
+    [1,2,3].forEach(i => {
+      const lu = document.getElementById(`mu_lu_${i}`)?.value; if (!lu) return;
+      const sz = parseFloat(document.getElementById(`mu_${i}_sz`)?.value) || 0;
+      const mf = mitFactor(`mu_${i}_`, inCenter);
+      const vmt = rawVMT(lu, sz, zd, `mu_${i}_`) * mf;
+      tVMT += vmt; tSOS += sosVMT(lu, sz, zd); tFee += mobFee(lu, vmt);
+      if (!isScreened(lu, vmt, inCenter)) anyUnscr = true;
+    });
+    showResults(tVMT, tSOS, !anyUnscr, tFee);
+  } else {
+    const sz  = parseFloat(document.getElementById("sz")?.value) || 0;
+    const mf  = mitFactor("", inCenter);
+    let vmt   = rawVMT(pt, sz, zd, "") * mf;
+    if (document.querySelector('input[name="redev"]:checked')?.value === "Yes") {
+      const cu = document.getElementById("current_use")?.value;
+      const rs = parseFloat(document.getElementById("redev_sz")?.value) || 0;
+      if (cu && rs > 0) vmt = Math.max(0, vmt - rawVMT(cu, rs, zd, "redev_"));
+    }
+    showResults(vmt, sosVMT(pt, sz, zd), isScreened(pt, vmt, inCenter), mobFee(pt, vmt));
+  }
+};
+
+function showResults(vmt, sos, screened, fee) {
+  const over = !screened && sos > 0 && vmt > sos;
+  const mitV = over ? Math.max(0, vmt - sos) : 0;
+  const fN = v => isFinite(v) ? Math.round(v).toLocaleString() : "N/A";
+  const fD = v => v > 0 ? "$"+Math.round(v).toLocaleString() : "$0";
+  setCard("rv-vmt",    fN(vmt),                  "rc-vmt",    over ? "bad":"good");
+  setCard("rv-sos",    sos>0 ? fN(sos):"No-net-VMT", "rc-sos", null);
+  setCard("rv-screen", screened?"✓ Yes":"✗ No",   "rc-screen", screened?"good":"bad");
+  setCard("rv-mit",    fN(mitV),                  "rc-mit",    mitV>0?"bad":"good");
+  setCard("rv-fee",    fD(fee),                   "rc-fee",    null);
+}
+
+function setCard(valId, val, cardId, cls) {
+  document.getElementById(valId).textContent = val;
+  if (cardId) document.getElementById(cardId).className = "res-card"+(cls?" "+cls:"");
+}
+
+// ── UI handlers ──────────────────────────────────────────────
+window.onProjTypeChange = function () {
+  const pt = document.getElementById("proj_type").value;
+  const mx = pt === "Mixed-Use";
+  document.getElementById("size-wrapper").innerHTML   = mx ? "" : buildSizeHTML(pt,"");
+  document.getElementById("redev-wrapper").style.display = (pt&&!mx)?"block":"none";
+  document.getElementById("mu-panel").style.display   = mx?"block":"none";
+  const mp=document.getElementById("mit-panel");
+  if (pt && !mx) { mp.style.display="block"; document.getElementById("mit-cb").innerHTML=buildMitHTML(pt,""); document.getElementById("mit-sliders").innerHTML=""; }
+  else mp.style.display="none";
+  if (mx) buildMuPanel();
+  clearResults();
+};
+
+window.onMitChange = function (pfx) {
+  const el = pfx ? document.getElementById(`mu_sl_${pfx}`) : document.getElementById("mit-sliders");
+  if (el) el.innerHTML = buildSlidersHTML(pfx);
+  calculate();
+};
+
+window.onRedevChange = function () {
+  const yes = document.querySelector('input[name="redev"]:checked')?.value === "Yes";
+  document.getElementById("redev-inner").style.display = yes?"block":"none";
+  if (yes) {
+    const all = [...Object.keys(ITE),"Residential (Market-Rate)","Residential (Affordable)","Unique Project Type"].sort();
+    document.getElementById("current_use").innerHTML = '<option value="">— Select —</option>'+all.map(t=>`<option>${t}</option>`).join("");
+  }
+};
+window.renderRedevSize = function () {
+  document.getElementById("redev-size-wrapper").innerHTML = buildSizeHTML(document.getElementById("current_use").value,"redev_");
+};
+
+function buildMuPanel() {
+  const all = [...Object.keys(ITE),"Residential (Market-Rate)","Residential (Affordable)","Unique Project Type"].sort();
+  const opts = all.map(t=>`<option>${t}</option>`).join("");
+  [1,2,3].forEach(i => {
+    document.getElementById(`mu-${i}`).innerHTML = `
+      <label style="color:#999;font-size:10.5px;text-transform:uppercase;letter-spacing:.8px">Land Use ${i}</label>
+      <select id="mu_lu_${i}" onchange="onMuChange(${i})"><option value="">— Select —</option>${opts}</select>
+      <div id="mu_${i}_size"></div>
+      <div id="mu_${i}_mit" style="display:none">
+        <label style="margin-top:6px;font-size:10.5px;color:#888">Mitigations</label>
+        <div id="mu_mit_cb_${i}"></div>
+        <div id="mu_sl_mu_${i}_"></div>
+      </div>`;
+  });
+}
+
+window.onMuChange = function (i) {
+  const lu = document.getElementById(`mu_lu_${i}`).value;
+  document.getElementById(`mu_${i}_size`).innerHTML = lu ? buildSizeHTML(lu,`mu_${i}_`) : "";
+  const md = document.getElementById(`mu_${i}_mit`);
+  md.style.display = lu?"block":"none";
+  if (lu) document.getElementById(`mu_mit_cb_${i}`).innerHTML = buildMitHTML(lu,`mu_${i}_`);
+  calculate();
+};
+
+window.resetTool = function () {
+  selectedZoneId = null;
+  if (highlightHandle) { highlightHandle.remove(); highlightHandle = null; }
+  markerLayer.removeAll();
+  document.getElementById("proj_name").value = "";
+  document.getElementById("proj_type").selectedIndex = 0;
+  ["size-wrapper","redev-inner","mu-panel","mit-panel","zone-panel"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = ""; el.style.display = "none"; }
+  });
+  document.getElementById("redev-wrapper").style.display = "none";
+  clearResults();
+};
+
+function clearResults() {
+  ["rv-vmt","rv-sos","rv-screen","rv-mit","rv-fee","rv-zone"].forEach(id => document.getElementById(id).textContent="—");
+  ["rc-vmt","rc-sos","rc-screen","rc-mit","rc-fee","rc-zone"].forEach(id => document.getElementById(id).className="res-card");
+}
+
+window.showTab = function (tab) {
+  document.getElementById("tab-tool").style.display       = tab==="tool"?"flex":"none";
+  document.getElementById("tab-guidelines").style.display = tab==="guidelines"?"flex":"none";
+  document.getElementById("btn-tab-tool").className       = "tab-btn"+(tab==="tool"?" active":"");
+  document.getElementById("btn-tab-guidelines").className = "tab-btn"+(tab==="guidelines"?" active":"");
+};
+
+</script>
+</body>
+</html>

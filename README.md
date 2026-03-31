@@ -23,6 +23,10 @@ Production-quality prototypes and tools for internal use.
 | **Tahoe SEZ Viewer** | Interactive viewer for Stream Environment Zones (SEZ) in the Tahoe Basin. | [View](https://trpa-agency.github.io/Playground/Sandbox/TahoeSEZViewer/index.html) |
 | **Tahoe SEZ Viewer — Prototype 1** | Early prototype of the SEZ viewer, demonstrated at the 2025 Esri Dev Summit. | [View](https://trpa-agency.github.io/Playground/Sandbox/TahoeSEZViewer_prototype_1/index.html) |
 | **TRPA Web Feature Editor** | Web-based editor for viewing and editing GIS feature layers via the ArcGIS JS SDK. | [View](https://trpa-agency.github.io/Playground/Sandbox/WebEditor/index.html) |
+| **Lake Tahoe Projects Dashboard** | Dashboard for exploring active projects around Lake Tahoe. | [View](https://trpa-agency.github.io/Playground/Sandbox/mason_test/index.html) |
+| **Commute Hex Map** | Deck.GL hexagonal layer visualization of commute patterns with OSM tile layer. | [View](https://trpa-agency.github.io/Playground/Sandbox/Commute/decktest.html) |
+| **Mobility Index** | Interactive PIA Composite Index map for the Lake Tahoe EIP with weighted factor controls. | [View](https://trpa-agency.github.io/Playground/Sandbox/Mobility/Mobility_Index.html) |
+| **PIA Tool** | TRPA Project Impact Assessment (PIA) tool for evaluating project impacts across priority investment areas. | [View](https://trpa-agency.github.io/Playground/Sandbox/PIA/PIA_Tool/pia_tool.html) |
 
 ---
 
