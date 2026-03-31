@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Census Demographics Explorer | TRPA</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <style>
+    :root {
+      --navy:   #0b1f41;
+      --green:  #6ebe44;
+      --blue:   #007dc3;
+      --orange: #f16022;
+      --purple: #7b4f9e;
+      --bg:     #f4f6f9;
+      --surface:#ffffff;
+      --border: #d5dde8;
+      --text-dark:  #0b1f41;
+      --text-mid:   #4a5b73;
+      --text-light: #8a9bb2;
+      --shadow: 0 2px 16px rgba(11,31,65,0.09);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lexend Deca', sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+
+    /* ── HEADER ── */
+    .app-header { background: var(--navy); color: #fff; display: flex; align-items: stretch; flex-shrink: 0; }
+    .hdr-accent { width: 7px; flex-shrink: 0; background: linear-gradient(180deg, var(--green) 0%, var(--blue) 50%, var(--orange) 100%); }
+    .hdr-content { padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex: 1; }
+    .hdr-eyebrow { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 3px; }
+    .hdr-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+    .hdr-title span { color: var(--blue); }
+    .hdr-sub { font-size: 0.72rem; color: #8a9bb2; margin-top: 3px; }
+    .hdr-meta { font-size: 0.71rem; color: #8a9bb2; text-align: right; line-height: 1.8; }
+    .data-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--blue); color: #fff; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; margin-bottom: 4px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── LAYOUT ── */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 290px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sec-hdr {
+      padding: 10px 14px; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-light); border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+
+    /* Year selector */
+    .year-sec { padding: 14px 14px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .year-display {
+      font-size: 2rem; font-weight: 700; color: var(--navy);
+      letter-spacing: -0.03em; text-align: center; line-height: 1;
+      margin-bottom: 10px;
+    }
+    .year-display span { font-size: 0.62rem; font-weight: 600; color: var(--text-light); letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-top: 2px; }
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 4px;
+      background: var(--border); border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--navy); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(11,31,65,0.3);
+      cursor: pointer; transition: background .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { background: var(--blue); }
+    .year-labels { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.6rem; color: var(--text-light); }
+
+    /* Variable selector */
+    .var-scroll { flex: 1; overflow-y: auto; padding: 8px; }
+    .var-scroll::-webkit-scrollbar { width: 4px; }
+    .var-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .var-group-label {
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-light); padding: 8px 6px 4px; margin-top: 4px;
+    }
+    .var-group-label:first-child { margin-top: 0; }
+    .var-item {
+      padding: 6px 10px; border-radius: 4px; cursor: pointer;
+      font-size: 0.75rem; color: var(--text-mid); transition: all .12s;
+      border: 1.5px solid transparent; margin-bottom: 2px;
+    }
+    .var-item:hover { background: var(--bg); color: var(--text-dark); }
+    .var-item.sel {
+      background: rgba(0,125,195,0.08); color: var(--navy);
+      border-color: rgba(0,125,195,0.25); font-weight: 600;
+    }
+
+    /* Legend */
+    .legend-sec { border-top: 1px solid var(--border); padding: 10px 14px 12px; flex-shrink: 0; }
+    .legend-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; }
+    .legend-ramp { display: flex; flex-direction: column; gap: 3px; }
+    .legend-row { display: flex; align-items: center; gap: 7px; font-size: 0.67rem; color: var(--text-mid); }
+    .legend-swatch { width: 18px; height: 12px; border-radius: 2px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.08); }
+    .legend-empty { font-size: 0.67rem; color: var(--text-light); font-style: italic; }
+
+    /* ── MAP CENTER ── */
+    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    #mapDiv { flex: 1; min-height: 0; }
+
+    /* Tooltip */
+    .map-tooltip {
+      position: absolute; background: var(--navy); color: #fff;
+      border-radius: 5px; padding: 8px 12px; font-size: 0.72rem; line-height: 1.5;
+      pointer-events: none; z-index: 50; max-width: 220px;
+      box-shadow: 0 4px 16px rgba(11,31,65,0.25);
+      display: none; white-space: nowrap;
+    }
+    .tt-label { font-weight: 700; margin-bottom: 2px; font-size: 0.78rem; }
+    .tt-sub { color: #8a9bb2; font-size: 0.65rem; margin-bottom: 4px; }
+    .tt-val { color: var(--green); font-weight: 700; font-size: 0.85rem; }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute; inset: 0; background: rgba(244,246,249,0.9);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px; z-index: 100;
+    }
+    .loading-card { background: #fff; border-radius: 8px; padding: 28px 40px; text-align: center; box-shadow: var(--shadow); }
+    .loading-card h3 { font-size: 0.85rem; color: var(--navy); margin-bottom: 16px; }
+    .lb-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; width: 160px; margin: 0 auto; }
+    .spinner { height: 100%; width: 40%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 2px; animation: slide 1.2s ease-in-out infinite; }
+    @keyframes slide { 0%{margin-left:0;width:30%} 50%{margin-left:40%;width:60%} 100%{margin-left:100%;width:0} }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      width: 370px; flex-shrink: 0; background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .rp-hdr { padding: 11px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .rp-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; color: var(--text-light); text-transform: uppercase; }
+    .rp-field-name { font-size: 0.88rem; font-weight: 700; color: var(--navy); margin-top: 3px; line-height: 1.25; }
+    .rp-year { font-size: 0.68rem; color: var(--blue); font-weight: 600; margin-top: 2px; }
+
+    /* Stats tiles */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .stat-tile { padding: 10px 8px; border-right: 1px solid var(--border); text-align: center; }
+    .stat-tile:last-child { border-right: none; }
+    .stat-val { font-size: 1.1rem; font-weight: 700; color: var(--navy); line-height: 1; }
+    .stat-lbl { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-top: 3px; }
+
+    /* Extra stats row */
+    .stats-row2 {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+      background: rgba(11,31,65,0.02);
+    }
+    .stat2 { padding: 7px 8px; border-right: 1px solid var(--border); text-align: center; }
+    .stat2:last-child { border-right: none; }
+    .stat2-val { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+    .stat2-lbl { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-light); margin-top: 2px; }
+
+    /* Feature list */
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px 20px; gap: 10px; color: var(--text-light); font-size: 0.75rem; text-align: center; height: 100%;
+    }
+    .empty-icon { font-size: 36px; opacity: 0.18; }
+
+    /* Level toggle */
+    .level-sec { padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .level-lbl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
+    .toggle-pill { display: flex; background: var(--bg); border: 1.5px solid var(--border); border-radius: 5px; overflow: hidden; }
+    .toggle-opt {
+      flex: 1; padding: 6px 4px; text-align: center; font-size: 0.7rem; font-weight: 600;
+      cursor: pointer; color: var(--text-mid); transition: all .15s; user-select: none;
+    }
+    .toggle-opt.active { background: var(--navy); color: #fff; }
+    .toggle-opt:not(.active):hover { background: var(--border); }
+
+    /* Breakdown sections in right panel */
+    .breakdown-scroll { flex: 1; overflow-y: auto; padding: 0; }
+    .breakdown-scroll::-webkit-scrollbar { width: 4px; }
+    .breakdown-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .breakdown-sec { border-bottom: 1px solid var(--border); }
+    .breakdown-sec-hdr {
+      padding: 7px 14px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-light); background: rgba(11,31,65,0.025);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .breakdown-rows { padding: 4px 10px 8px; }
+    .bk-row { padding: 5px 0; border-bottom: 1px solid rgba(213,221,232,0.4); }
+    .bk-row:last-child { border-bottom: none; }
+    .bk-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .bk-label { font-size: 0.73rem; font-weight: 600; color: var(--navy); }
+    .bk-val { font-size: 0.73rem; font-weight: 700; color: var(--blue); }
+
+    .bk-bar-bg { height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+    .bk-bar { height: 100%; background: linear-gradient(90deg, var(--blue), #4db3e6); border-radius: 2px; transition: width .35s; }
+
+
+    /* Trend chart */
+    .chart-sec { border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .chart-sec-hdr { padding: 7px 14px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); background: rgba(11,31,65,0.025); }
+    #trend-chart { height: 180px; }
+
+    /* Update bar */
+    .update-bar { height: 3px; background: linear-gradient(90deg, var(--blue), var(--green)); display: none; flex-shrink: 0; }
+    .update-bar.running { display: block; animation: slide 1.5s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="app-header">
+  <div class="hdr-accent"></div>
+  <div class="hdr-content">
+    <div>
+      <div class="hdr-eyebrow">Tahoe Regional Planning Agency</div>
+      <div class="hdr-title">Census Demographics <span>Explorer</span></div>
+      <div class="hdr-sub">American Community Survey · Tahoe Basin Geographies</div>
+    </div>
+    <div class="hdr-meta">
+      <div class="data-badge">ACS 5-Year Estimates</div><br>
+      Source: TRPA Demographics Service
+    </div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+
+    <div class="sec-hdr">Survey Year</div>
+
+    <div class="year-sec">
+      <div class="year-display" id="year-display">—<span>Select a year</span></div>
+      <input type="range" id="year-slider" min="0" max="0" step="1" value="0" oninput="onYearSlide(this.value)"/>
+      <div class="year-labels">
+        <span id="year-min">—</span>
+        <span id="year-max">—</span>
+      </div>
+    </div>
+
+    <div class="level-sec">
+      <div class="level-lbl">Geography Level</div>
+      <div class="toggle-pill">
+        <div class="toggle-opt active" id="lvl-bg" onclick="setLevel('block group')">Block Group</div>
+        <div class="toggle-opt"        id="lvl-tr" onclick="setLevel('tract')">Tract</div>
+      </div>
+    </div>
+
+    <div class="sec-hdr">Variable</div>
+
+    <div class="var-scroll" id="var-list">
+      <div style="padding:16px;color:var(--text-light);font-size:0.75rem;text-align:center;">Loading…</div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend-sec">
+      <div class="legend-title">Legend</div>
+      <div class="legend-ramp" id="legend-ramp">
+        <div class="legend-empty">Select a variable to view legend</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── MAP ── -->
+  <div class="main-area">
+    <div id="mapDiv"></div>
+    <div class="map-tooltip" id="map-tooltip">
+      <div class="tt-label" id="tt-label">—</div>
+      <div class="tt-sub" id="tt-sub">—</div>
+      <div class="tt-val" id="tt-val">—</div>
+    </div>
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-card">
+        <h3>Loading Demographics Data</h3>
+        <div class="lb-bg"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right-panel">
+    <div class="rp-hdr">
+      <div class="rp-title">Summary Statistics</div>
+      <div class="rp-field-name" id="rp-field-name">No variable selected</div>
+      <div class="rp-year" id="rp-year"></div>
+    </div>
+
+    <div class="update-bar" id="update-bar"></div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-tile"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Basin Total</div></div>
+      <div class="stat-tile"><div class="stat-val" id="stat-min">—</div><div class="stat-lbl">Min</div></div>
+      <div class="stat-tile"><div class="stat-val" id="stat-max">—</div><div class="stat-lbl">Max</div></div>
+    </div>
+
+    <div class="chart-sec">
+      <div class="chart-sec-hdr">Basin Total by Year</div>
+      <div id="trend-chart"></div>
+    </div>
+
+    <div class="breakdown-scroll" id="breakdown-scroll">
+      <div class="empty-state" id="breakdown-empty">
+        <div class="empty-icon">◈</div>
+        <div style="font-weight:600;color:var(--text-mid)">No data loaded</div>
+        <div style="font-size:0.67rem;max-width:220px;line-height:1.55;">
+          Select a year and variable to explore census demographics across Tahoe Basin geographies.
+        </div>
+      </div>
+
+      <div id="breakdown-sections" style="display:none">
+        <div class="breakdown-sec">
+          <div class="breakdown-sec-hdr">
+            <span>By State</span>
+            <span id="bk-state-count" style="font-weight:400;text-transform:none;letter-spacing:0;"></span>
+          </div>
+          <div class="breakdown-rows" id="bk-state"></div>
+        </div>
+        <div class="breakdown-sec">
+          <div class="breakdown-sec-hdr">
+            <span>By County</span>
+            <span id="bk-county-count" style="font-weight:400;text-transform:none;letter-spacing:0;"></span>
+          </div>
+          <div class="breakdown-rows" id="bk-county"></div>
+        </div>
+        <div class="breakdown-sec">
+          <div class="breakdown-sec-hdr">
+            <span>By Region</span>
+            <span id="bk-ns-count" style="font-weight:400;text-transform:none;letter-spacing:0;"></span>
+          </div>
+          <div class="breakdown-rows" id="bk-ns"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+require([
+  'esri/Map',
+  'esri/views/MapView',
+  'esri/layers/FeatureLayer',
+  'esri/renderers/ClassBreaksRenderer',
+  'esri/symbols/SimpleFillSymbol',
+  'esri/symbols/SimpleLineSymbol',
+  'esri/geometry/Extent',
+  'esri/request',
+], function(Map, MapView, FeatureLayer, ClassBreaksRenderer, SimpleFillSymbol, SimpleLineSymbol, Extent, esriRequest) {
+
+  const SERVICE_URL = 'https://maps.trpa.org/server/rest/services/Demographics/MapServer/3';
+
+  // 5-class sequential blue → navy color ramp
+  const COLOR_RAMP = [
+    [219, 236, 248],
+    [145, 196, 228],
+    [60,  148, 201],
+    [14,  90,  160],
+    [11,  31,   65],
+  ];
+
+  const FIELD_GROUPS = {
+    'Population': [
+      { field: 'total_population',                    label: 'Total Population' },
+      { field: 'age_65_and_over',                     label: 'Age 65 and Over' },
+      { field: 'age_under_18',                        label: 'Age Under 18' },
+      { field: 'bipoc',                               label: 'BIPOC' },
+      { field: 'total_population_hispanic_or_latino', label: 'Hispanic or Latino' },
+      { field: 'not_well_not_at_all',                 label: 'Speaks English Not Well' },
+    ],
+    'Poverty & Access': [
+      { field: 'below_poverty_status_individuals_',                    label: 'Below Poverty (Individuals)' },
+      { field: 'poverty_status_of_households_below_poverty_level',     label: 'Poverty: Households' },
+      { field: 'no_vehicle_available',                                 label: 'No Vehicle Available' },
+    ],
+    'Housing – Overview': [
+      { field: 'total_housing_units',          label: 'Total Housing Units' },
+      { field: 'total_housing_units_occupied', label: 'Occupied Units' },
+      { field: 'total_housing_units_vacant',   label: 'Vacant Units' },
+      { field: 'total_households',             label: 'Total Households' },
+    ],
+    'Housing – Occupied': [
+      { field: 'occupied_housing_units_owner_occupied',  label: 'Owner Occupied' },
+      { field: 'occupied_housing_units_renter_occupied', label: 'Renter Occupied' },
+    ],
+    'Housing – Vacant': [
+      { field: 'vacant_housing_units_for_rent',                             label: 'For Rent' },
+      { field: 'vacant_housing_units_for_sale_only',                        label: 'For Sale Only' },
+      { field: 'vacant_housing_units_seasonal_recreational_or_occasional_use', label: 'Seasonal / Recreational' },
+      { field: 'vacant_housing_units_other_vacant',                         label: 'Other Vacant' },
+      { field: 'vacant_housing_units_rented_not_occupied',                  label: 'Rented Not Occupied' },
+      { field: 'vacant_housing_units_sold_not_occupied',                    label: 'Sold Not Occupied' },
+    ],
+  };
+
+  // All fields flat lookup
+  const FIELD_LOOKUP = {};
+  Object.values(FIELD_GROUPS).forEach(g => g.forEach(f => { FIELD_LOOKUP[f.field] = f.label; }));
+
+  let view, featureLayer;
+  let allYears = [];
+  let currentYear = null;
+  let currentField = 'total_population';
+  let currentLevel = 'block group';
+
+  function buildWhere(year, level) {
+    return "year_sample = " + year + " AND sample_level = '" + level + "'";
+  }
+
+
+  // Expose handlers to global scope so HTML oninput/onclick can reach them
+  window.onYearSlide = function(idx) {
+    currentYear = allYears[parseInt(idx)];
+    updateYearDisplay(currentYear);
+    applySelection();
+  };
+
+  let chartCache = { field: null, level: null, years: [], totals: [] };
+
+  window.setLevel = function(level) {
+    currentLevel = level;
+    document.getElementById('lvl-bg').classList.toggle('active', level === 'block group');
+    document.getElementById('lvl-tr').classList.toggle('active', level === 'tract');
+    chartCache.field = null; // force chart refresh on level change
+    applySelection();
+  };
+
+  // ── MAP SETUP ──────────────────────────────────────────────
+  const map = new Map({ basemap: 'topo-vector' });
+
+  // Tahoe Basin extent in WGS84
+  const tahoeExtent = new Extent({
+    xmin: -120.18, ymin: 38.87,
+    xmax: -119.88, ymax: 39.37,
+    spatialReference: { wkid: 4326 }
+  });
+
+  view = new MapView({
+    container: 'mapDiv',
+    map: map,
+    extent: tahoeExtent,
+    ui: { components: ['zoom', 'compass'] }
+  });
+
+  // ── FEATURE LAYER ──────────────────────────────────────────
+  featureLayer = new FeatureLayer({
+    url: SERVICE_URL,
+    outFields: ['*'],
+    definitionExpression: '1=0',   // hide until year is chosen
+    renderer: buildRenderer(currentField, 0, 1),
+    popupEnabled: false,
+  });
+  map.add(featureLayer);
+
+  // ── TOOLTIP ────────────────────────────────────────────────
+  const tooltip = document.getElementById('map-tooltip');
+  view.on('pointer-move', function(evt) {
+    view.hitTest(evt, { include: featureLayer }).then(function(result) {
+      if (result.results.length > 0) {
+        const attrs = result.results[0].graphic.attributes;
+        const val   = attrs[currentField];
+        const label = FIELD_LOOKUP[currentField] || currentField;
+        const geo   = buildGeoLabel(attrs);
+        document.getElementById('tt-label').textContent = geo;
+        document.getElementById('tt-sub').textContent   = label;
+        document.getElementById('tt-val').textContent   = val != null ? formatNum(val) : 'No data';
+        tooltip.style.left = (evt.x + 14) + 'px';
+        tooltip.style.top  = (evt.y - 10) + 'px';
+        tooltip.style.display = 'block';
+        view.container.style.cursor = 'crosshair';
+      } else {
+        tooltip.style.display = 'none';
+        view.container.style.cursor = 'default';
+      }
+    });
+  });
+  view.on('pointer-leave', function() { tooltip.style.display = 'none'; });
+
+  // ── INIT ───────────────────────────────────────────────────
+  view.when(function() {
+    loadYears();
+    buildVarList();
+  });
+
+  // Query distinct years via groupBy stats
+  function loadYears() {
+    esriRequest(SERVICE_URL + '/query', {
+      query: {
+        where: '1=1',
+        outStatistics: JSON.stringify([
+          { statisticType: 'count', onStatisticField: 'OBJECTID', outStatisticFieldName: 'cnt' }
+        ]),
+        groupByFieldsForStatistics: 'year_sample',
+        returnGeometry: false,
+        f: 'json',
+      },
+      responseType: 'json',
+    }).then(function(response) {
+      const data = response.data;
+      allYears = (data.features || [])
+        .map(function(f) { return f.attributes.year_sample; })
+        .filter(function(y) { return y != null; })
+        .sort(function(a, b) { return a - b; });
+
+      if (allYears.length === 0) {
+        console.error('No years returned from service');
+        document.getElementById('loading-overlay').style.display = 'none';
+        return;
+      }
+
+      const slider = document.getElementById('year-slider');
+      slider.min   = 0;
+      slider.max   = allYears.length - 1;
+      slider.value = allYears.length - 1;
+
+      document.getElementById('year-min').textContent = allYears[0];
+      document.getElementById('year-max').textContent = allYears[allYears.length - 1];
+
+      currentYear = allYears[allYears.length - 1];
+      updateYearDisplay(currentYear);
+      applySelection();
+    }).catch(function(err) {
+      console.error('Failed to load years:', err);
+      document.getElementById('loading-overlay').style.display = 'none';
+    });
+  }
+
+  function updateYearDisplay(year) {
+    const el = document.getElementById('year-display');
+    el.innerHTML = year + '<span>ACS 5-Year Estimate</span>';
+  }
+
+  // Build variable list in left panel
+  function buildVarList() {
+    const container = document.getElementById('var-list');
+    container.innerHTML = '';
+    Object.entries(FIELD_GROUPS).forEach(([group, fields]) => {
+      const grpEl = document.createElement('div');
+      grpEl.className = 'var-group-label';
+      grpEl.textContent = group;
+      container.appendChild(grpEl);
+      fields.forEach(({ field, label }) => {
+        const item = document.createElement('div');
+        item.className = 'var-item' + (field === currentField ? ' sel' : '');
+        item.textContent = label;
+        item.dataset.field = field;
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.var-item').forEach(el => el.classList.remove('sel'));
+          item.classList.add('sel');
+          currentField = field;
+          applySelection();
+        });
+        container.appendChild(item);
+      });
+    });
+  }
+
+  // Main update: filter layer + query stats + update panel
+  function applySelection() {
+    if (!currentYear || !currentField) return;
+    setLoading(true);
+
+    featureLayer.definitionExpression = buildWhere(currentYear, currentLevel);
+
+    // Chart data is independent — runs separately so any failure never touches the main flow
+    var snapYear  = currentYear;
+    var snapField = currentField;
+    refreshChartData(snapField, currentLevel).then(function() {
+      renderTrendChart(chartCache.years, chartCache.totals, snapYear, FIELD_LOOKUP[snapField] || snapField);
+    }).catch(function(err) {
+      console.warn('Chart query error (non-fatal):', err);
+    });
+
+    Promise.all([
+      queryStats(currentField, currentYear, currentLevel),
+      queryGroupedBreakdowns(currentField, currentYear, currentLevel),
+    ]).then(function([stats, breakdowns]) {
+      updateStatsPanel(stats);
+      updateBreakdowns(breakdowns);
+      updateRenderer(currentField, stats.min, stats.max);
+      updateLegend(currentField, stats.min, stats.max);
+      updateRPHeader(currentField, currentYear);
+      setLoading(false);
+    }).catch(function(err) {
+      console.error('Query error:', err);
+      setLoading(false);
+    });
+  }
+
+  // Query aggregate statistics for the whole selection
+  function queryStats(field, year, level) {
+    return esriRequest(SERVICE_URL + '/query', {
+      query: {
+        where: buildWhere(year, level),
+        outStatistics: JSON.stringify([
+          { statisticType: 'sum', onStatisticField: field, outStatisticFieldName: 'total'   },
+          { statisticType: 'min', onStatisticField: field, outStatisticFieldName: 'min_val' },
+          { statisticType: 'max', onStatisticField: field, outStatisticFieldName: 'max_val' },
+        ]),
+        returnGeometry: false,
+        f: 'json',
+      },
+      responseType: 'json',
+    }).then(function(response) {
+      const a = response.data.features[0].attributes;
+      return { total: a.total, min: a.min_val, max: a.max_val };
+    });
+  }
+
+  // Query totals grouped by state, county, and north_south in parallel
+  function queryGroupedBreakdowns(field, year, level) {
+    const where    = buildWhere(year, level);
+    const statsDef = JSON.stringify([
+      { statisticType: 'sum', onStatisticField: field, outStatisticFieldName: 'total' },
+    ]);
+    const groups = [
+      { key: 'state',  groupField: 'state_name'  },
+      { key: 'county', groupField: 'county_name' },
+      { key: 'ns',     groupField: 'north_south' },
+    ];
+    return Promise.all(groups.map(function(g) {
+      return esriRequest(SERVICE_URL + '/query', {
+        query: {
+          where: where,
+          outStatistics: statsDef,
+          groupByFieldsForStatistics: g.groupField,
+          returnGeometry: false,
+          f: 'json',
+        },
+        responseType: 'json',
+      }).then(function(response) {
+        const rows = (response.data.features || [])
+          .map(function(f) { return { label: f.attributes[g.groupField], total: f.attributes.total }; })
+          .sort(function(a, b) { return b.total - a.total; });
+        return { key: g.key, rows: rows };
+      });
+    }));
+  }
+
+  // Fetch basin totals for all years — cached by field+level, no orderByFields (sort client-side)
+  function refreshChartData(field, level) {
+    if (chartCache.field === field && chartCache.level === level) {
+      return Promise.resolve();
+    }
+    return esriRequest(SERVICE_URL + '/query', {
+      query: {
+        where: "sample_level = '" + level + "'",
+        outStatistics: JSON.stringify([
+          { statisticType: 'sum', onStatisticField: field, outStatisticFieldName: 'total' }
+        ]),
+        groupByFieldsForStatistics: 'year_sample',
+        returnGeometry: false,
+        f: 'json',
+      },
+      responseType: 'json',
+    }).then(function(response) {
+      if (!response || !response.data) return;
+      const features = (response.data.features || [])
+        .slice()
+        .sort(function(a, b) { return a.attributes.year_sample - b.attributes.year_sample; });
+      chartCache = {
+        field:  field,
+        level:  level,
+        years:  features.map(function(f) { return f.attributes.year_sample; }),
+        totals: features.map(function(f) { return f.attributes.total; }),
+      };
+    });
+  }
+
+  function renderTrendChart(years, totals, selectedYear, fieldLabel) {
+    if (!years || !years.length) return;
+    if (typeof Plotly === 'undefined') return;
+    const colors = years.map(function(y) {
+      return y === selectedYear ? '#f16022' : '#007dc3';
+    });
+    Plotly.react('trend-chart', [{
+      type: 'bar',
+      x: years,
+      y: totals,
+      marker: { color: colors },
+      hovertemplate: '<b>%{x}</b><br>' + fieldLabel + ': %{y:,}<extra></extra>',
+    }], {
+      margin:        { l: 48, r: 10, t: 8, b: 36 },
+      paper_bgcolor: 'transparent',
+      plot_bgcolor:  'transparent',
+      font:          { family: "'Lexend Deca', sans-serif", size: 10, color: '#4a5b73' },
+      xaxis: { tickfont: { size: 9 }, tickangle: -45, gridcolor: '#d5dde8', linecolor: '#d5dde8' },
+      yaxis: { tickfont: { size: 9 }, tickformat: ',', gridcolor: '#d5dde8', linecolor: '#d5dde8' },
+      bargap: 0.25,
+    }, { displayModeBar: false, responsive: true });
+  }
+
+  // Update renderer with class breaks
+  function updateRenderer(field, minVal, maxVal) {
+    featureLayer.renderer = buildRenderer(field, minVal, maxVal);
+  }
+
+  function buildRenderer(field, minVal, maxVal) {
+    if (minVal === maxVal) maxVal = minVal + 1;
+    const interval = (maxVal - minVal) / 5;
+    const breaks = [];
+    for (let i = 0; i < 5; i++) {
+      const lo = minVal + i * interval;
+      const hi = i === 4 ? maxVal + 0.001 : minVal + (i + 1) * interval;
+      breaks.push({
+        minValue: lo,
+        maxValue: hi,
+        symbol: new SimpleFillSymbol({
+          color: COLOR_RAMP[i],
+          outline: { color: [255, 255, 255, 0.6], width: 0.5 },
+        }),
+      });
+    }
+    return new ClassBreaksRenderer({ field: field, classBreakInfos: breaks });
+  }
+
+  // Update legend
+  function updateLegend(field, minVal, maxVal) {
+    const rampEl = document.getElementById('legend-ramp');
+    if (minVal == null || maxVal == null) {
+      rampEl.innerHTML = '<div class="legend-empty">No data</div>';
+      return;
+    }
+    if (minVal === maxVal) maxVal = minVal + 1;
+    const interval = (maxVal - minVal) / 5;
+    let html = '';
+    for (let i = 4; i >= 0; i--) {
+      const lo = minVal + i * interval;
+      const hi = i === 4 ? maxVal : minVal + (i + 1) * interval;
+      const [r, g, b] = COLOR_RAMP[i];
+      html += `<div class="legend-row">
+        <div class="legend-swatch" style="background:rgb(${r},${g},${b})"></div>
+        <span>${formatNum(Math.round(lo))} – ${formatNum(Math.round(hi))}</span>
+      </div>`;
+    }
+    rampEl.innerHTML = html;
+  }
+
+  // Update stats panel
+  function updateStatsPanel(stats) {
+    document.getElementById('stat-total').textContent = stats.total != null ? formatNum(stats.total) : '—';
+    document.getElementById('stat-min').textContent   = stats.min   != null ? formatNum(stats.min)   : '—';
+    document.getElementById('stat-max').textContent   = stats.max   != null ? formatNum(stats.max)   : '—';
+  }
+
+  // Render grouped breakdown sections
+  function updateBreakdowns(breakdowns) {
+    document.getElementById('breakdown-empty').style.display    = 'none';
+    document.getElementById('breakdown-sections').style.display = 'block';
+
+    const keyMap   = { state: 'bk-state',       county: 'bk-county',       ns: 'bk-ns'       };
+    const countMap = { state: 'bk-state-count',  county: 'bk-county-count', ns: 'bk-ns-count' };
+
+    breakdowns.forEach(function(group) {
+      const container = document.getElementById(keyMap[group.key]);
+      const countEl   = document.getElementById(countMap[group.key]);
+      const rows      = group.rows;
+      const maxTotal  = rows.length > 0 ? Math.max(...rows.map(function(r) { return r.total || 0; })) : 1;
+
+      countEl.textContent = '';
+
+      if (rows.length === 0) {
+        container.innerHTML = '<div style="padding:8px 4px;font-size:0.72rem;color:var(--text-light);">No data</div>';
+        return;
+      }
+
+      container.innerHTML = rows.map(function(row) {
+        const pct = maxTotal > 0 ? Math.round((row.total / maxTotal) * 100) : 0;
+        return `<div class="bk-row">
+          <div class="bk-top">
+            <div class="bk-label">${row.label || 'Unknown'}</div>
+            <div class="bk-val">${formatNum(row.total)}</div>
+          </div>
+          <div class="bk-bar-bg"><div class="bk-bar" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    });
+  }
+
+  // Update right panel header
+  function updateRPHeader(field, year) {
+    document.getElementById('rp-field-name').textContent = FIELD_LOOKUP[field] || field;
+    document.getElementById('rp-year').textContent       = year + ' ACS 5-Year Estimate';
+  }
+
+  // Build display label for a geography
+  function buildGeoLabel(attrs) {
+    const parts = [];
+    if (attrs.north_south) parts.push(attrs.north_south);
+    if (attrs.county_name) parts.push(attrs.county_name.replace(' County', ''));
+    if (attrs.state_name)  parts.push(attrs.state_name);
+    return parts.length > 0 ? parts.join(', ') : (attrs.trpaid || 'Unknown');
+  }
+
+  // Format numbers with commas
+  function formatNum(n) {
+    if (n == null || isNaN(n)) return '—';
+    return Number(n).toLocaleString();
+  }
+
+  function setLoading(on) {
+    document.getElementById('loading-overlay').style.display = on ? 'flex' : 'none';
+    const bar = document.getElementById('update-bar');
+    bar.className = 'update-bar' + (on ? ' running' : '');
+  }
+
+}); // end require
+</script>
+</body>
+</html>
