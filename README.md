@@ -27,6 +27,7 @@ Production-quality prototypes and tools for internal use.
 | **Commute Hex Map** | Deck.GL hexagonal layer visualization of commute patterns with OSM tile layer. | [View](https://trpa-agency.github.io/Playground/Sandbox/Commute/decktest.html) |
 | **Mobility Index** | Interactive PIA Composite Index map for the Lake Tahoe EIP with weighted factor controls. | [View](https://trpa-agency.github.io/Playground/Sandbox/Mobility/Mobility_Index.html) |
 | **PIA Tool** | TRPA Project Impact Assessment (PIA) tool for evaluating project impacts across priority investment areas. | [View](https://trpa-agency.github.io/Playground/Sandbox/PIA/PIA_Tool/pia_tool.html) |
+| **Census Demographics Explorer** | Interactive choropleth map for exploring ACS 5-year demographic estimates across Tahoe Basin geographies by year and variable, with basin totals, grouped breakdowns, and a trend chart. | [View](https://trpa-agency.github.io/Playground/Sandbox/Demographics/demographics-explorer.html) |
 
 ---
 

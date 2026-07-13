@@ -154,13 +154,23 @@
 
     /* Stats tiles */
     .stats-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
+      display: grid; grid-template-columns: 1fr;
       border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
-    .stat-tile { padding: 10px 8px; border-right: 1px solid var(--border); text-align: center; }
-    .stat-tile:last-child { border-right: none; }
-    .stat-val { font-size: 1.1rem; font-weight: 700; color: var(--navy); line-height: 1; }
+    .stat-tile { padding: 12px 8px; text-align: center; }
+    .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--navy); line-height: 1; }
     .stat-lbl { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-top: 3px; }
+
+    /* Download CSV button */
+    .rp-hdr-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .dl-btn {
+      flex-shrink: 0; background: var(--blue); color: #fff; border: none;
+      border-radius: 4px; padding: 6px 10px; font-family: inherit;
+      font-size: 0.68rem; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.04em; transition: background .15s; white-space: nowrap;
+    }
+    .dl-btn:hover:not(:disabled) { background: var(--navy); }
+    .dl-btn:disabled { background: var(--border); color: var(--text-light); cursor: not-allowed; }
 
     /* Extra stats row */
     .stats-row2 {
@@ -221,6 +231,54 @@
     /* Update bar */
     .update-bar { height: 3px; background: linear-gradient(90deg, var(--blue), var(--green)); display: none; flex-shrink: 0; }
     .update-bar.running { display: block; animation: slide 1.5s ease-in-out infinite; }
+
+    /* Mobile variable dropdown */
+    .mob-var-sec { display: none; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .mob-var-sec .level-lbl { margin-bottom: 6px; }
+    .mob-var-sec select {
+      width: 100%; padding: 8px 32px 8px 10px; font-family: inherit; font-size: 0.85rem;
+      border: 1.5px solid var(--border); border-radius: 4px; background: var(--surface);
+      color: var(--text-dark); outline: none; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a9bb2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .mob-var-sec select:focus { border-color: var(--blue); }
+
+    /* Mobile Map / Stats tab bar */
+    .mobile-tabs { display: none; flex-shrink: 0; background: var(--surface); border-bottom: 2px solid var(--border); }
+    .mob-tab {
+      flex: 1; padding: 13px 8px; text-align: center; font-size: 0.78rem; font-weight: 700;
+      color: var(--text-mid); background: none; border: none; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; cursor: pointer; font-family: inherit; letter-spacing: 0.06em;
+      text-transform: uppercase; transition: color .15s;
+    }
+    .mob-tab.active { color: var(--navy); border-bottom-color: var(--blue); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      body { height: auto; overflow: auto; font-size: 14px; }
+      .app-body { flex-direction: column; overflow: visible; }
+      .app-header .hdr-meta { display: none; }
+      .hdr-title { font-size: 1.1rem; }
+      .left-panel {
+        width: 100%; border-right: none; border-bottom: 1px solid var(--border);
+        max-height: none; overflow: visible;
+      }
+      .level-sec { display: none; }
+      .desktop-var { display: none !important; }
+      .mob-var-sec { display: block; }
+      .legend-sec { display: none; }
+      .mobile-tabs { display: flex; }
+      /* Map tab (default) */
+      .main-area { min-height: 320px; height: 60vw; max-height: 500px; }
+      #mapDiv { min-height: 320px; }
+      .right-panel { display: none; width: 100%; border-left: none; border-top: 1px solid var(--border); }
+      /* Stats tab active */
+      #app-body.mob-active-stats .right-panel { display: flex; }
+      #app-body.mob-active-stats .main-area { display: none; }
+      #trend-chart { height: 150px; }
+    }
   </style>
 </head>
 <body>
@@ -241,7 +299,7 @@
   </div>
 </div>
 
-<div class="app-body">
+<div class="app-body" id="app-body">
 
   <!-- ── LEFT PANEL ── -->
   <div class="left-panel">
@@ -265,9 +323,17 @@
       </div>
     </div>
 
-    <div class="sec-hdr">Variable</div>
+    <div class="sec-hdr desktop-var">Variable</div>
 
-    <div class="var-scroll" id="var-list">
+    <!-- Mobile variable dropdown (hidden on desktop) -->
+    <div class="mob-var-sec">
+      <div class="level-lbl">Variable</div>
+      <select id="var-select" onchange="onVarSelect(this.value)">
+        <option value="">Select a variable…</option>
+      </select>
+    </div>
+
+    <div class="var-scroll desktop-var" id="var-list">
       <div style="padding:16px;color:var(--text-light);font-size:0.75rem;text-align:center;">Loading…</div>
     </div>
 
@@ -279,6 +345,12 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ── MOBILE TABS (hidden on desktop) ── -->
+  <div class="mobile-tabs" id="mobile-tabs">
+    <button class="mob-tab active" id="tab-map"   onclick="setMobileTab('map')">Map</button>
+    <button class="mob-tab"        id="tab-stats" onclick="setMobileTab('stats')">Statistics</button>
   </div>
 
   <!-- ── MAP ── -->
@@ -300,17 +372,20 @@
   <!-- ── RIGHT PANEL ── -->
   <div class="right-panel">
     <div class="rp-hdr">
-      <div class="rp-title">Summary Statistics</div>
-      <div class="rp-field-name" id="rp-field-name">No variable selected</div>
-      <div class="rp-year" id="rp-year"></div>
+      <div class="rp-hdr-top">
+        <div>
+          <div class="rp-title">Summary Statistics</div>
+          <div class="rp-field-name" id="rp-field-name">No variable selected</div>
+          <div class="rp-year" id="rp-year"></div>
+        </div>
+        <button class="dl-btn" id="dl-btn" onclick="downloadCSV()" title="Download data as CSV" disabled>↓ CSV</button>
+      </div>
     </div>
 
     <div class="update-bar" id="update-bar"></div>
 
     <div class="stats-grid" id="stats-grid">
       <div class="stat-tile"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Basin Total</div></div>
-      <div class="stat-tile"><div class="stat-val" id="stat-min">—</div><div class="stat-lbl">Min</div></div>
-      <div class="stat-tile"><div class="stat-val" id="stat-max">—</div><div class="stat-lbl">Max</div></div>
     </div>
 
     <div class="chart-sec">
@@ -420,7 +495,7 @@ require([
   let allYears = [];
   let currentYear = null;
   let currentField = 'total_population';
-  let currentLevel = 'block group';
+  let currentLevel = window.innerWidth <= 768 ? 'tract' : 'block group';
 
   function buildWhere(year, level) {
     return "year_sample = " + year + " AND sample_level = '" + level + "'";
@@ -549,16 +624,27 @@ require([
     el.innerHTML = year + '<span>ACS 5-Year Estimate</span>';
   }
 
-  // Build variable list in left panel
+  // Build variable list (desktop) and dropdown (mobile)
   function buildVarList() {
     const container = document.getElementById('var-list');
+    const select    = document.getElementById('var-select');
     container.innerHTML = '';
+    select.innerHTML = '<option value="">Select a variable…</option>';
+
     Object.entries(FIELD_GROUPS).forEach(([group, fields]) => {
+      // Desktop grouped list
       const grpEl = document.createElement('div');
       grpEl.className = 'var-group-label';
       grpEl.textContent = group;
       container.appendChild(grpEl);
+
+      // Mobile optgroup
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = group;
+      select.appendChild(optGroup);
+
       fields.forEach(({ field, label }) => {
+        // Desktop item
         const item = document.createElement('div');
         item.className = 'var-item' + (field === currentField ? ' sel' : '');
         item.textContent = label;
@@ -567,12 +653,38 @@ require([
           document.querySelectorAll('.var-item').forEach(el => el.classList.remove('sel'));
           item.classList.add('sel');
           currentField = field;
+          select.value = field;
           applySelection();
         });
         container.appendChild(item);
+
+        // Mobile option
+        const opt = document.createElement('option');
+        opt.value = field;
+        opt.textContent = label;
+        if (field === currentField) opt.selected = true;
+        optGroup.appendChild(opt);
       });
     });
   }
+
+  window.onVarSelect = function(field) {
+    if (!field) return;
+    currentField = field;
+    document.querySelectorAll('.var-item').forEach(function(el) {
+      el.classList.toggle('sel', el.dataset.field === field);
+    });
+    applySelection();
+  };
+
+  window.setMobileTab = function(tab) {
+    document.getElementById('tab-map').classList.toggle('active', tab === 'map');
+    document.getElementById('tab-stats').classList.toggle('active', tab === 'stats');
+    document.getElementById('app-body').classList.toggle('mob-active-stats', tab === 'stats');
+    if (tab === 'map' && view) {
+      setTimeout(function() { view.resize(); }, 50);
+    }
+  };
 
   // Main update: filter layer + query stats + update panel
   function applySelection() {
@@ -758,8 +870,6 @@ require([
   // Update stats panel
   function updateStatsPanel(stats) {
     document.getElementById('stat-total').textContent = stats.total != null ? formatNum(stats.total) : '—';
-    document.getElementById('stat-min').textContent   = stats.min   != null ? formatNum(stats.min)   : '—';
-    document.getElementById('stat-max').textContent   = stats.max   != null ? formatNum(stats.max)   : '—';
   }
 
   // Render grouped breakdown sections
@@ -800,7 +910,51 @@ require([
   function updateRPHeader(field, year) {
     document.getElementById('rp-field-name').textContent = FIELD_LOOKUP[field] || field;
     document.getElementById('rp-year').textContent       = year + ' ACS 5-Year Estimate';
+    document.getElementById('dl-btn').disabled = false;
   }
+
+  // Download current selection as CSV
+  window.downloadCSV = function() {
+    if (!currentYear || !currentField) return;
+    const btn = document.getElementById('dl-btn');
+    btn.textContent = '…';
+    btn.disabled = true;
+
+    esriRequest(SERVICE_URL + '/query', {
+      query: {
+        where: buildWhere(currentYear, currentLevel),
+        outFields: 'state_name,county_name,north_south,year_sample,sample_level,' + currentField,
+        returnGeometry: false,
+        f: 'json',
+      },
+      responseType: 'json',
+    }).then(function(response) {
+      const features = response.data.features || [];
+      const fieldLabel = (FIELD_LOOKUP[currentField] || currentField).replace(/,/g, '');
+      const headers = ['State', 'County', 'North/South', 'Year', 'Level', fieldLabel];
+      const rows = features.map(function(f) {
+        const a = f.attributes;
+        return [a.state_name, a.county_name, a.north_south, a.year_sample, a.sample_level, a[currentField]]
+          .map(function(v) { return '"' + String(v != null ? v : '').replace(/"/g, '""') + '"'; })
+          .join(',');
+      });
+      const csv = [headers.join(',')].concat(rows).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'demographics_' + currentField + '_' + currentYear + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }).catch(function(err) {
+      console.error('CSV download error:', err);
+    }).finally(function() {
+      btn.textContent = '↓ CSV';
+      btn.disabled = false;
+    });
+  };
 
   // Build display label for a geography
   function buildGeoLabel(attrs) {
