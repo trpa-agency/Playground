@@ -890,8 +890,8 @@ tbody tr[aria-current="true"] td { background: var(--hover); font-weight: 600; }
 
     <span class="ctl-label" style="margin-left:6px">Basemap</span>
     <div class="seg" role="group" aria-label="Basemap">
-      <button id="b-terrain" aria-pressed="true">Terrain</button>
-      <button id="b-light" aria-pressed="false">Light</button>
+      <button id="b-terrain" aria-pressed="false">Terrain</button>
+      <button id="b-light" aria-pressed="true">Light</button>
       <button id="b-none" aria-pressed="false">None</button>
     </div>
 
@@ -1086,7 +1086,7 @@ const BASEMAPS = {
     maxZoom: 19, subdomains: "abcd", attribution: "© CARTO, © OpenStreetMap contributors"
   })
 };
-let base = BASEMAPS.terrain.addTo(map);
+let base = BASEMAPS.light.addTo(map);
 
 // Precip grid drawn to an offscreen canvas, then stretched over the bbox.
 const cv = document.createElement("canvas");
