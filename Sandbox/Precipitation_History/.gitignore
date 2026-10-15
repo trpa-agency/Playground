@@ -1,0 +1,22 @@
+# Local analysis environment (679 MB; rebuild with the pip line in README)
+.venv/
+
+# Cached source data and derived products. All of it is reproducible by
+# re-running fetch_aorc.py / fetch_mrms.py / fetch_atlas14.py, and the
+# interim cubes alone run to tens of megabytes.
+data/interim/
+data/raw/
+
+# Run logs
+*.log
+
+# Sample GRIB2 files from the original one-off script
+mrms_tahoe_data/*.grib2
+mrms_tahoe_data/*.idx
+
+# Keep: data/boundary/ (small, and pins the exact TRPA line used)
+# Keep: data/processed/ (the deliverables)
+
+# Python bytecode
+__pycache__/
+*.pyc

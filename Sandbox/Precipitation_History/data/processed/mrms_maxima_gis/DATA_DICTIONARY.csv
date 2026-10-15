@@ -1,0 +1,13 @@
+raster,units,meaning
+max_1h_all.tif,inches,Largest 1h rainfall observed in any Jun–Oct of 2015-2025
+max_1h_6.tif,inches,Largest 1h rainfall observed in any June of 2015-2025
+max_1h_7.tif,inches,Largest 1h rainfall observed in any July of 2015-2025
+max_1h_8.tif,inches,Largest 1h rainfall observed in any August of 2015-2025
+max_1h_9.tif,inches,Largest 1h rainfall observed in any September of 2015-2025
+max_1h_10.tif,inches,Largest 1h rainfall observed in any October of 2015-2025
+max_24h_all.tif,inches,Largest 24h rainfall observed in any Jun–Oct of 2015-2025
+max_24h_6.tif,inches,Largest 24h rainfall observed in any June of 2015-2025
+max_24h_7.tif,inches,Largest 24h rainfall observed in any July of 2015-2025
+max_24h_8.tif,inches,Largest 24h rainfall observed in any August of 2015-2025
+max_24h_9.tif,inches,Largest 24h rainfall observed in any September of 2015-2025
+max_24h_10.tif,inches,Largest 24h rainfall observed in any October of 2015-2025

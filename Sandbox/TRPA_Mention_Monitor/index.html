@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRPA Mention Monitor — TRPA</title>
+  <meta name="description" content="Where the Tahoe Regional Planning Agency comes up in Lake Tahoe Region public meetings and press: upcoming agendas, recent meetings, and news coverage." />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+
+  <!-- Calcite (5.0 injects its own styles; there is no separate stylesheet) -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/5.0"></script>
+
+  <!-- AG Grid (no Plotly or ArcGIS SDK: this tool has no charts or map) -->
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@33.3.2/dist/ag-grid-community.min.js"></script>
+
+  <!-- TRPA design tokens (agency brand) and Open Sans -->
+  <link rel="stylesheet" href="https://trpa-agency.github.io/tools/assets/trpa-tokens.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Data written by the collector (python -m trpa_monitor). A script rather than fetch()
+       so the page also works when opened straight from disk. -->
+  <script src="data/mentions.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--brand-font);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--brand-text);
+      background: var(--brand-page);
+    }
+    :focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+    a { color: var(--brand-primary-text); }
+    a:hover { color: var(--brand-primary-hover); }
+    mark {
+      background: var(--brand-accent-light);
+      color: inherit;
+      font-weight: 600;
+      border-bottom: 2px solid var(--brand-accent);
+      padding: 0 1px;
+    }
+
+    /* ── Header ── */
+    .dashboard-header {
+      background: var(--brand-dark);
+      color: #fff;
+      padding: 0.9rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .dashboard-header img { height: 52px; width: auto; display: block; }
+    .dashboard-header .divider { width: 1px; align-self: stretch; background: rgba(255,255,255,0.35); }
+    .dashboard-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; line-height: 1.25; }
+    .dashboard-header .subtitle { font-size: 0.875rem; opacity: 0.85; margin: 0.15rem 0 0; }
+
+    /* ── Layout ── */
+    main { max-width: 1440px; margin: 0 auto; }
+    .notices { padding: 1.25rem 2rem 0; display: grid; gap: 0.5rem; }
+    .section { padding: 0 2rem; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.75rem 0 0.75rem; }
+    .section-head h2 { font-size: 1.2rem; font-weight: 700; margin: 0; }
+    .section-head .hint { font-size: 0.85rem; color: var(--gray-text); }
+    .head-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+    /* ── Department view picker ── */
+    .view-bar { display: flex; align-items: center; gap: 0.5rem 1rem; flex-wrap: wrap; padding: 1.25rem 2rem 0; }
+    .view-bar calcite-label { margin: 0; font-weight: 600; }
+    .view-bar calcite-select { width: 260px; max-width: 100%; }
+    .view-bar .dept-terms { font-size: 0.85rem; color: var(--gray-text); flex: 1; min-width: 240px; }
+
+    /* Importance: public-comment-only muted. Agenda items get a label, not extra emphasis. */
+    .meeting-card.tier-public { border-left-color: #C9D2DE; background: var(--gray-bg); box-shadow: none;
+                                border-top: 1px solid var(--gray-border); border-right: 1px solid var(--gray-border);
+                                border-bottom: 1px solid var(--gray-border); }
+    .meeting-card.tier-public h3 { font-weight: 600; }
+    .flag-public { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gray-text); font-weight: 600; }
+    .group-head { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+                  margin: 0.5rem 0 -0.25rem; font-size: 1.02rem; }
+    .group-head .hint { font-size: 0.82rem; font-weight: 400; color: var(--gray-text); }
+    .group-empty { grid-column: 1 / -1; }
+    .cal-chip.chip-public { font-style: italic; }
+    .ag-row.row-public .ag-cell { color: var(--gray-text); }
+    .dialog-flag { margin: 0 0 0.75rem; }
+
+    /* ── Upcoming meeting cards ── */
+    .upcoming-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+    .meeting-card {
+      background: var(--brand-surface);
+      border-radius: var(--brand-radius);
+      box-shadow: var(--brand-shadow-sm);
+      border-left: 4px solid var(--brand-accent);
+      padding: 1rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      line-height: 1.5;   /* explicit: inside calcite-tab the inherited line height is tighter */
+    }
+    .meeting-card .when { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+    .meeting-card .date { font-weight: 700; font-size: 1.05rem; }
+    .meeting-card .countdown { font-size: 0.8rem; font-weight: 600; color: var(--brand-accent-text); }
+    .meeting-card h3 { font-size: 1rem; font-weight: 700; margin: 0; }
+    .meeting-card .meta { font-size: 0.85rem; color: var(--gray-text); margin: 0; }
+    .meeting-card .snippet { font-size: 0.875rem; margin: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .meeting-card .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: auto; padding-top: 0.25rem; }
+    .empty {
+      background: var(--brand-surface);
+      border-radius: var(--brand-radius);
+      padding: 1.25rem;
+      color: var(--gray-text);
+      box-shadow: var(--brand-shadow-sm);
+    }
+
+    /* ── Tabs, filters, grids ── */
+    calcite-tabs { margin-top: 0.5rem; }
+    .tab-body { padding-top: 1rem; }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: flex-end; margin-bottom: 1rem; }
+    .filters calcite-input-text { width: 280px; max-width: 100%; }
+    .filters calcite-combobox { width: 320px; max-width: 100%; }
+    .filters .spacer { flex: 1; }
+    .grid-container {
+      background: var(--brand-surface);
+      border-radius: var(--brand-radius);
+      box-shadow: var(--brand-shadow-sm);
+      margin-bottom: 1rem;
+    }
+    .grid-container { overflow: hidden; }
+    .source-note { font-size: 0.8rem; color: var(--gray-text); margin: 0.25rem 0 0; }
+    .grid-snippet, .grid-clamp { white-space: normal; line-height: 1.45; margin: 8px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1.5;
+      padding: 0 0.55rem;
+      border-radius: var(--brand-radius-pill);
+      white-space: nowrap;
+    }
+    .tag.upcoming { background: var(--brand-accent-light); color: var(--brand-accent-text); }
+    .tag.past     { background: var(--brand-primary-light); color: var(--brand-dark); }
+    .tag.ok       { background: var(--status-success-light); color: var(--status-success); }
+    .tag.failed   { background: var(--status-danger-light); color: var(--status-danger); }
+    .tag.partial  { background: var(--status-warning-light); color: var(--status-warning-text); }
+    /* How TRPA comes up. Text labels carry the meaning; color only reinforces it. */
+    .type-agenda  { background: var(--brand-primary-light); color: var(--brand-dark); border: 1px solid var(--brand-primary); }
+    /* Public comment is the least important context: muted, never an attention color. */
+    .type-public  { background: #fff; color: var(--gray-text); border: 1px dashed #C9D2DE; font-weight: 400; }
+    .type-staff   { background: var(--brand-primary-light); color: var(--brand-dark); }
+    .type-minutes { background: var(--gray-bg); color: var(--gray-text); border: 1px solid var(--gray-border); }
+    .type-other   { background: #fff; color: var(--gray-text); border: 1px solid var(--gray-border); }
+    ul.how { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; font-size: 0.85rem; line-height: 1.4; }
+    ul.how li { margin: 0; }
+    .where { color: var(--gray-text); font-size: 0.8rem; }
+    .terms { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .term { font-size: 0.75rem; border: 1px solid var(--gray-border); border-radius: var(--brand-radius-pill); padding: 0 0.5rem; color: var(--brand-text); }
+    .term b { font-weight: 700; }
+    .grid-how { line-height: 1.4; margin: 8px 0; white-space: normal; }
+    .dialog-how { background: var(--gray-bg); border-radius: var(--brand-radius-control); padding: 0.6rem 0.8rem; }
+    .dialog-how h3 { font-size: 0.85rem; margin: 0 0 0.4rem; }
+    .tag.unverified { background: var(--gray-bg); color: var(--gray-text); border: 1px solid var(--gray-border); }
+
+    /* ── Calendar ── */
+    .cal-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+    .cal-head h3 { margin: 0; font-size: 1.15rem; min-width: 10ch; text-align: center; }
+    .cal-legend { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+      background: var(--brand-surface); border-radius: var(--brand-radius); box-shadow: var(--brand-shadow-sm);
+      overflow: hidden; margin: 0.75rem 0 1rem; border: 1px solid var(--gray-border);
+    }
+    .cal-dow { padding: 0.4rem 0.5rem; font-size: 0.8rem; font-weight: 600; color: var(--gray-text);
+               background: var(--gray-bg); border-bottom: 1px solid var(--gray-border); }
+    .cal-cell {
+      min-height: 96px; padding: 0.35rem 0.4rem; border: 0; border-right: 1px solid var(--gray-border);
+      border-bottom: 1px solid var(--gray-border); background: var(--brand-surface); color: var(--brand-text);
+      font: inherit; text-align: left; display: flex; flex-direction: column; gap: 0.2rem; min-width: 0;
+    }
+    .cal-cell:nth-child(7n) { border-right: 0; }
+    .cal-cell.out { background: var(--gray-bg); color: var(--gray-muted); }
+    .cal-cell.past .cal-num { color: var(--gray-muted); }
+    .cal-cell.has { cursor: pointer; }
+    .cal-cell.has:hover { background: var(--brand-primary-light); }
+    .cal-cell.selected { box-shadow: inset 0 0 0 2px var(--brand-primary); background: var(--brand-primary-light); }
+    .cal-num { font-size: 0.85rem; font-weight: 600; width: 1.7rem; height: 1.7rem; display: inline-flex;
+               align-items: center; justify-content: center; border-radius: 50%; }
+    .cal-cell.today .cal-num { background: var(--brand-dark); color: #fff; }
+    .cal-chip {
+      display: block; font-size: 0.72rem; font-weight: 600; line-height: 1.35; padding: 0.1rem 0.4rem;
+      border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+    }
+    button.cal-chip { border: 0; font-family: inherit; text-align: left; cursor: pointer; width: 100%; }
+    button.cal-chip.type-minutes, button.cal-chip.type-other { border: 1px solid var(--gray-border); }
+    button.cal-chip:hover { filter: brightness(0.95); text-decoration: underline; }
+    button.cal-num { border: 0; background: transparent; color: inherit; font-family: inherit; cursor: pointer; padding: 0; }
+    .cal-cell.today button.cal-num { background: var(--brand-dark); color: #fff; }
+    .cal-more { font-size: 0.72rem; color: var(--gray-text); }
+    .cal-pop { padding: 0.25rem 0.85rem 0.85rem; max-width: 360px; display: grid; gap: 0.45rem;
+               font-size: 0.875rem; line-height: 1.45; color: var(--brand-text); }
+    .cal-pop p { margin: 0; }
+    .cal-pop .pop-when { font-weight: 700; }
+    .cal-pop .countdown { font-size: 0.8rem; font-weight: 600; color: var(--brand-accent-text); }
+    .cal-pop .meta { font-size: 0.8rem; color: var(--gray-text); }
+    .cal-pop .pop-snippet { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .cal-pop .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .cal-count { display: none; }
+    .cal-day-head { font-size: 1.05rem; margin: 0.5rem 0 0.75rem; }
+    .cal-day .countdown { font-size: 0.85rem; font-weight: 600; color: var(--brand-accent-text); }
+
+    /* ── Context dialog ── */
+    .dialog-meta { margin: 0 0 0.75rem; color: var(--gray-text); font-size: 0.9rem; }
+    .dialog-snippets { display: grid; gap: 0.75rem; }
+    .dialog-snippets blockquote {
+      margin: 0;
+      padding: 0.6rem 0.9rem;
+      background: var(--gray-bg);
+      border-left: 3px solid var(--brand-primary);
+      border-radius: 0 var(--brand-radius-control) var(--brand-radius-control) 0;
+      font-size: 0.9rem;
+    }
+    .dialog-snippets .page { display: block; font-size: 0.75rem; font-weight: 600; color: var(--gray-text); margin-bottom: 0.15rem; }
+
+    /* ── Footer ── */
+    footer { padding: 1.5rem 2rem 2.5rem; font-size: 0.875rem; color: var(--brand-text); }
+    footer h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+    footer ul { margin: 0 0 0.75rem; padding-left: 1.2rem; }
+    footer li { margin-bottom: 0.3rem; }
+    footer .source-note { font-size: 0.85rem; }
+
+    @media (max-width: 700px) {
+      .dashboard-header { padding: 0.75rem 1rem; gap: 0.75rem; }
+      .dashboard-header img { height: 40px; }
+      .dashboard-header h1 { font-size: 1.15rem; }
+      .dashboard-header .subtitle { display: none; }
+      .notices, .view-bar { padding-left: 1rem; padding-right: 1rem; }
+      .view-bar calcite-select { width: 100%; }
+      .section, footer { padding-left: 1rem; padding-right: 1rem; }
+      .upcoming-list { grid-template-columns: 1fr; }
+      .filters calcite-input-text, .filters calcite-combobox { width: 100%; }
+      /* Phone calendar: compact cells with a meeting count instead of agency chips. */
+      .cal-cell { min-height: 48px; padding: 0.2rem; align-items: center; }
+      .cal-chip, .cal-more { display: none; }
+      .cal-cell.has .cal-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.2rem;
+        height: 1.2rem; border-radius: 999px; background: var(--brand-accent); color: #fff; font-size: 0.7rem; font-weight: 700; }
+      .cal-dow { padding: 0.3rem 0.2rem; text-align: center; font-size: 0.72rem; }
+      .cal-legend { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="dashboard-header">
+    <img src="assets/trpa-logo-white.png" alt="Tahoe Regional Planning Agency" width="87" height="52" />
+    <div class="divider" aria-hidden="true"></div>
+    <div>
+      <h1>TRPA Mention Monitor</h1>
+      <p class="subtitle">Where the Tahoe Regional Planning Agency (TRPA) comes up in Lake Tahoe Region public meetings and press</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="notices" id="notices"></div>
+
+    <!-- ── DEPARTMENT VIEW (departments and keywords come from keywords.csv) ── -->
+    <div class="view-bar" id="view-bar" hidden>
+      <calcite-label layout="inline" for="dept">Department view</calcite-label>
+      <calcite-select id="dept" label="Department view"></calcite-select>
+      <span class="dept-terms" id="dept-terms" aria-live="polite"></span>
+    </div>
+
+    <!-- ── COMING UP ── -->
+    <section class="section" aria-labelledby="upcoming-heading">
+      <div class="section-head">
+        <h2 id="upcoming-heading">Coming up</h2>
+        <div class="head-actions">
+          <span class="hint" id="upcoming-hint"></span>
+          <calcite-button id="summary-pdf" icon-start="file-pdf" scale="s" href="data/TRPA_Mention_Summary.pdf"
+            target="_blank" rel="noopener noreferrer">Download summary (PDF)</calcite-button>
+        </div>
+      </div>
+      <div class="upcoming-list" id="upcoming-list"></div>
+    </section>
+
+    <!-- ── TABS: Meetings / Press / Sources ── -->
+    <section class="section" aria-labelledby="detail-heading">
+      <div class="section-head">
+        <h2 id="detail-heading">All mentions</h2>
+        <span class="hint">Select a row to read every passage that mentions TRPA</span>
+      </div>
+
+      <calcite-tabs id="tabs">
+        <calcite-tab-nav slot="title-group" id="tab-nav">
+          <calcite-tab-title selected icon-start="calendar">Calendar</calcite-tab-title>
+          <calcite-tab-title icon-start="group">Meetings</calcite-tab-title>
+          <calcite-tab-title icon-start="article">Press</calcite-tab-title>
+          <calcite-tab-title icon-start="data-check">Sources checked</calcite-tab-title>
+        </calcite-tab-nav>
+
+        <!-- Calendar -->
+        <calcite-tab selected>
+          <div class="tab-body">
+            <div class="cal-head">
+              <calcite-button id="cal-prev" appearance="outline" scale="s" icon-start="chevron-left" label="Previous month"></calcite-button>
+              <h3 id="cal-month" aria-live="polite"></h3>
+              <calcite-button id="cal-next" appearance="outline" scale="s" icon-start="chevron-right" label="Next month"></calcite-button>
+              <span class="spacer"></span>
+              <div class="cal-legend" aria-label="Legend: how it comes up">
+                <span class="tag type-agenda">Agenda item</span>
+                <span class="tag type-staff">Staff report</span>
+                <span class="tag type-minutes">Minutes</span>
+                <span class="tag type-public">Public comment (lower priority)</span>
+              </div>
+            </div>
+            <p class="source-note" id="cal-hint"></p>
+            <div class="cal-grid" id="cal-grid" aria-labelledby="cal-month"></div>
+            <p class="empty" id="cal-empty" hidden>No posted agendas this month mention TRPA or a keyword yet.</p>
+            <div id="cal-day" class="cal-day" aria-live="polite"></div>
+          </div>
+        </calcite-tab>
+
+        <!-- Meetings -->
+        <calcite-tab>
+          <div class="tab-body">
+            <div class="filters">
+              <calcite-input-text id="m-search" icon="search" clearable placeholder="Search meetings and context" label="Search meetings"></calcite-input-text>
+              <calcite-combobox id="m-agency" label="Agency" placeholder="All agencies" selection-mode="multiple" scale="m"></calcite-combobox>
+              <calcite-combobox id="m-type" label="How it comes up" placeholder="Any way it comes up" selection-mode="multiple" scale="m"></calcite-combobox>
+              <calcite-segmented-control id="m-timing" label="Timing">
+                <calcite-segmented-control-item value="all" checked>All</calcite-segmented-control-item>
+                <calcite-segmented-control-item value="upcoming">Upcoming</calcite-segmented-control-item>
+                <calcite-segmented-control-item value="meeting">Past</calcite-segmented-control-item>
+              </calcite-segmented-control>
+              <span class="spacer"></span>
+              <calcite-button id="m-csv" icon-start="download" appearance="outline" scale="s">CSV</calcite-button>
+            </div>
+            <div class="grid-container"><div id="m-grid" style="width: 100%;"></div></div>
+            <p class="source-note">Source: agendas, minutes, and agenda packets published by each agency.</p>
+          </div>
+        </calcite-tab>
+
+        <!-- Press -->
+        <calcite-tab>
+          <div class="tab-body">
+            <div class="filters">
+              <calcite-input-text id="p-search" icon="search" clearable placeholder="Search headlines and context" label="Search press"></calcite-input-text>
+              <calcite-label layout="inline" style="margin: 0;">
+                <calcite-switch id="p-verified" label="Only items confirmed in the article text"></calcite-switch>
+                Only confirmed in article text
+              </calcite-label>
+              <span class="spacer"></span>
+              <calcite-button id="p-csv" icon-start="download" appearance="outline" scale="s">CSV</calcite-button>
+            </div>
+            <div class="grid-container"><div id="p-grid" style="width: 100%;"></div></div>
+            <p class="source-note">Source: Google News, Bing News, and local news RSS feeds.</p>
+          </div>
+        </calcite-tab>
+
+        <!-- Sources -->
+        <calcite-tab>
+          <div class="tab-body">
+            <div class="grid-container"><div id="s-grid" style="width: 100%;"></div></div>
+            <p class="source-note">Each source is checked on every run. A failed source usually means the agency changed its website; the other sources are unaffected.</p>
+          </div>
+        </calcite-tab>
+      </calcite-tabs>
+    </section>
+  </main>
+
+  <!-- ── ABOUT ── -->
+  <footer>
+    <h2>About this data</h2>
+    <ul>
+      <li>The collector downloads the agendas, minutes, and agenda packets posted by each agency and searches their full text for "Tahoe Regional Planning Agency" and "TRPA." Press items come from news searches and local outlets' feeds.</li>
+      <li>TRPA's own Governing Board and Advisory Planning Commission (APC) meetings are excluded, as is trpa.gov.</li>
+      <li>Recurring boilerplate is ignored, for example meeting locations printed as "Tahoe Regional Planning Agency, 128 Market Street" and "Sources: TRPA" credits on maps.</li>
+      <li>"Upcoming" means the meeting has not happened yet but its agenda is posted, usually three to 10 days ahead. Upcoming meetings are also searched for the department keywords listed in <code>keywords.csv</code> (one row per department and keyword); edit that file and refresh the data to change them.</li>
+      <li>Department view: the default view shows only meetings and press that mention TRPA. Picking a department shows upcoming meetings that match its keywords (even without a TRPA mention), plus past meetings and press items whose TRPA passages mention one of them. Share a department's view with its link (for example <code>?dept=Transportation</code>).</li>
+      <li>"How it comes up" is worked out from each document's structure: a numbered item on the agenda, public comment (letters, emails, written comments), a staff report or memo, minutes of an earlier meeting, or another attachment. "Named in the item itself" means TRPA is in the agenda item's own title or description. Treat it as a guide and confirm in the document.</li>
+      <li>Order: upcoming meetings are listed soonest first, whether TRPA or a keyword is an agenda item or appears in the staff reports, attachments, or minutes. Mentions only in public comment are flagged "Public comment only" and listed last as lower priority.</li>
+      <li>"Headline match only" press items come from a news search where the article text could not be checked. Open them to confirm.</li>
+    </ul>
+    <p class="source-note" id="footer-source"></p>
+  </footer>
+
+  <!-- ── CALENDAR SUMMARY POPOVER (anchored to the clicked meeting) ── -->
+  <calcite-popover id="cal-pop" label="Meeting summary" heading="Meeting" closable auto-close trigger-disabled
+                   placement="auto" overlay-positioning="fixed" scale="s">
+    <div id="cal-pop-body" class="cal-pop"></div>
+  </calcite-popover>
+
+  <!-- ── CONTEXT DIALOG ── -->
+  <calcite-dialog id="ctx-dialog" modal width-scale="m" width="m" heading="Context">
+    <p class="dialog-meta" id="ctx-meta"></p>
+    <div class="dialog-snippets" id="ctx-snippets"></div>
+    <calcite-button slot="footer-end" id="ctx-open" icon-end="launch" target="_blank" rel="noopener noreferrer">Open document</calcite-button>
+    <calcite-button slot="footer-end" id="ctx-close" appearance="outline">Close</calcite-button>
+  </calcite-dialog>
+
+  <script>
+    // ── CONSTANTS ──
+    const BRAND_FONT = 'Open Sans, system-ui, sans-serif';
+    const BRAND_TEXT = '#003B71';
+    const TRPA_RE = /Tahoe\s+Regional\s+Planning\s+Agency|\bTRPA\b/gi;
+    const DATA = window.TRPA_MENTIONS;
+    const KEYWORDS = (DATA && DATA.keywords) || [];
+    // {department: [keywords]} from keywords.csv, for the department view picker.
+    const DEPARTMENTS = (DATA && DATA.departments) || {};
+    // Same matching as the collector: whole words, flexible spaces/hyphens, simple plurals.
+    const keywordPattern = k => '(?<!\\w)' + k.split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]+') + '(?:s|es)?(?!\\w)';
+    // Current department view ('' = the default view: TRPA mentions only). Highlighting
+    // follows the view: TRPA alone, or TRPA plus the department's keywords.
+    const ALL_LABEL = 'TRPA';
+    const view = { dept: '', terms: new Set(), re: null };
+    let HIGHLIGHT_RE = new RegExp([TRPA_RE.source, ...KEYWORDS.map(keywordPattern)].join('|'), 'gi');
+    function activeKeywords() { return view.dept ? DEPARTMENTS[view.dept] : []; }
+    function setDepartment(dept) {
+      view.dept = DEPARTMENTS[dept] ? dept : '';
+      const kws = activeKeywords();
+      view.terms = new Set(kws.map(k => k.toLowerCase()));
+      view.re = view.dept ? new RegExp(kws.map(keywordPattern).join('|'), 'i') : null;
+      HIGHLIGHT_RE = new RegExp([TRPA_RE.source, ...kws.map(keywordPattern)].join('|'), 'gi');
+    }
+    // Default view: only records that mention TRPA (keyword-only upcoming agendas are left
+    // to the department views). In a department view: upcoming meetings that matched one of
+    // its keywords, or any record whose TRPA passages, item titles, or headline mention one.
+    function inDept(m) {
+      if (!view.dept) return m.category === 'press' || (m.hit_count || 0) > 0;
+      if (Object.keys(m.keywords || {}).some(k => view.terms.has(k.toLowerCase()))) return true;
+      return view.re.test([m.title, ...(m.snippets || []), ...(m.contexts || []).map(c => c.title)].join(' '));
+    }
+    // How TRPA comes up, most significant first (matches the collector's classify.py).
+    // Most significant first (matches classify.py): agendized items matter most, public comment least.
+    const TYPE_ORDER = ['Agenda item', 'Staff report', 'Attachment', 'Minutes', 'Public comment'];
+    const IMPORTANCE = { 'Agenda item': 'agenda', 'Staff report': 'materials', 'Attachment': 'materials',
+                         'Minutes': 'materials', 'Public comment': 'public' };
+    const TYPE_CLASS = { 'Agenda item': 'type-agenda', 'Public comment': 'type-public', 'Staff report': 'type-staff',
+                         'Minutes': 'type-minutes', 'Attachment': 'type-other' };
+
+    // ── FORMATTING (TRPA style guide) ──
+    const MONTHS = ['Jan.', 'Feb.', 'March', 'April', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+    const NUMBER_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+
+    function parseDay(iso) {            // "2026-10-15" -> local Date at midnight
+      if (!iso) return null;
+      const [y, m, d] = iso.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function fmtDate(iso, withYear = true) {
+      const d = parseDay(iso);
+      if (!d) return '—';
+      return `${MONTHS[d.getMonth()]} ${d.getDate()}${withYear ? ', ' + d.getFullYear() : ''}`;
+    }
+    function fmtDateTime(isoTs) {
+      const d = new Date(isoTs);
+      const h = d.getHours() % 12 || 12, m = String(d.getMinutes()).padStart(2, '0');
+      return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}, ${h}:${m} ${d.getHours() < 12 ? 'a.m.' : 'p.m.'}`;
+    }
+    function count(n, noun, plural = noun + 's') {   // prose: spell out zero to nine
+      return `${n < 10 ? NUMBER_WORDS[n] : n.toLocaleString()} ${n === 1 ? noun : plural}`;
+    }
+    const cap = s => s.charAt(0).toUpperCase() + s.slice(1);   // sentence start
+    function weekday(iso) {
+      return parseDay(iso).toLocaleDateString('en-US', { weekday: 'long' });
+    }
+    function daysUntil(iso) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      return Math.round((parseDay(iso) - today) / 86400000);
+    }
+    function countdown(iso) {
+      const n = daysUntil(iso);
+      if (n <= 0) return 'Today';
+      if (n === 1) return 'Tomorrow';
+      return `In ${count(n, 'day')}`;
+    }
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function highlight(text) {
+      return escapeHtml(text).replace(HIGHLIGHT_RE, m => `<mark>${m}</mark>`);
+    }
+    // TRPA passages first, then keyword passages: [{snippet, term}]. In a department view
+    // that department's keyword passages come first, so cards and links lead with them.
+    const isDeptTerm = term => view.terms.has(term.toLowerCase());
+    function passagesOf(m) {
+      const out = (m.snippets || []).map(s => ({ snippet: s, term: 'TRPA' }));
+      for (const [k, v] of Object.entries(m.keywords || {})) out.push(...v.snippets.map(s => ({ snippet: s, term: k })));
+      return view.dept ? out.sort((a, b) => isDeptTerm(b.term) - isDeptTerm(a.term)) : out;
+    }
+    function primaryType(m) {
+      const cs = m.contexts || [];
+      return cs.length ? cs.map(c => c.type).sort((a, b) => TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b))[0] : '';
+    }
+    // "agenda" (part of an agendized item), "materials" (staff reports, attachments, minutes),
+    // or "public" (only in public comment); "" for press.
+    function importanceOf(m) { return IMPORTANCE[primaryType(m)] || ''; }
+    const isPublicOnly = m => importanceOf(m) === 'public';
+    // Soonest first; on the same day, public-comment-only mentions last, then by agency.
+    function byDate(a, b) {
+      return a.date.localeCompare(b.date) || isPublicOnly(a) - isPublicOnly(b) || a.source.localeCompare(b.source);
+    }
+    // Flag shown at the top of cards, the calendar popover, and the details dialog.
+    function flagHtml(m) {
+      return isPublicOnly(m) ? '<div class="flag-public">Public comment only · lower priority</div>' : '';
+    }
+    function pageList(pages) {
+      if (pages.length === 1) return `page ${pages[0]}`;
+      const contiguous = pages.every((p, i) => i === 0 || p === pages[i - 1] + 1);
+      if (contiguous) return `pages ${pages[0]}–${pages[pages.length - 1]}`;
+      return `pages ${pages.slice(0, 4).join(', ')}${pages.length > 4 ? ', …' : ''}`;
+    }
+    function typeTag(type) {
+      return `<span class="tag ${TYPE_CLASS[type] || 'type-other'}">${escapeHtml(type)}</span>`;
+    }
+    // One line per way TRPA comes up: "[Agenda item] 11. TRPA Housing Amendments… (page 5)"
+    function contextLines(m, limit = 3) {
+      const rows = (m.contexts || []).slice(0, limit).map(c => {
+        // Only claim "named in the item" when the term is visibly in the item's title.
+        const named = c.type === 'Agenda item' && c.in_title && new RegExp(HIGHLIGHT_RE.source, 'i').test((c.title || '').slice(0, 140))
+          ? ' · named in the item itself' : '';
+        return `<li>${typeTag(c.type)} ${c.title ? highlight(c.title) : ''} <span class="where">(${pageList(c.pages)}${named})</span></li>`;
+      });
+      const extra = (m.contexts || []).length - limit;
+      if (extra > 0) rows.push(`<li class="where">…and ${count(extra, 'more place')} in the document</li>`);
+      return rows.length ? `<ul class="how">${rows.join('')}</ul>` : '';
+    }
+    function termChips(m) {
+      if (!view.dept) return '';   // the meta line already gives the TRPA count
+      const terms = [...(m.hit_count ? [['TRPA', m.hit_count]] : []),
+                     ...Object.entries(m.keywords || {}).filter(([k]) => !view.dept || isDeptTerm(k))
+                       .map(([k, v]) => [k, v.count])];
+      return `<div class="terms">${terms.map(([t, n]) => `<span class="term">${escapeHtml(t)} <b>${n}</b></span>`).join('')}</div>`;
+    }
+    function splitPage(snippet) {       // "p.12: ...text" -> {page: 12, text}
+      const m = /^p\.(\d+):\s*/.exec(snippet || '');
+      return m ? { page: Number(m[1]), text: snippet.slice(m[0].length) } : { page: null, text: snippet || '' };
+    }
+    // Meeting PDFs open at the page of the first TRPA mention: "#page=N" is honored by the
+    // PDF viewers built into Chrome, Edge, Firefox, and Safari. CivicClerk (IVGID) serves
+    // its files as downloads, which drop the page, so those links name the page instead.
+    function firstPage(m) {
+      // First TRPA mention, or the first keyword match when TRPA isn't mentioned.
+      return m.category === 'press' ? null : splitPage((passagesOf(m)[0] || {}).snippet).page;
+    }
+    function isDownloadOnly(url) { return /GetMeetingFileStream/i.test(url || ''); }
+    function docUrl(m, page = firstPage(m)) {
+      if (!page || m.category === 'press' || isDownloadOnly(m.url)) return m.url;
+      return m.url.split('#')[0] + '#page=' + page;
+    }
+    function openLabel(m, page = firstPage(m), noun = 'agenda') {
+      if (m.category === 'press') return 'Open article';
+      if (!page) return `Open ${noun}`;
+      return isDownloadOnly(m.url) ? `Download ${noun} (see page ${page})` : `Open ${noun} at page ${page}`;
+    }
+
+    function el(tag, attrs = {}, html = '') {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+      if (html) e.innerHTML = html;
+      return e;
+    }
+
+    // ── NOTICES ──
+    function addNotice(kind, icon, title, message) {
+      const n = el('calcite-notice', { kind, icon, scale: 's', open: '' });
+      n.innerHTML = (title ? `<div slot="title">${title}</div>` : '') + `<div slot="message">${message}</div>`;
+      document.getElementById('notices').appendChild(n);
+    }
+
+    // ── CONTEXT DIALOG ──
+    const dialog = document.getElementById('ctx-dialog');
+    function openContext(m) {
+      dialog.heading = m.category === 'press' ? (m.title || 'Press item') : `${m.source}: ${m.title}`;
+      const timing = m.category === 'upcoming' ? 'Upcoming meeting' : m.category === 'press' ? 'Press' : 'Past meeting';
+      const where = m.category === 'press' ? (m.detail || m.source) : `${m.source} · ${m.detail}`;
+      document.getElementById('ctx-meta').textContent =
+        `${timing} · ${fmtDate(m.date)} · ${where} · ${count(m.hit_count || 0, 'TRPA mention')}`;
+      const box = document.getElementById('ctx-snippets');
+      box.innerHTML = '';
+      const flag = flagHtml(m);
+      if (flag) box.appendChild(el('div', { class: 'dialog-flag' }, flag));
+      if (m.contexts && m.contexts.length) {
+        box.appendChild(el('div', { class: 'dialog-how' }, '<h3>How it comes up</h3>' + contextLines(m, 8)));
+      }
+      if (Object.keys(m.keywords || {}).length) box.appendChild(el('div', {}, termChips(m)));
+      for (const { snippet, term } of passagesOf(m)) {
+        const { page, text } = splitPage(snippet);
+        const termLabel = term !== 'TRPA' ? ` · keyword “${escapeHtml(term)}”` : '';
+        const pageLabel = !page ? (termLabel ? `<span class="page">${termLabel.slice(3)}</span>` : '')
+          : isDownloadOnly(m.url) ? `<span class="page">Page ${page}${termLabel}</span>`
+          : `<span class="page"><a href="${escapeHtml(docUrl(m, page))}" target="_blank" rel="noopener noreferrer">Go to page ${page}</a>${termLabel}</span>`;
+        box.appendChild(el('blockquote', {}, pageLabel + highlight(text)));
+      }
+      const shown = (m.snippets || []).reduce((n, s) => n + (s.match(TRPA_RE) || []).length, 0);
+      if ((m.hit_count || 0) > shown) {
+        box.appendChild(el('p', { class: 'source-note' },
+          `Showing ${shown < 10 ? NUMBER_WORDS[shown] : shown} of ${m.hit_count} mentions. Open the ${m.category === 'press' ? 'article' : 'document'} to see the rest.`));
+      }
+      const open = document.getElementById('ctx-open');
+      open.href = docUrl(m);
+      open.textContent = openLabel(m, firstPage(m), 'document');
+      dialog.open = true;
+    }
+    document.getElementById('ctx-close').addEventListener('click', () => { dialog.open = false; });
+
+    // ── UPCOMING CARDS ──
+    function renderUpcoming(upcoming) {
+      document.getElementById('upcoming-hint').textContent =
+        `Agendas already posted for meetings through ${fmtDate(DATA.meeting_window.end)}`;
+      const list = document.getElementById('upcoming-list');
+      list.innerHTML = '';
+      if (!upcoming.length) {
+        list.appendChild(el('div', { class: 'empty' }, (view.dept
+          ? `No posted agendas for upcoming meetings match the ${escapeHtml(view.dept)} keywords yet.`
+          : 'No posted agendas for upcoming meetings mention TRPA yet.')
+          + ' Agencies usually post agendas three to 10 days ahead, so check back after the next update.'));
+        return;
+      }
+      // Soonest first, whether it's an agenda item or in the packet. Only mentions that are
+      // just in public comment are set apart, last, as lower priority.
+      for (const m of upcoming.filter(m => !isPublicOnly(m))) list.appendChild(meetingCard(m));
+      const publicOnly = upcoming.filter(isPublicOnly);
+      if (publicOnly.length) {
+        list.appendChild(el('h3', { class: 'group-head' }, 'Public comment only <span class="hint">Lower priority</span>'));
+        for (const m of publicOnly) list.appendChild(meetingCard(m));
+      }
+    }
+
+    // Summary card for an upcoming meeting: when, agency, matched terms, how it comes up,
+    // key passage, and links. Used by "Coming up" and the calendar's day panel.
+    function meetingCard(m, { showDate = true } = {}) {
+      const first = splitPage((passagesOf(m)[0] || {}).snippet);
+      const card = el('article', { class: `meeting-card tier-${importanceOf(m) || 'materials'}` });
+      const trpa = m.hit_count ? count(m.hit_count, 'TRPA mention') : 'No TRPA mentions';
+      card.innerHTML = `
+        ${flagHtml(m)}
+        ${showDate ? `<div class="when">
+          <span class="date">${weekday(m.date)}, ${fmtDate(m.date, false)}</span>
+          <span class="countdown">${countdown(m.date)}</span>
+        </div>` : ''}
+        <h3>${escapeHtml(m.source)}</h3>
+        <p class="meta">${escapeHtml(m.title)} · ${escapeHtml(m.detail)} · ${trpa}</p>
+        ${termChips(m)}
+        ${contextLines(m)}
+        <p class="snippet">${first.page ? `<strong>Page ${first.page}:</strong> ` : ''}${highlight(first.text)}</p>
+        <div class="actions"></div>`;
+      const ctxBtn = el('calcite-button', { appearance: 'outline', scale: 's', 'icon-start': 'quote' });
+      ctxBtn.textContent = 'Read context';
+      ctxBtn.addEventListener('click', () => openContext(m));
+      const openBtn = el('calcite-button', { scale: 's', 'icon-end': isDownloadOnly(m.url) ? 'download' : 'launch',
+        href: docUrl(m), target: '_blank', rel: 'noopener noreferrer' });
+      openBtn.textContent = openLabel(m);
+      card.querySelector('.actions').append(ctxBtn, openBtn);
+      return card;
+    }
+
+    // ── CALENDAR ──
+    // Month grid of upcoming meetings whose agenda mentions TRPA or a keyword. Selecting a
+    // day lists its meetings below the grid with the same summary cards as "Coming up".
+    const cal = { month: null, selected: null, byDay: new Map(), first: null, last: null };
+    const isoOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+                         'September', 'October', 'November', 'December'];
+
+    function setupCalendar() {
+      document.getElementById('cal-prev').addEventListener('click', () => moveMonth(-1));
+      document.getElementById('cal-next').addEventListener('click', () => moveMonth(1));
+    }
+
+    function setCalendarData(upcoming) {
+      cal.byDay = new Map();
+      for (const m of upcoming) {
+        if (!cal.byDay.has(m.date)) cal.byDay.set(m.date, []);
+        cal.byDay.get(m.date).push(m);
+      }
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const firstMeeting = upcoming.length ? parseDay(upcoming[0].date) : today;
+      cal.first = new Date(today.getFullYear(), today.getMonth(), 1);
+      const end = parseDay(DATA.meeting_window.end) || today;
+      cal.last = new Date(end.getFullYear(), end.getMonth(), 1);
+      cal.month = new Date(firstMeeting.getFullYear(), firstMeeting.getMonth(), 1);
+      cal.selected = upcoming.length ? upcoming[0].date : null;
+      document.getElementById('cal-hint').textContent = (view.dept
+        ? `Upcoming meetings whose posted agenda or packet matches a ${view.dept} keyword. `
+        : 'Upcoming meetings whose posted agenda or packet mentions TRPA. ')
+        + `Agendas checked through ${fmtDate(DATA.meeting_window.end)}; most agencies post three to 10 days ahead.`;
+      renderCalendar();
+    }
+
+    function moveMonth(step) {
+      const next = new Date(cal.month.getFullYear(), cal.month.getMonth() + step, 1);
+      if (next < cal.first || next > cal.last) return;
+      cal.month = next;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const y = cal.month.getFullYear(), mo = cal.month.getMonth();
+      document.getElementById('cal-month').textContent = `${MONTH_NAMES[mo]} ${y}`;
+      document.getElementById('cal-prev').disabled = cal.month <= cal.first;
+      document.getElementById('cal-next').disabled = cal.month >= cal.last;
+
+      const today = isoOf(new Date());
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+      for (const name of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']) {
+        grid.appendChild(el('div', { class: 'cal-dow', 'aria-hidden': 'true' }, name));
+      }
+      const start = new Date(y, mo, 1 - new Date(y, mo, 1).getDay());   // Sunday on or before the 1st
+      const weeks = Math.ceil((new Date(y, mo + 1, 0).getDate() + new Date(y, mo, 1).getDay()) / 7);
+      let monthCount = 0;
+      for (let i = 0; i < weeks * 7; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        const iso = isoOf(d);
+        const items = (cal.byDay.get(iso) || []).slice().sort(byDate);
+        const inMonth = d.getMonth() === mo;
+        if (inMonth) monthCount += items.length;
+        const cls = ['cal-cell', inMonth ? '' : 'out', iso < today ? 'past' : '', iso === today ? 'today' : '',
+                     items.length ? 'has' : '', iso === cal.selected ? 'selected' : ''].filter(Boolean).join(' ');
+        // A cell holds buttons (the day number selects the day; each meeting label opens a
+        // summary popover), so the cell itself is a plain container.
+        const cell = el('div', { class: cls, 'data-day': iso });
+        const label = `${weekday(iso)}, ${fmtDate(iso)}: ${items.length ? count(items.length, 'meeting') : 'no meetings'}`;
+        if (items.length) {
+          const num = el('button', { type: 'button', class: 'cal-num', 'aria-label': `Show meetings on ${label}`,
+                                     'aria-pressed': String(iso === cal.selected) }, String(d.getDate()));
+          num.addEventListener('click', () => selectDay(iso));
+          cell.appendChild(num);
+          items.slice(0, 3).forEach(m => {
+            const type = primaryType(m);
+            const chip = el('button', { type: 'button', class: `cal-chip ${TYPE_CLASS[type] || 'type-other'} chip-${importanceOf(m)}`,
+              'aria-label': `${m.source}, ${m.title}${type ? ', ' + type : ''}. Show summary`,
+              'aria-haspopup': 'dialog' }, escapeHtml(m.source));
+            chip.addEventListener('click', e => { e.stopPropagation(); selectDay(iso); showChipSummary(chip, m); });
+            cell.appendChild(chip);
+          });
+          if (items.length > 3) cell.appendChild(el('span', { class: 'cal-more' }, `+${items.length - 3} more`));
+          cell.appendChild(el('span', { class: 'cal-count', 'aria-hidden': 'true' }, String(items.length)));
+          // Phones hide the labels; a tap anywhere in the cell selects the day.
+          cell.addEventListener('click', () => selectDay(iso));
+        } else {
+          cell.appendChild(el('span', { class: 'cal-num', 'aria-label': label }, String(d.getDate())));
+        }
+        grid.appendChild(cell);
+      }
+      document.getElementById('cal-empty').hidden = monthCount > 0;
+      renderCalendarDay();
+    }
+
+    // Select a day without redrawing the grid (so an open popover keeps its anchor).
+    function selectDay(iso) {
+      if (cal.selected === iso) return;
+      cal.selected = iso;
+      for (const c of document.querySelectorAll('#cal-grid .cal-cell')) {
+        const on = c.dataset.day === iso;
+        c.classList.toggle('selected', on);
+        const num = c.querySelector('button.cal-num');
+        if (num) num.setAttribute('aria-pressed', String(on));
+      }
+      renderCalendarDay();
+    }
+
+    // Small summary next to a meeting on the calendar.
+    const calPop = document.getElementById('cal-pop');
+    let calPopFor = null;
+    function showChipSummary(chip, m) {
+      if (calPop.open && calPopFor === chip) { calPop.open = false; return; }   // second click closes
+      calPopFor = chip;
+      const first = splitPage((passagesOf(m)[0] || {}).snippet);
+      const trpa = m.hit_count ? count(m.hit_count, 'TRPA mention') : 'No TRPA mentions';
+      const body = document.getElementById('cal-pop-body');
+      body.innerHTML = `
+        ${flagHtml(m)}
+        <p class="pop-when">${weekday(m.date)}, ${fmtDate(m.date, false)} <span class="countdown">${countdown(m.date)}</span></p>
+        <p class="meta">${escapeHtml(m.title)} · ${escapeHtml(m.detail)} · ${trpa}</p>
+        ${termChips(m)}
+        ${contextLines(m, 2)}
+        ${first.text ? `<p class="pop-snippet">${first.page ? `<strong>Page ${first.page}:</strong> ` : ''}${highlight(first.text)}</p>` : ''}
+        <div class="actions"></div>`;
+      const open = el('calcite-button', { scale: 's', 'icon-end': isDownloadOnly(m.url) ? 'download' : 'launch',
+        href: docUrl(m), target: '_blank', rel: 'noopener noreferrer' });
+      open.textContent = openLabel(m);
+      const more = el('calcite-button', { scale: 's', appearance: 'outline', 'icon-start': 'quote' });
+      more.textContent = 'Full details';
+      more.addEventListener('click', () => { calPop.open = false; openContext(m); });
+      body.querySelector('.actions').append(open, more);
+      calPop.heading = m.source;
+      calPop.referenceElement = chip;
+      calPop.open = true;
+    }
+
+    function renderCalendarDay() {
+      const panel = document.getElementById('cal-day');
+      panel.innerHTML = '';
+      const items = cal.selected ? (cal.byDay.get(cal.selected) || []).slice().sort(byDate) : [];
+      if (!items.length) {
+        panel.appendChild(el('p', { class: 'empty' }, 'Select a highlighted day to see its meetings.'));
+        return;
+      }
+      panel.appendChild(el('h3', { class: 'cal-day-head' },
+        `${weekday(cal.selected)}, ${fmtDate(cal.selected)} <span class="countdown">${countdown(cal.selected)}</span>`
+        + ` <span class="where">· ${count(items.length, 'meeting document')}</span>`));
+      const list = el('div', { class: 'upcoming-list' });
+      for (const m of items) list.appendChild(meetingCard(m, { showDate: false }));
+      panel.appendChild(list);
+    }
+
+    // ── AG GRID ──
+    const GRID_THEME = agGrid.themeQuartz.withParams({
+      fontFamily: BRAND_FONT,
+      fontSize: 14,
+      foregroundColor: BRAND_TEXT,
+      accentColor: '#0072CE',
+      headerBackgroundColor: '#F5F7FA',
+      headerTextColor: BRAND_TEXT,
+      headerFontWeight: 600,
+      borderColor: '#E2E6EC',
+      rowHoverColor: '#E8F1F8',
+      selectedRowBackgroundColor: '#E8F1F8',
+      wrapperBorderRadius: 8,
+    });
+
+    function dateCol(extra = {}) {
+      return {
+        field: 'date', headerName: 'Date', width: 130, sort: 'desc',
+        valueFormatter: p => fmtDate(p.value),
+        filter: 'agDateColumnFilter',
+        filterParams: { comparator: (filterDate, cell) => (parseDay(cell) || 0) - filterDate },
+        ...extra,
+      };
+    }
+    function snippetCol() {
+      return {
+        field: 'snippets', headerName: 'Context', flex: 3, minWidth: 320, autoHeight: true, sortable: false,
+        filter: false,
+        cellDataType: false,
+        valueFormatter: p => (p.value || []).join(' | '),
+        getQuickFilterText: p => (p.value || []).join(' '),
+        cellRenderer: p => {
+          const { page, text } = splitPage((passagesOf(p.data)[0] || {}).snippet);
+          return el('div', { class: 'grid-snippet' }, (page ? `<strong>p. ${page}:</strong> ` : '') + highlight(text));
+        },
+      };
+    }
+    function linkCol(label) {
+      return {
+        field: 'url', headerName: '', width: 130, sortable: false, filter: false, resizable: false,
+        cellRenderer: p => {
+          const page = firstPage(p.data);
+          const text = !page ? 'Open' : isDownloadOnly(p.value) ? `Get p. ${page}` : `Open p. ${page}`;
+          const a = el('a', { href: docUrl(p.data), target: '_blank', rel: 'noopener noreferrer',
+            'aria-label': `${openLabel(p.data, page, 'document')}: ${p.data.title}` }, text);
+          if (page && isDownloadOnly(p.value)) a.title = `Downloads the PDF; the first mention is on page ${page}`;
+          a.addEventListener('click', e => e.stopPropagation());   // don't also open the dialog
+          return a;
+        },
+      };
+    }
+    function clampCol(field, headerName, extra = {}) {   // wrapped text, three lines max, full text on hover
+      return {
+        field, headerName, autoHeight: true,
+        cellRenderer: p => {
+          const v = p.valueFormatted ?? p.value ?? '';
+          const d = el('div', { class: 'grid-clamp' }, escapeHtml(v));
+          d.title = v;
+          return d;
+        },
+        ...extra,
+      };
+    }
+    function tag(cls, text, title) {
+      const t = el('span', { class: `tag ${cls}` }, escapeHtml(text));
+      if (title) t.title = title;
+      return t;
+    }
+    // A source can "succeed" while some of its documents couldn't be read (blocked downloads,
+    // scanned PDFs with no text), so that is reported separately from outright failure.
+    function sourceStatus(s) {
+      if (!s.ok && s.previous_run) {
+        return { cls: 'partial', label: 'Failed this run', note:
+          `Showing ${count(s.carried_over || 0, 'result')} kept from the previous run (${fmtDateTime(s.previous_run)}). Error: ${s.error}` };
+      }
+      if (!s.ok) return { cls: 'failed', label: 'Failed', note: s.error };
+      const bad = s.docs_unreadable || 0, all = s.docs_scanned || 0;
+      if (bad && bad === all) return { cls: 'failed', label: 'No documents readable', note: `None of the ${all} documents could be read.` };
+      if (bad) return { cls: 'partial', label: 'Partly checked', note: `${bad} of ${all} documents could not be read (blocked download or scanned image).` };
+      return { cls: 'ok', label: 'Checked', note: '' };
+    }
+
+    const fileTag = () => view.dept ? '-' + view.dept.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+    const exportCell = p => Array.isArray(p.value) ? p.value.join(' | ')
+      : p.column.getColId() === 'date' ? (p.value || '') : (p.value ?? '');
+
+    function makeGrid(id, columnDefs, rowData, extra = {}) {
+      return agGrid.createGrid(document.getElementById(id), {
+        theme: GRID_THEME,
+        columnDefs,
+        rowData,
+        defaultColDef: { sortable: true, filter: true, resizable: true, wrapHeaderText: true, autoHeaderHeight: true },
+        pagination: true,                 // read-only reporting tables
+        paginationPageSize: 25,
+        paginationPageSizeSelector: [25, 50, 100],
+        domLayout: 'autoHeight',
+        onRowClicked: e => openContext(e.data),
+        onCellKeyDown: e => { if (e.event.key === 'Enter') openContext(e.data); },
+        overlayNoRowsTemplate: '<span style="padding: 1rem;">No mentions match these filters.</span>',
+        rowClassRules: { 'row-public': p => isPublicOnly(p.data) },
+        ...extra,
+      });
+    }
+
+    // ── INIT ──
+    async function init() {
+      if (!DATA || !Array.isArray(DATA.mentions)) {
+        addNotice('danger', 'exclamation-mark-triangle', 'No data yet',
+          'The data file <code>data/mentions.js</code> is missing. Run the collector (<code>python -m trpa_monitor</code>) in this folder to create it.');
+        return;
+      }
+      await Promise.all(['calcite-combobox', 'calcite-segmented-control', 'calcite-dialog', 'calcite-tab-nav', 'calcite-popover', 'calcite-select']
+        .map(t => customElements.whenDefined(t)));
+
+      const meetings = DATA.mentions.filter(m => m.category !== 'press');
+      const press = DATA.mentions.filter(m => m.category === 'press');
+      const sources = DATA.sources || [];
+      const failed = sources.filter(s => sourceStatus(s).cls === 'failed');
+      const kept = sources.filter(s => !s.ok && s.previous_run);
+      if (kept.length) {
+        addNotice('warning', 'refresh', `${cap(count(kept.length, 'source'))} couldn't be reached this time`,
+          `${kept.map(s => escapeHtml(s.name)).join(', ')}. Their results from the previous run are still shown. See the Sources checked tab.`);
+      }
+
+      // Notices: freshness, coverage, failures
+      const ageDays = (Date.now() - new Date(DATA.generated_at)) / 86400000;
+      addNotice('brand', 'information', '',
+        `Updated ${fmtDateTime(DATA.generated_at)} Past meetings and press cover ${fmtDate(DATA.window.start)} to ${fmtDate(DATA.window.end)}; ` +
+        `upcoming meetings cover agendas posted through ${fmtDate(DATA.meeting_window.end)}.`);
+      if (ageDays > 2) {   // the data is refreshed daily
+        addNotice('warning', 'clock', 'This data is out of date',
+          `It was last updated ${count(Math.floor(ageDays), 'day')} ago. Run the collector to refresh it.`);
+      }
+      if (failed.length) {
+        addNotice('warning', 'exclamation-mark-triangle', `${cap(count(failed.length, 'source'))} could not be checked`,
+          `${failed.map(s => escapeHtml(s.name)).join(', ')}. See the Sources checked tab.`);
+      }
+      const nMeet = sources.filter(s => s.kind === 'meetings').length, nPress = sources.filter(s => s.kind === 'press').length;
+      document.getElementById('footer-source').textContent =
+        `Source: agendas, minutes, and packets from ${count(nMeet, 'local agency', 'local agencies')}; ${count(nPress, 'news source')}. Compiled by the Tahoe Regional Planning Agency.`;
+
+      setDepartment(new URLSearchParams(location.search).get('dept') || '');
+      setupCalendar();
+      document.getElementById('summary-pdf').download = `TRPA-mention-summary-${DATA.window.end}.pdf`;
+
+      // Meetings grid and filters
+      const agencyBox = document.getElementById('m-agency');
+      for (const a of [...new Set(meetings.map(m => m.source))].sort()) {
+        agencyBox.appendChild(el('calcite-combobox-item', { value: a, heading: a }));
+      }
+      const mState = { timing: 'all', agencies: [], types: [] };
+      const typeBox = document.getElementById('m-type');
+      for (const t of TYPE_ORDER.filter(t => meetings.some(m => (m.contexts || []).some(c => c.type === t)))) {
+        typeBox.appendChild(el('calcite-combobox-item', { value: t, heading: t }));
+      }
+      typeBox.addEventListener('calciteComboboxChange', e => {
+        mState.types = e.target.selectedItems.map(i => i.value);
+        mApi.onFilterChanged();
+      });
+      const mApi = makeGrid('m-grid', [
+        dateCol(),
+        { field: 'category', headerName: 'Timing', width: 115,
+          valueFormatter: p => p.value === 'upcoming' ? 'Upcoming' : 'Past',
+          cellRenderer: p => p.value === 'upcoming' ? tag('upcoming', 'Upcoming') : tag('past', 'Past') },
+        clampCol('source', 'Agency', { flex: 1.3, minWidth: 170 }),
+        clampCol('title', 'Meeting', { flex: 1.4, minWidth: 180 }),
+        clampCol('detail', 'Document', { flex: 1, minWidth: 140 }),
+        { colId: 'how', headerName: 'How it comes up', width: 165, autoHeight: true,
+          valueGetter: p => primaryType(p.data),
+          comparator: (a, b) => TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b),
+          cellRenderer: p => {
+            const cs = p.data.contexts || [];
+            if (!cs.length) return '';
+            const others = [...new Set(cs.slice(1).map(c => c.type))].filter(t => t !== cs[0].type);
+            const d = el('div', { class: 'grid-how' }, typeTag(cs[0].type)
+              + (others.length ? `<div class="where">also ${escapeHtml(others.join(', ').toLowerCase())}</div>` : ''));
+            d.title = cs.map(c => `${c.type}${c.title ? ': ' + c.title : ''} (${pageList(c.pages)})`).join('\n');
+            return d;
+          } },
+        ...(KEYWORDS.length ? [{ colId: 'keywords', headerName: 'Keywords', width: 160, autoHeight: true,
+          valueGetter: p => Object.keys(p.data.keywords || {}).join(', '),
+          cellRenderer: p => el('div', { class: 'grid-clamp' }, escapeHtml(p.value)) }] : []),
+        { field: 'hit_count', headerName: 'TRPA mentions', width: 130, type: 'numericColumn', filter: 'agNumberColumnFilter' },
+        snippetCol(),
+        linkCol('Open document'),
+      ], meetings, {
+        isExternalFilterPresent: () => true,   // the view always filters (TRPA mentions or a department)
+        doesExternalFilterPass: n => inDept(n.data) && (mState.timing === 'all' || n.data.category === mState.timing)
+          && (!mState.agencies.length || mState.agencies.includes(n.data.source))
+          && (!mState.types.length || (n.data.contexts || []).some(c => mState.types.includes(c.type))),
+      });
+      document.getElementById('m-search').addEventListener('calciteInputTextInput', e => mApi.setGridOption('quickFilterText', e.target.value));
+      document.getElementById('m-timing').addEventListener('calciteSegmentedControlChange', e => { mState.timing = e.target.value; mApi.onFilterChanged(); });
+      agencyBox.addEventListener('calciteComboboxChange', e => {
+        mState.agencies = e.target.selectedItems.map(i => i.value);
+        mApi.onFilterChanged();
+      });
+      document.getElementById('m-csv').addEventListener('click', () =>
+        mApi.exportDataAsCsv({ fileName: `trpa-mentions-meetings${fileTag()}.csv`, processCellCallback: exportCell }));
+
+      // Press grid and filters
+      const pState = { verifiedOnly: false };
+      const pApi = makeGrid('p-grid', [
+        dateCol(),
+        clampCol('title', 'Headline', { flex: 2, minWidth: 220 }),
+        clampCol('detail', 'Outlet', { flex: 1, minWidth: 140, valueGetter: p => p.data.detail || p.data.source }),
+        { field: 'source', headerName: 'Found via', width: 150 },
+        { field: 'verified', headerName: 'Checked', width: 185,
+          valueFormatter: p => p.value ? 'Confirmed in article' : 'Headline match only',
+          cellRenderer: p => p.value ? tag('ok', 'Confirmed in article')
+            : tag('unverified', 'Headline match only', 'The article text could not be checked. Open it to confirm.') },
+        snippetCol(),
+        linkCol('Open article'),
+      ], press, {
+        isExternalFilterPresent: () => !!view.dept || pState.verifiedOnly,
+        doesExternalFilterPass: n => inDept(n.data) && (!pState.verifiedOnly || n.data.verified),
+      });
+      document.getElementById('p-search').addEventListener('calciteInputTextInput', e => pApi.setGridOption('quickFilterText', e.target.value));
+      document.getElementById('p-verified').addEventListener('calciteSwitchChange', e => { pState.verifiedOnly = e.target.checked; pApi.onFilterChanged(); });
+      document.getElementById('p-csv').addEventListener('click', () =>
+        pApi.exportDataAsCsv({ fileName: `trpa-mentions-press${fileTag()}.csv`, processCellCallback: exportCell }));
+
+      // Department view: everything above (cards, calendar, grids) follows the picker.
+      function applyView() {
+        const shown = DATA.mentions.filter(inDept);
+        const upcoming = shown.filter(m => m.category === 'upcoming').sort(byDate);
+        renderUpcoming(upcoming);
+        setCalendarData(upcoming);
+        document.getElementById('dept-terms').textContent = view.dept
+          ? `Showing items that match: ${activeKeywords().join(', ')}`
+          : 'Showing meetings and press that mention TRPA. Pick a department to see upcoming agendas that match its keywords.';
+        for (const api of [mApi, pApi]) { api.onFilterChanged(); api.redrawRows(); }   // redraw for new highlights
+      }
+      const deptSelect = document.getElementById('dept');
+      const deptNames = Object.keys(DEPARTMENTS).sort();
+      if (deptNames.length) {
+        deptSelect.appendChild(el('calcite-option', { value: '__all', label: ALL_LABEL }, escapeHtml(ALL_LABEL)));
+        for (const d of deptNames) {
+          const opt = el('calcite-option', { value: d, label: d }, escapeHtml(d));
+          if (d === view.dept) opt.setAttribute('selected', '');
+          deptSelect.appendChild(opt);
+        }
+        document.getElementById('view-bar').hidden = false;
+        deptSelect.addEventListener('calciteSelectChange', e => {
+          setDepartment(e.target.value === '__all' ? '' : e.target.value);
+          const url = new URL(location.href);
+          if (view.dept) url.searchParams.set('dept', view.dept); else url.searchParams.delete('dept');
+          history.replaceState(null, '', url);
+          applyView();
+        });
+      }
+      applyView();
+
+      // Sources grid (a working list people scan top to bottom, so no paging)
+      agGrid.createGrid(document.getElementById('s-grid'), {
+        theme: GRID_THEME,
+        rowData: sources,
+        defaultColDef: { sortable: true, filter: true, resizable: true, wrapHeaderText: true, autoHeaderHeight: true },
+        domLayout: 'autoHeight',
+        columnDefs: [
+          { field: 'name', headerName: 'Source', flex: 1.6, minWidth: 220 },
+          { field: 'kind', headerName: 'Covers', width: 120, valueFormatter: p => p.value === 'press' ? 'Press' : 'Meetings' },
+          { field: 'platform', headerName: 'Platform', flex: 1, minWidth: 160 },
+          { field: 'docs_scanned', headerName: 'Documents scanned', width: 150, type: 'numericColumn',
+            valueFormatter: p => p.value == null ? '—' : p.value.toLocaleString() },
+          { field: 'hits', headerName: 'Mentions found', width: 140, type: 'numericColumn' },
+          { field: 'ok', headerName: 'Status', flex: 1.4, minWidth: 180, wrapText: true, autoHeight: true,
+            valueGetter: p => sourceStatus(p.data).label,
+            cellRenderer: p => {
+              const s = sourceStatus(p.data);
+              const wrap = el('div');
+              wrap.append(tag(s.cls, s.label));
+              if (s.note) wrap.append(el('div', { class: 'source-note' }, escapeHtml(s.note)));
+              return wrap;
+            } },
+        ],
+      });
+    }
+
+    init().catch(err => {
+      console.error(err);
+      addNotice('danger', 'exclamation-mark-triangle', 'Something went wrong', escapeHtml(err.message));
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tahoe Basin Record Rainfall — MRMS</title>
+<style>/*__LEAFLET_CSS__*/</style>
+<style>
+:root {
+  color-scheme: light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --series-1:#2a78d6; --hover:rgba(11,11,11,0.05);
+  --boundary:#0b0b0b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1:#1a1a19; --page:#0d0d0d;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --hover:rgba(255,255,255,0.07);
+    --boundary:#ffffff;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:#1a1a19; --page:#0d0d0d;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --series-1:#3987e5; --hover:rgba(255,255,255,0.07);
+  --boundary:#ffffff;
+}
+
+* { box-sizing:border-box; }
+html, body { height:100%; margin:0; }
+body {
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--page); color:var(--text-primary);
+  font-size:14px; line-height:1.45;
+}
+.app { display:flex; flex-direction:column; height:100%; }
+
+header {
+  padding:14px 20px 12px; border-bottom:1px solid var(--border);
+  background:var(--surface-1);
+  display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+}
+h1 { font-size:16px; font-weight:600; margin:0; letter-spacing:-0.01em; }
+.sub { font-size:12px; color:var(--text-secondary); }
+.spacer { flex:1 1 auto; }
+
+.controls {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:10px 20px; border-bottom:1px solid var(--border);
+  background:var(--surface-1);
+}
+.ctl-label {
+  font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--text-muted);
+}
+.seg { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
+.seg button {
+  font:inherit; font-size:13px; padding:5px 11px; border:0;
+  background:transparent; color:var(--text-secondary); cursor:pointer;
+}
+.seg button + button { border-left:1px solid var(--border); }
+.seg button:hover { background:var(--hover); }
+.seg button[aria-pressed="true"] { background:var(--series-1); color:#fff; }
+button.plain {
+  font:inherit; font-size:13px; padding:5px 11px; cursor:pointer;
+  border:1px solid var(--border); border-radius:7px;
+  background:transparent; color:var(--text-secondary);
+}
+button.plain:hover { background:var(--hover); }
+button.plain[aria-pressed="true"] { background:var(--series-1); color:#fff; border-color:transparent; }
+
+.main { flex:1 1 auto; display:flex; min-height:0; }
+#map { flex:1 1 auto; min-width:0; background:var(--page); }
+.side {
+  width:340px; flex:0 0 340px; border-left:1px solid var(--border);
+  background:var(--surface-1); overflow-y:auto;
+}
+.panel { padding:14px 16px; border-bottom:1px solid var(--border); }
+.panel h2 {
+  font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:0.06em; color:var(--text-muted); margin:0 0 10px;
+}
+.stats { display:grid; grid-template-columns:1fr 1fr; gap:12px 10px; }
+.stat .val { font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; }
+.stat .val .unit { font-size:11px; font-weight:400; color:var(--text-muted); margin-left:3px; }
+.stat .lbl { font-size:11px; color:var(--text-secondary); }
+
+.readout {
+  position:absolute; z-index:1000; left:12px; top:12px;
+  background:var(--surface-1); border:1px solid var(--border);
+  border-radius:9px; padding:9px 12px; pointer-events:none;
+  box-shadow:0 3px 14px rgba(0,0,0,0.13); min-width:170px;
+}
+.readout .big { font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; }
+.readout .when { font-size:12px; color:var(--text-secondary); margin-top:1px; }
+.readout .meta { font-size:11px; color:var(--text-muted); margin-top:3px; }
+
+.legend-row { display:flex; align-items:center; gap:8px; padding:2px 0; }
+.legend-row .sw { width:22px; height:12px; border-radius:2px; flex:0 0 auto; }
+.legend-row .rng { font-size:12px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+
+.hint { font-size:11px; color:var(--text-muted); margin:8px 0 0; }
+.dl { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+#profile { width:100%; height:auto; display:block; }
+.pin-note { font-size:11px; color:var(--text-muted); margin:6px 0 0; }
+.note { font-size:11px; color:var(--text-muted); margin:10px 20px; }
+
+/* ------------------------------------------------------------- charts */
+.charts { flex:1 1 auto; overflow-y:auto; padding:18px 20px 28px; }
+.chart-grid {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(430px, 1fr));
+  gap:18px; max-width:1500px;
+}
+.card {
+  background:var(--surface-1); border:1px solid var(--border);
+  border-radius:10px; padding:14px 16px 12px;
+}
+.card h3 { font-size:13px; font-weight:600; margin:0 0 2px; }
+.card .cap { font-size:11px; color:var(--text-muted); margin:0 0 10px; }
+.card canvas { width:100%; height:auto; display:block; }
+.chart-tip {
+  position:fixed; z-index:2000; pointer-events:none;
+  background:var(--surface-1); border:1px solid var(--border);
+  border-radius:7px; padding:6px 9px; font-size:12px;
+  box-shadow:0 3px 14px rgba(0,0,0,0.16); white-space:nowrap;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Tahoe Basin — record rainfall</h1>
+    <div class="seg" role="group" aria-label="View">
+      <button id="tab-map" aria-pressed="true">Map</button>
+      <button id="tab-charts" aria-pressed="false">Charts</button>
+    </div>
+    <span class="sub" id="hdr-sub"></span>
+    <span class="spacer"></span>
+    <span class="sub" id="hdr-src"></span>
+  </header>
+
+  <div class="controls">
+    <span class="ctl-label map-only">Duration</span>
+    <div class="seg map-only" role="group" aria-label="Duration">
+      <button id="d-1h" aria-pressed="true">1-hour</button>
+      <button id="d-24h" aria-pressed="false">24-hour</button>
+    </div>
+
+    <span class="ctl-label map-only" style="margin-left:6px">Period</span>
+    <div class="seg map-only" id="period-seg" role="group" aria-label="Period"></div>
+
+    <!-- Units drives the charts as well as the map, so it stays on both tabs. -->
+    <span class="ctl-label">Units</span>
+    <div class="seg" role="group" aria-label="Units">
+      <button id="u-in" aria-pressed="true">in</button>
+      <button id="u-mm" aria-pressed="false">mm</button>
+    </div>
+
+    <span class="ctl-label map-only" style="margin-left:6px">Basemap</span>
+    <div class="seg map-only" role="group" aria-label="Basemap">
+      <button id="b-terrain" aria-pressed="true">Terrain</button>
+      <button id="b-light" aria-pressed="false">Light</button>
+      <button id="b-none" aria-pressed="false">None</button>
+    </div>
+
+    <span class="ctl-label map-only" style="margin-left:6px">Scale</span>
+    <div class="seg map-only" role="group" aria-label="Colour scale">
+      <button id="s-shared" aria-pressed="true" title="One scale across all periods, so months are comparable">Shared</button>
+      <button id="s-rel" aria-pressed="false" title="Equal-count classes within this map, to show its internal structure">Relative</button>
+    </div>
+
+    <button class="plain map-only" id="btn-clip" aria-pressed="false">Clip to basin</button>
+    <span class="spacer"></span>
+    <button class="plain" id="btn-theme">Theme</button>
+  </div>
+
+  <div class="main" id="view-map">
+    <div id="map" style="position:relative">
+      <div class="readout" id="readout" hidden>
+        <div class="big" id="ro-val">—</div>
+        <div class="when" id="ro-when"></div>
+        <div class="meta" id="ro-pos"></div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <section class="panel">
+        <h2 id="stats-title">Basin summary</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="val" id="s-max">—<span class="unit" id="s-max-u"></span></div>
+            <div class="lbl">Wettest cell</div>
+          </div>
+          <div class="stat">
+            <div class="val" id="s-med">—<span class="unit" id="s-med-u"></span></div>
+            <div class="lbl">Basin median</div>
+          </div>
+          <div class="stat">
+            <div class="val" id="s-ratio">—<span class="unit">&times;</span></div>
+            <div class="lbl">Max &divide; median</div>
+          </div>
+          <div class="stat">
+            <div class="val" id="s-when">—</div>
+            <div class="lbl">Wettest cell on</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 id="prof-title">Month profile</h2>
+        <canvas id="profile" width="600" height="220" role="img"
+                aria-label="Bar chart of the record maximum for each calendar month at the selected cell."></canvas>
+        <p class="pin-note" id="prof-note">Hover the map to preview a cell.</p>
+      </section>
+
+      <section class="panel">
+        <h2 id="legend-title">Legend</h2>
+        <div id="legend"></div>
+        <p class="hint" id="legend-hint"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Download</h2>
+        <div class="dl">
+          <button class="plain" id="dl-grid">Current map — CSV grid</button>
+          <button class="plain" id="dl-points">Current map — GeoJSON points</button>
+          <button class="plain" id="dl-long">All layers — CSV (long)</button>
+          <button class="plain" id="dl-json">Full dataset — JSON</button>
+          <p class="hint" id="dl-hint"></p>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="charts" id="view-charts" hidden>
+    <div class="chart-grid">
+      <div class="card">
+        <h3>Record 1-hour rainfall by calendar month</h3>
+        <p class="cap">Wettest in-basin cell in any given month, beside the median year. Shares a y axis with the 24-hour chart.</p>
+        <canvas id="c-month-1h" height="260"></canvas>
+      </div>
+      <div class="card">
+        <h3>Record 24-hour rainfall by calendar month</h3>
+        <p class="cap">Same basis, rolling 24-hour windows. Shares a y axis with the 1-hour chart.</p>
+        <canvas id="c-month-24h" height="260"></canvas>
+      </div>
+      <div class="card">
+        <h3>1-hour maximum by month and year</h3>
+        <p class="cap">Wettest in-basin cell in each month of each season. Hover for the date. Colour is scaled within each heatmap.</p>
+        <canvas id="c-heat-1h" height="300"></canvas>
+      </div>
+      <div class="card">
+        <h3>24-hour maximum by month and year</h3>
+        <p class="cap">Wettest in-basin cell in each month of each season. Hover for the date. Colour is scaled within each heatmap.</p>
+        <canvas id="c-heat-24h" height="300"></canvas>
+      </div>
+      <div class="card">
+        <h3>1-hour seasonal maximum by year</h3>
+        <p class="cap">Largest single hour anywhere in the basin, each Jun–Oct season. Shares a y axis with the 24-hour chart.</p>
+        <canvas id="c-year-1h" height="240"></canvas>
+      </div>
+      <div class="card">
+        <h3>24-hour seasonal maximum by year</h3>
+        <p class="cap">Largest rolling 24-hour total anywhere in the basin, each Jun–Oct season. Shares a y axis with the 1-hour chart.</p>
+        <canvas id="c-year-24h" height="240"></canvas>
+      </div>
+    </div>
+    <p class="note" id="charts-foot"></p>
+  </div>
+
+  <p class="note" id="foot"></p>
+</div>
+
+<script>/*__LEAFLET_JS__*/</script>
+<script>
+const DATA = "__DATA__";
+
+/* ------------------------------------------------------------------ state */
+let dur = "1h", period = "all", unit = "in", clip = false;
+let scaleMode = "shared";
+let pinned = null, pinMarker = null;
+
+const S = DATA.scale, NODATA = DATA.nodata;
+const NX = DATA.nx, NY = DATA.ny, NC = NX * NY;
+const key = () => dur + "|" + period;
+const layer = () => DATA.layers[key()];
+const grid = () => layer().g;
+const periodLabel = () => DATA.periods.find(p => p.key === period).label;
+const durLabel = () => dur === "1h" ? "1-hour" : "24-hour";
+
+/* ------------------------------------------------------------------ units */
+const toU = mm => unit === "in" ? mm / 25.4 : mm;
+const dec = () => unit === "in" ? 2 : 1;
+const fmt = (mm, d) => (mm === null || Number.isNaN(mm)) ? "—"
+  : toU(mm).toFixed(d === undefined ? dec() : d);
+const fmtU = (mm, d) => fmt(mm, d) + " " + unit;
+
+/* ------------------------------------------------------------------ color */
+const RAMP = ["#cde2fb","#9ec5f4","#6da7ec","#3987e5","#256abf","#184f95","#0d366b"];
+const RGB = RAMP.map(h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]);
+
+/* Breaks are fixed per duration, in mm, and shared by every period. Letting
+   each month rescale its own colours would make the months look alike and
+   destroy the comparison the maps exist to support. */
+function breaksFor() {
+  /* Shared: one ramp for every period, so the months can be compared -- the
+     reason the monthly maps exist. Relative: equal-count classes inside the
+     current map, which is the only way to see structure in a period whose
+     values are bunched (October's 24-hour field spans 2.5-7.8 in and would
+     otherwise read as one flat block). */
+  if (scaleMode === "rel") {
+    const b = layer().b;
+    if (b) return b.concat([Infinity]);
+  }
+  return DATA.breaks[dur].map(v => v === null ? Infinity : v);
+}
+const classOf = mm => {
+  const b = breaksFor();
+  for (let i = 0; i < b.length; i++) if (mm <= b[i]) return i;
+  return b.length - 1;
+};
+
+/* -------------------------------------------------------------------- map */
+const B = DATA.bounds;
+const map = L.map("map", { zoomControl: false, attributionControl: true })
+  .fitBounds([[B.south, B.west], [B.north, B.east]]);
+
+// Zoom sits bottom-left: the default top-left corner is where the hover
+// readout appears, and the buttons covered it.
+L.control.zoom({ position: "bottomleft" }).addTo(map);
+
+const BASEMAPS = {
+  terrain: L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    maxZoom: 17, attribution: "&copy; OpenTopoMap, &copy; OpenStreetMap contributors" }),
+  light: L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19, subdomains: "abcd", attribution: "&copy; CARTO, &copy; OpenStreetMap contributors" })
+};
+let base = BASEMAPS.terrain.addTo(map);
+
+const cv = document.createElement("canvas");
+cv.width = NX; cv.height = NY;
+const cx = cv.getContext("2d");
+const overlay = L.imageOverlay(cv.toDataURL(), [[B.south, B.west], [B.north, B.east]],
+  { opacity: 0.82, interactive: true, className: "precip-overlay" }).addTo(map);
+
+/* Nearest-neighbour, so 1 km cells stay crisp instead of blurring into each
+   other. The overlay is a data grid, not a photo. */
+const styleTag = document.createElement("style");
+styleTag.textContent = ".precip-overlay{image-rendering:pixelated;}";
+document.head.appendChild(styleTag);
+
+const boundary = L.polyline(DATA.boundary.map(r => r.map(p => [p[1], p[0]])),
+  { color: "#0b0b0b", weight: 1.4, opacity: 0.85, fill: false, interactive: false }).addTo(map);
+function themeBoundary() {
+  const c = getComputedStyle(document.documentElement).getPropertyValue("--boundary").trim();
+  boundary.setStyle({ color: c || "#0b0b0b" });
+}
+
+function drawGrid() {
+  const g = grid(), img = cx.createImageData(NX, NY), d = img.data;
+  for (let i = 0; i < NC; i++) {
+    const v = g[i], o = i * 4;
+    if (v === NODATA || v <= 0 || (clip && !DATA.inBasin[i])) { d[o+3] = 0; continue; }
+    const c = RGB[classOf(v / S)];
+    d[o] = c[0]; d[o+1] = c[1]; d[o+2] = c[2]; d[o+3] = 255;
+  }
+  cx.putImageData(img, 0, 0);
+  overlay.setUrl(cv.toDataURL());
+}
+
+/* --------------------------------------------------------------- readout */
+const readout = document.getElementById("readout");
+const roVal = document.getElementById("ro-val");
+const roWhen = document.getElementById("ro-when");
+const roPos = document.getElementById("ro-pos");
+
+function cellAt(latlng) {
+  const row = Math.floor((B.north - latlng.lat) / DATA.cellDeg);
+  const col = Math.floor((latlng.lng - B.west) / DATA.cellDeg);
+  if (row < 0 || row >= NY || col < 0 || col >= NX) return null;
+  return { row, col, i: row * NX + col };
+}
+function whenAt(i, k) {
+  const L = DATA.layers[k || key()];
+  const wi = L.w[i];
+  return wi < 0 ? null : L.wl[wi];
+}
+function showCell(c) {
+  const v = grid()[c.i];
+  readout.hidden = false;
+  roVal.textContent = v === NODATA ? "no data" : fmtU(v / S);
+  const w = whenAt(c.i);
+  roWhen.textContent = (v === NODATA || !w) ? "" : "on " + w;
+  roPos.textContent = DATA.lats[c.row].toFixed(3) + "°, " + DATA.lons[c.col].toFixed(3) + "°"
+    + (DATA.inBasin[c.i] ? "" : " · outside basin");
+}
+
+map.on("mousemove", e => {
+  const c = cellAt(e.latlng);
+  if (!c) { if (pinned === null) readout.hidden = true; return; }
+  showCell(c);
+  if (pinned === null) drawProfile(c.i, false);
+});
+map.on("mouseout", () => {
+  if (pinned === null) { readout.hidden = true; drawProfile(null, false); }
+});
+map.on("click", e => {
+  const c = cellAt(e.latlng);
+  if (!c) return;
+  if (pinned === c.i) {
+    pinned = null;
+    if (pinMarker) { map.removeLayer(pinMarker); pinMarker = null; }
+  } else {
+    pinned = c.i;
+    if (pinMarker) map.removeLayer(pinMarker);
+    pinMarker = L.circleMarker([DATA.lats[c.row], DATA.lons[c.col]],
+      { radius: 6, color: "#e8590c", weight: 2, fillColor: "#ffd400", fillOpacity: 0.9 })
+      .addTo(map);
+  }
+  drawProfile(pinned, true);
+});
+
+/* ------------------------------------------------------- month profile */
+const profile = document.getElementById("profile");
+const profNote = document.getElementById("prof-note");
+
+function drawProfile(i, isPin) {
+  const g = profile.getContext("2d");
+  const W = profile.width, H = profile.height;
+  g.clearRect(0, 0, W, H);
+  const css = getComputedStyle(document.documentElement);
+  const cText = css.getPropertyValue("--text-secondary").trim() || "#52514e";
+  const cMuted = css.getPropertyValue("--text-muted").trim() || "#898781";
+  const cAxis = css.getPropertyValue("--axis").trim() || "#c3c2b7";
+  const cSel = css.getPropertyValue("--series-1").trim() || "#2a78d6";
+
+  if (i === null || i === undefined) {
+    g.fillStyle = cMuted; g.font = "13px system-ui";
+    g.fillText("Hover or click a cell for its month-by-month record.", 8, 26);
+    document.getElementById("prof-title").textContent = "Month profile";
+    profNote.textContent = "Hover the map to preview a cell; click to pin it.";
+    return;
+  }
+
+  const keys = DATA.periods.map(p => p.key);
+  const vals = keys.map(k => {
+    const v = DATA.layers[dur + "|" + k].g[i];
+    return v === NODATA ? NaN : toU(v / S);
+  });
+  const finite = vals.filter(Number.isFinite);
+  const maxV = finite.length ? Math.max(...finite, 0.0001) : 0.0001;
+
+  const padL = 36, padR = 10, padT = 16, padB = 40;
+  const bw = (W - padL - padR) / keys.length;
+
+  g.strokeStyle = cAxis; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(padL, H - padB + 0.5); g.lineTo(W - padR, H - padB + 0.5); g.stroke();
+
+  g.font = "11px system-ui"; g.textAlign = "right"; g.fillStyle = cMuted;
+  g.fillText(maxV.toFixed(unit === "in" ? 2 : 0), padL - 6, padT + 9);
+  g.fillText("0", padL - 6, H - padB + 3);
+
+  for (let k = 0; k < keys.length; k++) {
+    const v = vals[k];
+    const x = padL + k * bw + bw * 0.16;
+    const w = bw * 0.68;
+    const h = Number.isFinite(v) ? (v / maxV) * (H - padT - padB) : 0;
+    const isSel = keys[k] === period;
+
+    g.fillStyle = isSel ? cSel : RAMP[3];
+    g.globalAlpha = isSel ? 1 : 0.45;
+    g.fillRect(x, H - padB - h, w, h);
+    g.globalAlpha = 1;
+
+    g.textAlign = "center";
+    g.fillStyle = isSel ? cText : cMuted;
+    g.font = isSel ? "600 11px system-ui" : "11px system-ui";
+    g.fillText(DATA.periods[k].short, x + w / 2, H - padB + 15);
+    if (Number.isFinite(v)) {
+      g.font = "10px system-ui"; g.fillStyle = cMuted;
+      g.fillText(v.toFixed(unit === "in" ? 2 : 0), x + w / 2, H - padB - h - 5);
+    }
+  }
+
+  const row = Math.floor(i / NX), col = i % NX;
+  document.getElementById("prof-title").textContent =
+    "Month profile — " + (isPin ? "pinned cell" : "preview");
+  const w0 = whenAt(i);
+  profNote.textContent =
+    DATA.lats[row].toFixed(3) + "°, " + DATA.lons[col].toFixed(3) + "°"
+    + " · " + durLabel() + " records"
+    + (w0 ? " · " + periodLabel() + " peak on " + w0 : "")
+    + (isPin ? " · click again to unpin" : "");
+}
+
+/* ---------------------------------------------------------------- legend */
+function renderLegend() {
+  const b = breaksFor(), el = document.getElementById("legend");
+  const rows = []; let prev = 0;
+  for (let i = 0; i < b.length; i++) {
+    const hi = b[i];
+    const label = hi === Infinity ? "≥ " + fmt(prev) : fmt(prev) + " – " + fmt(hi);
+    rows.push('<div class="legend-row"><span class="sw" style="background:' + RAMP[i] + '"></span>'
+      + '<span class="rng">' + label + '</span></div>');
+    prev = hi;
+  }
+  rows.push('<div class="legend-row"><span class="sw"'
+    + ' style="background:transparent;box-shadow:inset 0 0 0 1px var(--axis)"></span>'
+    + '<span class="rng">no data</span></div>');
+  el.innerHTML = rows.join("");
+  document.getElementById("legend-title").textContent =
+    "Record " + durLabel() + " depth (" + unit + ")";
+  document.getElementById("legend-hint").textContent = scaleMode === "rel"
+    ? "Equal-count classes within this map. Good for structure, not for comparing periods."
+    : "One scale per duration, shared by every period, so the months are directly comparable.";
+}
+
+/* ----------------------------------------------------------------- stats */
+function renderStats() {
+  const g = grid();
+  let mx = -1, mxi = -1;
+  const vals = [];
+  for (let i = 0; i < NC; i++) {
+    if (!DATA.inBasin[i] || g[i] === NODATA) continue;
+    vals.push(g[i]);
+    if (g[i] > mx) { mx = g[i]; mxi = i; }
+  }
+  vals.sort((a, b) => a - b);
+  const med = vals.length ? vals[Math.floor(vals.length / 2)] : NaN;
+
+  document.getElementById("s-max").firstChild.nodeValue = vals.length ? fmt(mx / S) : "—";
+  document.getElementById("s-med").firstChild.nodeValue = vals.length ? fmt(med / S) : "—";
+  document.getElementById("s-max-u").textContent = unit;
+  document.getElementById("s-med-u").textContent = unit;
+  document.getElementById("s-ratio").firstChild.nodeValue =
+    (med > 0) ? (mx / med).toFixed(2) : "—";
+  document.getElementById("s-when").firstChild.nodeValue =
+    mxi >= 0 ? (whenAt(mxi) || "—").slice(0, 10) : "—";
+  document.getElementById("stats-title").textContent =
+    "Basin summary — " + periodLabel() + ", " + durLabel();
+}
+
+/* ---------------------------------------------------------------- render */
+function render() {
+  drawGrid(); renderLegend(); renderStats(); drawProfile(pinned, true);
+}
+
+/* -------------------------------------------------------------- controls */
+function seg(ids, onPick) {
+  ids.forEach(id => {
+    document.getElementById(id).addEventListener("click", () => {
+      ids.forEach(o => document.getElementById(o)
+        .setAttribute("aria-pressed", String(o === id)));
+      onPick(id);
+    });
+  });
+}
+seg(["d-1h", "d-24h"], id => { dur = id.slice(2); render(); });
+seg(["s-shared", "s-rel"], id => { scaleMode = id.slice(2); render(); });
+seg(["u-in", "u-mm"], id => { unit = id.slice(2); render(); if (view === "charts") renderCharts(); });
+seg(["b-terrain", "b-light", "b-none"], id => {
+  if (base) { map.removeLayer(base); base = null; }
+  const k = id.slice(2);
+  if (BASEMAPS[k]) { base = BASEMAPS[k].addTo(map); base.bringToBack(); }
+});
+
+/* Period buttons are generated from the payload so the control set cannot
+   drift out of step with the layers that actually exist. */
+const pseg = document.getElementById("period-seg");
+DATA.periods.forEach(p => {
+  const b = document.createElement("button");
+  b.id = "p-" + p.key;
+  b.textContent = p.short;
+  b.title = p.label;
+  b.setAttribute("aria-pressed", String(p.key === period));
+  pseg.appendChild(b);
+});
+seg(DATA.periods.map(p => "p-" + p.key), id => { period = id.slice(2); render(); });
+
+document.getElementById("btn-clip").addEventListener("click", e => {
+  clip = !clip;
+  e.currentTarget.setAttribute("aria-pressed", String(clip));
+  drawGrid();
+});
+document.getElementById("btn-theme").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : cur === "light" ? "dark"
+    : (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", next);
+  themeBoundary();
+  drawProfile(pinned, true);
+  if (view === "charts") renderCharts();
+});
+
+/* -------------------------------------------------------------- download */
+function save(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  document.getElementById("dl-hint").textContent = "Saved " + name;
+}
+const uSuffix = () => unit === "in" ? "in" : "mm";
+
+document.getElementById("dl-grid").addEventListener("click", () => {
+  const g = grid(), out = [];
+  out.push(["lat", "lon", "max_" + dur + "_" + uSuffix(), "occurred_local", "in_basin"].join(","));
+  for (let r = 0; r < NY; r++) for (let c = 0; c < NX; c++) {
+    const i = r * NX + c, v = g[i];
+    out.push([DATA.lats[r].toFixed(4), DATA.lons[c].toFixed(4),
+      v === NODATA ? "" : toU(v / S).toFixed(4),
+      whenAt(i) || "", DATA.inBasin[i] ? 1 : 0].join(","));
+  }
+  save("mrms_max_" + dur + "_" + period + "_" + uSuffix() + ".csv", out.join("\n"), "text/csv");
+});
+
+document.getElementById("dl-points").addEventListener("click", () => {
+  const g = grid(), feats = [];
+  for (let r = 0; r < NY; r++) for (let c = 0; c < NX; c++) {
+    const i = r * NX + c, v = g[i];
+    if (v === NODATA) continue;
+    feats.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [+DATA.lons[c].toFixed(4), +DATA.lats[r].toFixed(4)] },
+      properties: {
+        value: +toU(v / S).toFixed(4), units: unit, duration: dur,
+        period: periodLabel(), occurred_local: whenAt(i), in_basin: !!DATA.inBasin[i]
+      }
+    });
+  }
+  save("mrms_max_" + dur + "_" + period + ".geojson",
+    JSON.stringify({ type: "FeatureCollection", features: feats }), "application/geo+json");
+});
+
+document.getElementById("dl-long").addEventListener("click", () => {
+  const out = ["lat,lon,duration,period,value_" + uSuffix() + ",occurred_local,in_basin"];
+  ["1h", "24h"].forEach(d => DATA.periods.forEach(p => {
+    const L = DATA.layers[d + "|" + p.key];
+    for (let r = 0; r < NY; r++) for (let c = 0; c < NX; c++) {
+      const i = r * NX + c, v = L.g[i];
+      if (v === NODATA) continue;
+      out.push([DATA.lats[r].toFixed(4), DATA.lons[c].toFixed(4), d, p.label,
+        toU(v / S).toFixed(4), (L.w[i] < 0 ? "" : L.wl[L.w[i]]),
+        DATA.inBasin[i] ? 1 : 0].join(","));
+    }
+  }));
+  save("mrms_maxima_long.csv", out.join("\n"), "text/csv");
+});
+
+document.getElementById("dl-json").addEventListener("click", () => {
+  save("mrms_maxima.json", JSON.stringify(DATA), "application/json");
+});
+
+
+/* =======================================================================
+   Charts tab
+   ======================================================================= */
+const MONTH_NAMES = { 6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct" };
+
+const tip = (() => {
+  const el = document.createElement("div");
+  el.className = "chart-tip";
+  el.hidden = true;
+  document.body.appendChild(el);
+  return el;
+})();
+
+function css(name, fallback) {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name).trim() || fallback;
+}
+
+/* Canvases are laid out by CSS but drawn in device pixels: size the backing
+   store to the element and scale the context, or every label is blurry on a
+   HiDPI screen. */
+function fitCanvas(cv, cssHeight) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || 460;
+  const h = cssHeight;
+  cv.width = Math.round(w * dpr);
+  cv.height = Math.round(h * dpr);
+  cv.style.height = h + "px";
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  return { g: g, w: w, h: h };
+}
+
+/* A fairly fine ladder of round axis tops. The coarse 1/2/5/10 version
+   rounded a 6.76 in maximum up to 10 and threw away a third of the height —
+   which matters more than usual here, because the side-by-side panels share
+   one axis and the 1-hour bars are short to begin with. */
+function niceMax(v) {
+  if (!(v > 0)) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / mag;
+  const steps = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+  for (let i = 0; i < steps.length; i++) {
+    if (n <= steps[i] + 1e-9) return steps[i] * mag;
+  }
+  return 10 * mag;
+}
+
+/* -------------------------------------------------------- grouped bars */
+function barChart(cvId, labels, series, opts) {
+  const cv = document.getElementById(cvId);
+  if (!cv) return;
+  const fit = fitCanvas(cv, (opts && opts.height) || 260);
+  const g = fit.g, w = fit.w, h = fit.h;
+  const cText = css("--text-secondary", "#52514e");
+  const cMuted = css("--text-muted", "#898781");
+  const cGrid = css("--grid", "#e1e0d9");
+  const cAxis = css("--axis", "#c3c2b7");
+
+  const padL = 46, padR = 12, padT = 16, padB = 34;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const all = [];
+  series.forEach(s => s.values.forEach(v => { if (isFinite(v)) all.push(v); }));
+  /* Side-by-side charts are handed a common axisMax so the 1-hour and
+     24-hour panels share one y axis. The 1-hour bars end up short, which is
+     the honest result: the two durations differ by roughly a factor of
+     three, and scaling each panel to its own maximum would hide that. Value
+     labels sit above every bar so no precision is lost to the short bars. */
+  const top = (opts && opts.axisMax)
+    ? opts.axisMax
+    : niceMax(Math.max.apply(null, all.concat([0.0001])));
+
+  g.strokeStyle = cGrid; g.lineWidth = 1;
+  g.font = "10px system-ui"; g.textAlign = "right"; g.fillStyle = cMuted;
+  for (let k = 0; k <= 4; k++) {
+    const v = top * k / 4, y = padT + plotH - (v / top) * plotH;
+    g.beginPath(); g.moveTo(padL, y + 0.5); g.lineTo(w - padR, y + 0.5); g.stroke();
+    g.fillText(v.toFixed(unit === "in" ? 2 : 0), padL - 6, y + 3);
+  }
+  g.strokeStyle = cAxis;
+  g.beginPath();
+  g.moveTo(padL, padT + plotH + 0.5); g.lineTo(w - padR, padT + plotH + 0.5);
+  g.stroke();
+
+  const slot = plotW / labels.length;
+  const bw = slot * 0.72 / series.length;
+  labels.forEach((lab, i) => {
+    series.forEach((sr, j) => {
+      const v = sr.values[i];
+      if (!isFinite(v)) return;
+      const x = padL + i * slot + slot * 0.14 + j * bw;
+      const bh = (v / top) * plotH;
+      g.fillStyle = sr.color;
+      g.fillRect(x, padT + plotH - bh, Math.max(bw - 2, 1), bh);
+      g.fillStyle = cMuted; g.font = "10px system-ui"; g.textAlign = "center";
+      g.fillText(v.toFixed(unit === "in" ? 2 : 0),
+                 x + Math.max(bw - 2, 1) / 2, padT + plotH - bh - 4);
+    });
+    g.fillStyle = cText; g.font = "11px system-ui"; g.textAlign = "center";
+    g.fillText(lab, padL + i * slot + slot / 2, padT + plotH + 15);
+  });
+
+  let lx = padL;
+  g.textAlign = "left";
+  series.forEach(sr => {
+    g.fillStyle = sr.color; g.fillRect(lx, 4, 10, 8);
+    g.fillStyle = cMuted; g.font = "10px system-ui";
+    g.fillText(sr.name, lx + 14, 12);
+    lx += 16 + g.measureText(sr.name).width + 14;
+  });
+}
+
+/* ------------------------------------------------------------- heatmap */
+function heatChart(cvId, dur) {
+  const cv = document.getElementById(cvId);
+  if (!cv || !DATA.series) return;
+  const SR = DATA.series;
+  const fit = fitCanvas(cv, 300);
+  const g = fit.g, w = fit.w, h = fit.h;
+  const cText = css("--text-secondary", "#52514e");
+  const cMuted = css("--text-muted", "#898781");
+
+  const rows = SR.years, cols = SR.months;
+  const padL = 46, padR = 12, padT = 12, padB = 26;
+  const cw = (w - padL - padR) / cols.length;
+  const ch = (h - padT - padB) / rows.length;
+
+  const flat = [];
+  SR.max[dur].forEach(r => r.forEach(v => { if (v !== NODATA) flat.push(v); }));
+  const top = toU(Math.max.apply(null, flat.concat([1])) / S);
+
+  const cells = [];
+  rows.forEach((yr, i) => cols.forEach((mo, j) => {
+    const raw = SR.max[dur][i][j];
+    const x = padL + j * cw, y = padT + i * ch;
+    if (raw === NODATA) {
+      g.fillStyle = css("--hover", "#eeeeee");
+      g.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+    } else {
+      const v = toU(raw / S);
+      /* Compress with a power curve: one exceptional October would
+         otherwise push every other month into the palest class. */
+      const t = Math.pow(v / top, 0.6);
+      const k = Math.min(RAMP.length - 1,
+                         Math.max(0, Math.round(t * (RAMP.length - 1))));
+      g.fillStyle = RAMP[k];
+      g.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+      g.fillStyle = k >= 4 ? "#ffffff" : cText;
+      g.font = "10px system-ui"; g.textAlign = "center";
+      g.fillText(v.toFixed(unit === "in" ? 2 : 0), x + cw / 2, y + ch / 2 + 3);
+    }
+    cells.push({ x: x, y: y, w: cw, h: ch, yr: yr, mo: mo, raw: raw, i: i, j: j });
+  }));
+
+  g.fillStyle = cMuted; g.font = "10px system-ui";
+  g.textAlign = "right";
+  rows.forEach((yr, i) => g.fillText(String(yr), padL - 6,
+                                     padT + i * ch + ch / 2 + 3));
+  g.textAlign = "center";
+  cols.forEach((mo, j) => g.fillText(MONTH_NAMES[mo],
+                                     padL + j * cw + cw / 2, h - padB + 15));
+
+  cv.onmousemove = function (e) {
+    const r = cv.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    let hit = null;
+    for (let n = 0; n < cells.length; n++) {
+      const c = cells[n];
+      if (mx >= c.x && mx < c.x + c.w && my >= c.y && my < c.y + c.h) {
+        hit = c; break;
+      }
+    }
+    if (!hit || hit.raw === NODATA) { tip.hidden = true; return; }
+    const when = SR.when[dur][hit.i][hit.j];
+    tip.hidden = false;
+    tip.innerHTML = "<b>" + fmtU(hit.raw / S) + "</b> &middot; "
+      + MONTH_NAMES[hit.mo] + " " + hit.yr + (when ? "<br>" + when : "");
+    tip.style.left = (e.clientX + 14) + "px";
+    tip.style.top = (e.clientY + 14) + "px";
+  };
+  cv.onmouseleave = function () { tip.hidden = true; };
+}
+
+/* ---------------------------------------------------------- charts tab */
+function renderCharts() {
+  const SR = DATA.series;
+  if (!SR) return;
+  const months = SR.months.map(m => MONTH_NAMES[m]);
+
+  /* Gather both durations before drawing anything: each side-by-side pair
+     shares one y axis, so the pair's maximum has to be known up front. */
+  const byMonth = {}, byYear = {};
+  ["1h", "24h"].forEach(d => {
+    const rec = [], med = [];
+    SR.months.forEach((m, j) => {
+      const col = [];
+      SR.years.forEach((y, i) => {
+        const v = SR.max[d][i][j];
+        if (v !== NODATA) col.push(v);
+      });
+      if (col.length) {
+        rec.push(toU(Math.max.apply(null, col) / S));
+        const sorted = col.slice().sort((a, b) => a - b);
+        med.push(toU(sorted[Math.floor(sorted.length / 2)] / S));
+      } else { rec.push(NaN); med.push(NaN); }
+    });
+    byMonth[d] = { rec: rec, med: med };
+
+    byYear[d] = SR.years.map((y, i) => {
+      const row = SR.max[d][i].filter(v => v !== NODATA);
+      return row.length ? toU(Math.max.apply(null, row) / S) : NaN;
+    });
+  });
+
+  const finite = a => a.filter(v => isFinite(v));
+  const monthTop = niceMax(Math.max.apply(null, finite(
+    byMonth["1h"].rec.concat(byMonth["1h"].med,
+                             byMonth["24h"].rec, byMonth["24h"].med))
+    .concat([0.0001])));
+  const yearTop = niceMax(Math.max.apply(null,
+    finite(byYear["1h"].concat(byYear["24h"])).concat([0.0001])));
+
+  ["1h", "24h"].forEach(d => {
+    barChart("c-month-" + d, months, [
+      { name: "Record " + DATA.seasons, values: byMonth[d].rec, color: "#184f95" },
+      { name: "Median year", values: byMonth[d].med, color: "#9ec5f4" }
+    ], { axisMax: monthTop });
+
+    heatChart("c-heat-" + d, d);
+
+    barChart("c-year-" + d, SR.years.map(String),
+      [{ name: "Season maximum", values: byYear[d], color: "#2a78d6" }],
+      { height: 240, axisMax: yearTop });
+  });
+
+  const foot = document.getElementById("charts-foot");
+  if (foot) {
+    foot.textContent = "Basin-wide: the wettest in-basin cell for each "
+      + "period, so these are records, not averages. " + DATA.note;
+  }
+}
+
+/* ---------------------------------------------------------------- tabs */
+let view = "map";
+function setView(v) {
+  view = v;
+  document.getElementById("view-map").hidden = (v !== "map");
+  document.getElementById("view-charts").hidden = (v !== "charts");
+  // Units and Theme are not marked map-only: both tabs honour them.
+  document.querySelectorAll(".map-only").forEach(el => {
+    el.style.display = (v === "map") ? "" : "none";
+  });
+  document.getElementById("foot").hidden = (v !== "map");
+  if (v === "map") { map.invalidateSize(); } else { renderCharts(); }
+}
+seg(["tab-map", "tab-charts"], id => setView(id.slice(4)));
+
+window.addEventListener("resize", () => {
+  if (view === "charts") renderCharts();
+});
+
+/* ------------------------------------------------------------------ init */
+document.getElementById("hdr-sub").textContent =
+  DATA.seasons + " · " + DATA.nSeasons + " Jun–Oct seasons · "
+  + NY + "×" + NX + " cells at " + DATA.cellDeg + "°";
+document.getElementById("hdr-src").textContent = DATA.source;
+document.getElementById("foot").textContent = DATA.note;
+themeBoundary();
+render();
+</script>
+</body>
+</html>
