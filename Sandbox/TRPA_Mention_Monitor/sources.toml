@@ -1,0 +1,185 @@
+# TRPA Mention Monitor - source configuration
+#
+# Each [[source]] block is one place to check. `type` selects the adapter:
+#   google_news  - Google News RSS search (one query per `queries` entry)
+#   bing_news    - Bing News RSS search
+#   rss          - any RSS/Atom feed; items are text-searched for TRPA mentions
+#   legistar     - Legistar Web API (client = the slug in webapi.legistar.com/v1/<client>)
+#   granicus     - Granicus ViewPublisher meeting list (host + view_id)
+#   municode     - Municode Meetings (client_code)
+#   civicplus    - CivicPlus AgendaCenter (base_url of the site)
+#
+# Set `enabled = false` to skip a source without deleting it.
+# Set `packets = true` on a meeting source to always scan its full agenda packets
+# (otherwise only done with --packets). Useful for small agencies with few meetings.
+
+[settings]
+# Patterns matched (case-insensitive) against document text.
+patterns = ['\bTahoe\s+Regional\s+Planning\s+Agency\b', '\bTRPA\b']
+
+# Meetings whose body/meeting name matches any of these are skipped
+# (TRPA's own Governing Board and Advisory Planning Commission).
+exclude_meeting_patterns = [
+  '(TRPA|Tahoe Regional Planning Agency).*(Governing Board|Advisory Planning Commission|\bAPC\b)',
+  '^\s*(TRPA\s+)?Governing Board\b',
+  '^\s*(TRPA\s+)?Advisory Planning Commission\b',
+]
+
+# Recurring boilerplate that names TRPA but isn't substantive. A hit is ignored when
+# one of these phrases, including the TRPA mention itself, surrounds it. Add phrases
+# here if a source keeps producing the same non-substantive mention.
+ignore_context_patterns = [
+  # Washoe County BCC agendas list every commissioner's liaison board assignments.
+  'Tahoe Prosperity Center Board of Directors\s+Tahoe Regional Planning Agency Governing Board\s+Tahoe Transportation District',
+  # Map credits, e.g. "Sources: TRPA, Tahoe Conservancy".
+  'Sources?:\s*(?:[\w ]{1,40},\s*){0,5}TRPA',
+  # TTD meets in TRPA's building: "Agenda Tahoe Regional Planning Agency October 7, 2026 128 Market Street",
+  # "open to the public at Tahoe Regional Planning Agency, Stateline, NV".
+  'Tahoe Regional Planning Agency\s+(\w+\s+\d{1,2},\s+\d{4}\s+)?128 Market Street',
+  'public at (the )?Tahoe Regional Planning Agency,?\s+(128 Market Street,?\s+)?Stateline',
+  # Minutes: "called to order ... at the Tahoe Regional Planning Agency and via Zoom".
+  # Stays within one sentence ("p.m." and "Ms. Bagwell" are fine; ". The" is not) and never
+  # spans another mention.
+  'called to order(?:(?!(?<!\bM[rs])(?<!\bMrs)(?<!\bDr)\.\s+(?-i:[A-Z])|TRPA|Tahoe Regional).){0,80}? at (the )?Tahoe Regional Planning Agency',
+]
+
+# Press items from these domains are skipped (TRPA's own site is not "press").
+exclude_domains = ["trpa.gov"]
+
+# ---------------------------------------------------------------- press ----
+
+[[source]]
+name = "Google News"
+type = "google_news"
+queries = ['"Tahoe Regional Planning Agency"', 'TRPA Tahoe']
+
+[[source]]
+name = "Bing News"
+type = "bing_news"
+queries = ['"Tahoe Regional Planning Agency"', 'TRPA Tahoe']
+
+[[source]]
+name = "Tahoe Daily Tribune"
+type = "rss"
+url = "https://www.tahoedailytribune.com/feed/"
+
+[[source]]
+name = "Sierra Sun"
+type = "rss"
+url = "https://www.sierrasun.com/feed/"
+
+[[source]]
+name = "Moonshine Ink"
+type = "rss"
+url = "https://www.moonshineink.com/feed/"
+
+[[source]]
+name = "South Tahoe Now"
+type = "rss"
+url = "https://www.southtahoenow.com/feed"
+
+[[source]]
+name = "Tahoe Weekly"
+type = "rss"
+url = "https://thetahoeweekly.com/feed/"
+
+[[source]]
+name = "Sierra Nevada Ally"
+type = "rss"
+url = "https://sierranevadaally.org/feed/"
+
+[[source]]
+name = "California Tahoe Conservancy (news)"
+type = "rss"
+url = "https://tahoe.ca.gov/feed/"
+
+# ------------------------------------------------------- public meetings ----
+
+[[source]]
+name = "El Dorado County"
+type = "legistar"
+client = "eldorado"
+
+[[source]]
+name = "Washoe County"
+type = "legistar"
+client = "washoe-nv"
+
+[[source]]
+name = "Placer County"
+type = "civicplus"
+base_url = "https://www.placer.ca.gov"
+
+[[source]]
+name = "Douglas County"
+type = "granicus"
+host = "douglascountynv.granicus.com"
+view_id = 1
+
+[[source]]
+name = "City of South Lake Tahoe"
+type = "granicus"
+host = "slt.granicus.com"
+view_id = 6
+
+[[source]]
+name = "Town of Truckee"
+type = "municode"
+client_code = "TRUCKEECA"
+
+[[source]]
+name = "Tahoe City Public Utility District"
+type = "granicus"
+host = "tahoecitypud.granicus.com"
+view_id = 2
+packets = true
+
+[[source]]
+name = "Incline Village General Improvement District"
+type = "civicclerk"
+tenant = "ivgid"
+packets = true
+
+# Agency-specific scrapers (see trpa_monitor/sources/custom.py)
+
+[[source]]
+name = "North Tahoe Public Utility District"
+type = "ntpud"
+url = "https://ntpud.org/about/board-meetings/"
+packets = true
+
+[[source]]
+name = "Tahoe Transportation District"
+type = "ttd"
+site = "https://tahoetransportation.org"
+
+[[source]]
+name = "Lahontan Regional Water Quality Control Board"
+type = "lahontan"
+
+[[source]]
+name = "California Tahoe Conservancy (board)"
+type = "tahoe_conservancy"
+
+[[source]]
+name = "South Tahoe Public Utility District"
+type = "streamline"
+site = "https://www.stpud.us"
+pages = ["/board-meetings", "/standing-committee-meetings"]
+
+[[source]]
+name = "Tahoe Resource Conservation District"
+type = "streamline"
+site = "https://www.tahoercd.org"
+pages = ["/board-meetings"]
+
+[[source]]
+name = "Tahoe Douglas Fire Protection District"
+type = "pdf_links"
+pages = ["https://tahoefire.org/about/fire-board/"]
+meeting_name = "Board of Trustees"
+
+[[source]]
+name = "North Tahoe Fire Protection District"
+type = "ntfire"
+url = "https://www.ntfire.net/board-minutes"

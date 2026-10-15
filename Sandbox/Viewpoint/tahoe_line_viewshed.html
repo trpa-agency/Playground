@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Tahoe Line Viewshed</title>
+
+    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
+    <script type="module" src="https://js.arcgis.com/5.1/"></script>
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      arcgis-scene {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      .esri-view-surface:after {
+        outline: 0 !important;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .row > * {
+        flex: 1;
+      }
+
+      .hint {
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--calcite-color-text-3);
+        margin: 6px 0 0;
+      }
+
+      .stats {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .stats td {
+        padding: 3px 0;
+      }
+
+      .stats td:last-child {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #status {
+        font-size: 12px;
+        min-height: 1.4em;
+        margin: 6px 0 0;
+      }
+
+      .legend-swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        margin-right: 6px;
+        vertical-align: -1px;
+        background: rgba(255, 149, 0, 0.55);
+        border: 1px solid rgb(255, 149, 0);
+      }
+    </style>
+  </head>
+
+  <body>
+    <calcite-shell>
+      <calcite-shell-panel slot="panel-start" position="start">
+        <calcite-panel heading="Tahoe Line Viewshed" description="Combined visible area from every foot along a line or across a polygon">
+          <calcite-block heading="1. Location" expanded>
+            <calcite-label>
+              Jump to
+              <calcite-select id="bookmarkSelect">
+                <calcite-option value="basin">Lake Tahoe Basin (overview)</calcite-option>
+                <calcite-option value="southShore">South Lake Tahoe / Stateline</calcite-option>
+                <calcite-option value="emeraldBay">Emerald Bay</calcite-option>
+                <calcite-option value="tahoeCity">Tahoe City</calcite-option>
+                <calcite-option value="kingsBeach">Kings Beach</calcite-option>
+                <calcite-option value="incline">Incline Village</calcite-option>
+                <calcite-option value="caveRock">Cave Rock (US 50)</calcite-option>
+              </calcite-select>
+            </calcite-label>
+          </calcite-block>
+
+          <calcite-block heading="2. Draw a line or polygon" expanded>
+            <calcite-segmented-control id="shapeControl" width="full" style="margin-bottom: 8px">
+              <calcite-segmented-control-item value="polyline" icon-start="line" checked>Line</calcite-segmented-control-item>
+              <calcite-segmented-control-item value="polygon" icon-start="polygon">Polygon</calcite-segmented-control-item>
+            </calcite-segmented-control>
+            <calcite-label id="polyModeLabel" hidden>
+              Observers in the polygon
+              <calcite-segmented-control id="polyModeControl" width="full">
+                <calcite-segmented-control-item value="area" checked>Whole area</calcite-segmented-control-item>
+                <calcite-segmented-control-item value="perimeter">Perimeter only</calcite-segmented-control-item>
+              </calcite-segmented-control>
+            </calcite-label>
+            <div class="row">
+              <calcite-button id="drawBtn" icon-start="line" width="full">Draw line</calcite-button>
+              <calcite-button id="clearBtn" appearance="outline" icon-start="trash" width="full">Clear</calcite-button>
+            </div>
+            <p class="hint" id="lineInfo">Click on the map to add vertices and double-click to finish. Click the shape to reshape it.</p>
+            <calcite-notice id="regionNotice" kind="warning" scale="s" width="full" hidden>
+              <div slot="message">This shape is outside the Lake Tahoe region. The analysis will still run.</div>
+            </calcite-notice>
+          </calcite-block>
+
+          <calcite-block heading="3. Parameters" expanded>
+            <calcite-label>
+              Point spacing along line or perimeter (ft)
+              <calcite-input-number id="spacingFt" value="1" min="0.1" step="0.5"></calcite-input-number>
+            </calcite-label>
+            <div class="row">
+              <calcite-label>
+                Observer height (ft)
+                <calcite-input-number id="obsHeightFt" value="5.5" min="0" step="0.5"></calcite-input-number>
+              </calcite-label>
+              <calcite-label>
+                Target height (ft)
+                <calcite-input-number id="tgtHeightFt" value="0" min="0" step="1"></calcite-input-number>
+              </calcite-label>
+            </div>
+            <div class="row">
+              <calcite-label>
+                Max view distance (mi)
+                <calcite-input-number id="maxDistMi" value="6" min="0.1" max="30" step="0.5"></calcite-input-number>
+              </calcite-label>
+              <calcite-label>
+                Finest cell size (m)
+                <calcite-input-number id="resM" value="10" min="1" step="1"></calcite-input-number>
+              </calcite-label>
+            </div>
+            <calcite-label>
+              View direction
+              <calcite-segmented-control id="dirControl" width="full">
+                <calcite-segmented-control-item value="all" checked>All around (360°)</calcite-segmented-control-item>
+                <calcite-segmented-control-item value="forward">Direction of travel</calcite-segmented-control-item>
+              </calcite-segmented-control>
+            </calcite-label>
+            <calcite-label id="fovLabel" hidden>
+              Field of view (°)
+              <calcite-input-number id="fovDeg" value="120" min="1" max="360" step="5"></calcite-input-number>
+            </calcite-label>
+            <p class="hint" id="dirHint" hidden>
+              Observers inside a polygon have no direction of travel, so whole-area polygons always use 360°. For a perimeter,
+              direction of travel follows the order the vertices were drawn in.
+            </p>
+            <calcite-label layout="inline">
+              <calcite-checkbox id="canopyChk" checked></calcite-checkbox>
+              Trees block the view (Global Canopy Height 2020)
+            </calcite-label>
+            <calcite-label id="clearingLabel">
+              Clearing around each observer (ft)
+              <calcite-input-number id="clearingFt" value="100" min="0" step="10"></calcite-input-number>
+            </calcite-label>
+            <calcite-label layout="inline">
+              <calcite-checkbox id="curvatureChk" checked></calcite-checkbox>
+              Account for earth curvature and refraction
+            </calcite-label>
+            <p class="hint">
+              Use about 3.5 ft for a driver's eye and 5.5 ft for a pedestrian. Target height adds height above the ground at each
+              cell, so 30 ft asks whether a 30 ft structure there would be visible. Trees are ignored within the clearing
+              distance of each observer, which stands for the road, trail or opening the observer is in.
+            </p>
+          </calcite-block>
+
+          <calcite-block heading="4. Run" expanded>
+            <div class="row">
+              <calcite-button id="runBtn" icon-start="view-visible" width="full" disabled>Compute viewshed</calcite-button>
+              <calcite-button id="cancelBtn" appearance="outline" kind="danger" width="full" disabled>Cancel</calcite-button>
+            </div>
+            <calcite-progress id="progress" type="determinate" value="0" hidden></calcite-progress>
+            <p id="status"></p>
+          </calcite-block>
+
+          <calcite-block heading="Results" id="resultsBlock" expanded hidden>
+            <p style="margin: 0 0 8px; font-size: 13px">
+              <span class="legend-swatch"></span><span id="legendText">Visible from at least one point on the line</span>
+            </p>
+            <table class="stats">
+              <tbody id="statsBody"></tbody>
+            </table>
+            <calcite-label layout="inline" style="margin-top: 8px">
+              <calcite-checkbox id="showObserversChk"></calcite-checkbox>
+              Show observer locations
+            </calcite-label>
+            <calcite-button id="exportBtn" icon-start="download" appearance="outline" width="full">
+              Download GeoJSON
+            </calcite-button>
+          </calcite-block>
+
+          <calcite-block heading="About the method" collapsible>
+            <p class="hint">
+              The line, or the polygon's perimeter, is sampled at the spacing you set, measured as true ground distance. Each
+              sample becomes an observer. In whole-area polygon mode, every terrain cell whose center is inside the polygon
+              also becomes an observer. At the grid's resolution, that matches sampling the inside every foot.
+              For each observer, rays are cast across a terrain grid from the scene's ground elevation service. A cell is
+              visible if its line of sight clears every terrain cell in between. The visible cells from all observers are
+              merged with a logical OR on the grid, which is the same as a union of every per-point viewshed polygon. The merged
+              grid is then traced into polygons.
+            </p>
+            <p class="hint">
+              Samples that fall in the same terrain cell (and, for direction of travel, face within 5° of each other) would give
+              identical results at the grid's resolution, so each cell is computed only once.
+            </p>
+            <p class="hint">
+              The terrain is bare earth. With "Trees block the view" on, tree height from the 10 m
+              <a href="https://www.arcgis.com/home/item.html?id=2a3dfb00c2c6425f85bd70da420d58eb" target="_blank">Global Canopy
+              Height 2020</a> layer (Lang et al. 2022, CC BY 4.0) is added on top of the terrain. Trees then block sight lines,
+              and the tops of trees count as visible surface. Tree heights in that layer are typically off by several meters, and
+              buildings are not included. With it off, the result is the largest area that could possibly be seen.
+            </p>
+          </calcite-block>
+        </calcite-panel>
+      </calcite-shell-panel>
+
+      <arcgis-scene id="mainScene" basemap="satellite" ground="world-elevation" center="-120.03, 39.03" zoom="10">
+        <arcgis-zoom slot="top-left"></arcgis-zoom>
+        <arcgis-navigation-toggle slot="top-left"></arcgis-navigation-toggle>
+        <arcgis-compass slot="top-left"></arcgis-compass>
+      </arcgis-scene>
+    </calcite-shell>
+
+    <script type="module">
+      const [Graphic, GraphicsLayer, ImageryTileLayer, SketchViewModel, Polygon, Multipoint, Extent] = await $arcgis.import([
+        "@arcgis/core/Graphic.js",
+        "@arcgis/core/layers/GraphicsLayer.js",
+        "@arcgis/core/layers/ImageryTileLayer.js",
+        "@arcgis/core/widgets/Sketch/SketchViewModel.js",
+        "@arcgis/core/geometry/Polygon.js",
+        "@arcgis/core/geometry/Multipoint.js",
+        "@arcgis/core/geometry/Extent.js",
+      ]);
+
+      /**********************************************
+       * Constants
+       *********************************************/
+      const FT = 0.3048; // meters per foot
+      const MI = 1609.344; // meters per mile
+      const SQM_PER_ACRE = 4046.8564224;
+      const SQM_PER_SQMI = 2589988.110336;
+      const MAX_CELLS = 2_500_000; // cap on terrain grid size; cell size grows for big areas
+      const HEADING_BUCKET_DEG = 5; // direction-of-travel observers are de-duplicated per 5° of heading
+      const R_MERC = 6378137;
+
+      // Global Canopy Height 2020 (Lang et al. 2022), 10 m, values in meters. Living Atlas item 2a3dfb00c2c6425f85bd70da420d58eb
+      const CANOPY_URL =
+        "https://tiledimageservices.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/10m_Tree_Canopy_Height/ImageServer";
+
+      // Rough Lake Tahoe region, used only to warn when a line is drawn somewhere else
+      const TAHOE_BOUNDS = { xmin: -120.35, xmax: -119.75, ymin: 38.7, ymax: 39.45 };
+
+      const BOOKMARKS = {
+        basin: { center: [-120.03, 39.03], zoom: 10, tilt: 45 },
+        southShore: { center: [-119.96, 38.94], zoom: 13, tilt: 55 },
+        emeraldBay: { center: [-120.11, 38.94], zoom: 13, tilt: 60 },
+        tahoeCity: { center: [-120.14, 39.16], zoom: 13, tilt: 55 },
+        kingsBeach: { center: [-120.03, 39.23], zoom: 13, tilt: 55 },
+        incline: { center: [-119.95, 39.24], zoom: 13, tilt: 55 },
+        caveRock: { center: [-119.95, 39.03], zoom: 14, tilt: 60 },
+      };
+
+      /**********************************************
+       * Environment | HTML elements
+       *********************************************/
+      const $ = (id) => document.getElementById(id);
+      const drawBtn = $("drawBtn");
+      const clearBtn = $("clearBtn");
+      const runBtn = $("runBtn");
+      const cancelBtn = $("cancelBtn");
+      const progressEl = $("progress");
+      const statusEl = $("status");
+      const lineInfo = $("lineInfo");
+      const regionNotice = $("regionNotice");
+      const resultsBlock = $("resultsBlock");
+      const statsBody = $("statsBody");
+      const dirControl = $("dirControl");
+      const fovLabel = $("fovLabel");
+      const dirHint = $("dirHint");
+      const shapeControl = $("shapeControl");
+      const polyModeControl = $("polyModeControl");
+      const polyModeLabel = $("polyModeLabel");
+
+      /**********************************************
+       * Environment | Scene
+       *********************************************/
+      const mainScene = $("mainScene");
+      await mainScene.viewOnReady();
+      const view = mainScene.view;
+
+      goToBookmark("basin", false);
+
+      /**********************************************
+       * Environment | Layers and Symbology
+       *********************************************/
+      const viewshedLayer = new GraphicsLayer({ title: "Combined viewshed", elevationInfo: { mode: "on-the-ground" } });
+      const observerLayer = new GraphicsLayer({
+        title: "Observers",
+        elevationInfo: { mode: "on-the-ground" },
+        visible: false,
+      });
+      const sketchLayer = new GraphicsLayer({ title: "Line", elevationInfo: { mode: "on-the-ground" } });
+      mainScene.map.addMany([viewshedLayer, observerLayer, sketchLayer]);
+
+      const viewshedSymbol = {
+        type: "polygon-3d",
+        symbolLayers: [
+          {
+            type: "fill",
+            material: { color: [255, 149, 0, 0.45] },
+            outline: { color: [255, 149, 0, 0.95], size: 1 },
+          },
+        ],
+      };
+
+      const lineSymbol = {
+        type: "line-3d",
+        symbolLayers: [{ type: "line", size: 3, material: { color: [0, 229, 255] } }],
+      };
+
+      const polygonSymbol = {
+        type: "polygon-3d",
+        symbolLayers: [
+          {
+            type: "fill",
+            material: { color: [0, 229, 255, 0.15] },
+            outline: { color: [0, 229, 255], size: 3 },
+          },
+        ],
+      };
+
+      const observerSymbol = {
+        type: "point-3d",
+        symbolLayers: [
+          {
+            type: "icon",
+            size: 5,
+            resource: { primitive: "circle" },
+            material: { color: [255, 255, 255] },
+            outline: { color: [0, 0, 0], size: 0.5 },
+          },
+        ],
+      };
+
+      /**********************************************
+       * Sketching the line or polygon
+       *********************************************/
+      const sketchVM = new SketchViewModel({
+        view,
+        layer: sketchLayer,
+        polylineSymbol: lineSymbol,
+        polygonSymbol,
+        defaultCreateOptions: { hasZ: false },
+        defaultUpdateOptions: { tool: "reshape", enableZ: false },
+      });
+
+      let currentGeom = null; // Polyline or Polygon
+      let lastResult = null;
+      let abortController = null;
+
+      sketchVM.on("create", (event) => {
+        if (event.state === "complete") {
+          setGeometry(event.graphic.geometry);
+        }
+      });
+
+      sketchVM.on("update", (event) => {
+        if (event.state === "complete" && event.graphics.length) {
+          setGeometry(event.graphics[0].geometry);
+        }
+      });
+
+      sketchVM.on("delete", () => setGeometry(null));
+
+      drawBtn.addEventListener("click", () => {
+        resetSketch();
+        sketchVM.create(shapeControl.value);
+        lineInfo.textContent = "Click to add vertices and double-click to finish.";
+      });
+
+      clearBtn.addEventListener("click", () => {
+        abortController?.abort();
+        resetSketch();
+      });
+
+      shapeControl.addEventListener("calciteSegmentedControlChange", () => {
+        const isPolygon = shapeControl.value === "polygon";
+        drawBtn.textContent = isPolygon ? "Draw polygon" : "Draw line";
+        drawBtn.iconStart = isPolygon ? "polygon" : "line";
+        if (currentGeom && currentGeom.type !== shapeControl.value) {
+          resetSketch();
+        }
+        updateDirectionUI();
+      });
+
+      polyModeControl.addEventListener("calciteSegmentedControlChange", () => {
+        updateDirectionUI();
+        setGeometry(currentGeom);
+      });
+
+      function resetSketch() {
+        sketchVM.cancel();
+        sketchLayer.removeAll();
+        clearResults();
+        setGeometry(null);
+      }
+
+      // Whole-area polygons have no travel direction, so the direction of travel option only applies to lines and perimeters
+      function updateDirectionUI() {
+        const isPolygon = shapeControl.value === "polygon";
+        polyModeLabel.hidden = !isPolygon;
+        dirHint.hidden = !isPolygon;
+        const allowForward = !isPolygon || polyModeControl.value === "perimeter";
+        dirControl.disabled = !allowForward;
+        fovLabel.hidden = !allowForward || dirControl.value !== "forward";
+      }
+
+      $("bookmarkSelect").addEventListener("calciteSelectChange", (event) => {
+        goToBookmark(event.target.value, true);
+      });
+
+      dirControl.addEventListener("calciteSegmentedControlChange", updateDirectionUI);
+
+      $("spacingFt").addEventListener("calciteInputNumberChange", () => setGeometry(currentGeom));
+
+      $("canopyChk").addEventListener("calciteCheckboxChange", (event) => {
+        $("clearingLabel").hidden = !event.target.checked;
+      });
+
+      $("showObserversChk").addEventListener("calciteCheckboxChange", (event) => {
+        observerLayer.visible = event.target.checked;
+      });
+
+      runBtn.addEventListener("click", () => {
+        runAnalysis().catch((error) => {
+          if (error?.name === "AbortError") {
+            setStatus("Cancelled.");
+          } else {
+            console.error(error);
+            setStatus(`Analysis failed: ${error?.message ?? error}`);
+          }
+          setRunning(false);
+        });
+      });
+
+      cancelBtn.addEventListener("click", () => abortController?.abort());
+
+      $("exportBtn").addEventListener("click", () => {
+        if (lastResult) {
+          downloadGeoJSON(lastResult);
+        }
+      });
+
+      function setGeometry(geom) {
+        currentGeom = geom && pathsOf(geom)?.length ? geom : null;
+        runBtn.disabled = !currentGeom;
+        regionNotice.hidden = true;
+        if (!currentGeom) {
+          lineInfo.textContent = "Click on the map to add vertices and double-click to finish.";
+          return;
+        }
+        const lengthM = groundLength(currentGeom);
+        const spacingM = Math.max(0.1, readNumber("spacingFt", 1)) * FT;
+        const nPoints = Math.floor(lengthM / spacingM) + 1;
+        if (currentGeom.type === "polygon") {
+          const areaSqM = Math.abs(ringsArea(currentGeom.rings)) * mercScale(currentGeom.extent.center.y) ** 2;
+          const areaText = `Area: ${Math.round(areaSqM / SQM_PER_ACRE).toLocaleString()} acres. Perimeter: ${formatLength(lengthM)}`;
+          lineInfo.textContent =
+            polyModeControl.value === "area"
+              ? `${areaText}. Observers will be the perimeter every ${readNumber("spacingFt", 1)} ft plus every terrain cell inside.`
+              : `${areaText}. That is ${nPoints.toLocaleString()} perimeter sample points at the current spacing.`;
+        } else {
+          lineInfo.textContent = `Line length: ${formatLength(lengthM)}. That is ${nPoints.toLocaleString()} sample points at the current spacing.`;
+        }
+
+        const c = currentGeom.extent.center;
+        const lon = xToLon(c.x);
+        const lat = yToLat(c.y);
+        regionNotice.hidden =
+          lon >= TAHOE_BOUNDS.xmin && lon <= TAHOE_BOUNDS.xmax && lat >= TAHOE_BOUNDS.ymin && lat <= TAHOE_BOUNDS.ymax;
+      }
+
+      /**********************************************
+       * Analysis
+       *********************************************/
+      async function runAnalysis() {
+        if (!currentGeom) {
+          return;
+        }
+        const geom = currentGeom;
+        const isPolygon = geom.type === "polygon";
+        const fillArea = isPolygon && polyModeControl.value === "area";
+        const sr = geom.spatialReference;
+        if (!sr.isWebMercator) {
+          throw new Error("Expected the scene to be in Web Mercator.");
+        }
+
+        const params = {
+          shape: isPolygon ? (fillArea ? "polygon-area" : "polygon-perimeter") : "line",
+          spacingM: Math.max(0.1, readNumber("spacingFt", 1)) * FT,
+          obsH: Math.max(0, readNumber("obsHeightFt", 5.5)) * FT,
+          tgtH: Math.max(0, readNumber("tgtHeightFt", 0)) * FT,
+          maxDist: Math.max(0.1, readNumber("maxDistMi", 6)) * MI,
+          resM: Math.max(1, readNumber("resM", 10)),
+          forward: !fillArea && dirControl.value === "forward",
+          fovDeg: Math.min(360, Math.max(1, readNumber("fovDeg", 120))),
+          curvature: $("curvatureChk").checked,
+          canopy: $("canopyChk").checked,
+          clearing: Math.max(0, readNumber("clearingFt", 100)) * FT,
+        };
+
+        abortController = new AbortController();
+        const { signal } = abortController;
+        const t0 = performance.now();
+        setRunning(true);
+        clearResults();
+
+        // --- Build an analysis grid around the line (in Web Mercator, scaled to ground meters) ---
+        const ext = geom.extent;
+        const k0 = mercScale(ext.center.y); // ground meters per Web Mercator unit at this latitude
+        const padM = params.maxDist / k0;
+        const widthMerc = ext.width + 2 * padM;
+        const heightMerc = ext.height + 2 * padM;
+        const cellG = Math.max(params.resM, Math.sqrt((widthMerc * k0 * heightMerc * k0) / MAX_CELLS));
+        const cellM = cellG / k0;
+        const ncols = Math.ceil(widthMerc / cellM);
+        const nrows = Math.ceil(heightMerc / cellM);
+        const xmin = ext.xmin - padM;
+        const ymax = ext.ymax + padM;
+        const grid = { xmin, ymax, cellM, cellG, ncols, nrows, sr };
+
+        // --- Sample terrain onto the grid ---
+        setStatus(`Loading terrain (${ncols.toLocaleString()} × ${nrows.toLocaleString()} cells at ${cellG.toFixed(1)} m)…`);
+        setProgress(0);
+        const gridExtent = new Extent({
+          xmin,
+          ymin: ymax - nrows * cellM,
+          xmax: xmin + ncols * cellM,
+          ymax,
+          spatialReference: sr,
+        });
+        const sampler = await mainScene.map.ground.createElevationSampler(gridExtent, {
+          demResolution: cellM,
+          noDataValue: -99999,
+          signal,
+        });
+
+        const dem = new Float32Array(ncols * nrows);
+        for (let r = 0; r < nrows; r++) {
+          const y = ymax - (r + 0.5) * cellM;
+          const rowOffset = r * ncols;
+          for (let c = 0; c < ncols; c++) {
+            const z = sampler.elevationAt(xmin + (c + 0.5) * cellM, y);
+            dem[rowOffset + c] = z == null || z <= -99990 ? NaN : z;
+          }
+          if (r % 64 === 0) {
+            setProgress((0.15 * r) / nrows);
+            await yieldToUI();
+            throwIfAborted(signal);
+          }
+        }
+
+        // --- Tree canopy heights on the same grid (pixel centers line up with cell centers) ---
+        let canopy = null;
+        let canopyNote = "Not included";
+        if (params.canopy) {
+          setStatus("Loading tree canopy heights…");
+          try {
+            canopy = await fetchCanopy(gridExtent, ncols, nrows, signal);
+            canopyNote = "Included";
+          } catch (error) {
+            if (error?.name === "AbortError") throw error;
+            console.error("Canopy fetch failed", error);
+            canopyNote = "Failed to load, not included";
+          }
+          throwIfAborted(signal);
+        }
+
+        // --- Sample the line (or perimeter) every N feet and collapse samples that share a cell (and heading bucket) ---
+        setStatus(isPolygon ? "Sampling polygon…" : "Sampling line…");
+        const samples = sampleLine({ paths: pathsOf(geom) }, params.spacingM);
+        let nSamples = samples.length / 3;
+        let nInteriorCells = 0;
+        if (fillArea) {
+          // Every cell center inside the polygon is an observer. Finer sampling would land in the same cells.
+          nInteriorCells = appendInteriorCells(samples, geom.rings, grid);
+          nSamples = samples.length / 3;
+        }
+        const unique = new Map();
+        for (let i = 0; i < nSamples; i++) {
+          const x = samples[i * 3];
+          const y = samples[i * 3 + 1];
+          const heading = samples[i * 3 + 2];
+          const c = Math.floor((x - xmin) / cellM);
+          const r = Math.floor((ymax - y) / cellM);
+          let key = r * ncols + c;
+          if (params.forward) {
+            const bucket = Math.round(((heading * 180) / Math.PI + 360) / HEADING_BUCKET_DEG) % (360 / HEADING_BUCKET_DEG);
+            key = key * (360 / HEADING_BUCKET_DEG) + bucket;
+          }
+          if (!unique.has(key)) {
+            unique.set(key, i);
+          }
+        }
+
+        const nObs = unique.size;
+        const observers = new Float64Array(nObs * 4); // [gridCol, gridRow, headingRad, groundZ] per observer
+        const observerXY = [];
+        let o = 0;
+        for (const i of unique.values()) {
+          const x = samples[i * 3];
+          const y = samples[i * 3 + 1];
+          observers[o * 4] = (x - xmin) / cellM - 0.5;
+          observers[o * 4 + 1] = (ymax - y) / cellM - 0.5;
+          observers[o * 4 + 2] = samples[i * 3 + 2];
+          const zg = sampler.elevationAt(x, y);
+          observers[o * 4 + 3] = zg == null || zg <= -99990 ? dem[Math.floor(observers[o * 4 + 1] + 0.5) * ncols + Math.floor(observers[o * 4] + 0.5)] : zg;
+          observerXY.push([x, y]);
+          o++;
+        }
+
+        // --- Compute and OR-combine per-observer viewsheds ---
+        setStatus(`Computing viewsheds for ${nObs.toLocaleString()} distinct observer locations…`);
+        const payload = {
+          dem,
+          ncols,
+          nrows,
+          cellG,
+          obsH: params.obsH,
+          tgtH: params.tgtH,
+          maxDist: params.maxDist,
+          curvature: params.curvature,
+          canopy,
+          clearing: params.clearing,
+          fovRad: params.forward ? (params.fovDeg * Math.PI) / 180 : 2 * Math.PI,
+        };
+        const vis = await computeCombined(payload, observers, signal, (done) => {
+          setProgress(0.15 + (0.8 * done) / nObs);
+        });
+
+        // --- Trace the combined raster into polygon rings ---
+        setStatus("Building combined polygon…");
+        setProgress(0.96);
+        await yieldToUI();
+        throwIfAborted(signal);
+
+        let visibleCells = 0;
+        for (let i = 0; i < vis.length; i++) {
+          visibleCells += vis[i];
+        }
+        const rings = traceRaster(vis, grid);
+        const polygon = new Polygon({ rings, spatialReference: sr });
+
+        viewshedLayer.add(new Graphic({ geometry: polygon, symbol: viewshedSymbol }));
+        observerLayer.add(
+          new Graphic({
+            geometry: new Multipoint({ points: observerXY, spatialReference: sr }),
+            symbol: observerSymbol,
+          }),
+        );
+
+        const areaSqM = visibleCells * cellG * cellG;
+        const seconds = (performance.now() - t0) / 1000;
+        const lineLengthM = groundLength(geom);
+        lastResult = { rings, grid, params, areaSqM, lineLengthM, nSamples, nObs, input: geom, canopyUsed: !!canopy };
+        $("legendText").textContent = `Visible from at least one point ${
+          fillArea ? "in the polygon" : isPolygon ? "on the polygon's perimeter" : "on the line"
+        }`;
+
+        const spacingText = `every ${(params.spacingM / FT).toLocaleString()} ft`;
+        const sampleRows = fillArea
+          ? [
+              [`Perimeter points (${spacingText})`, (nSamples - nInteriorCells).toLocaleString()],
+              ["Interior cells", nInteriorCells.toLocaleString()],
+            ]
+          : [[`Sample points (${spacingText})`, nSamples.toLocaleString()]];
+
+        renderStats([
+          [isPolygon ? "Perimeter" : "Line length", formatLength(lineLengthM)],
+          ...sampleRows,
+          ["Distinct observer locations", nObs.toLocaleString()],
+          ["Terrain cell size", `${cellG.toFixed(1)} m (${(cellG / FT).toFixed(0)} ft)`],
+          ["Tree canopy", canopyNote],
+          ["Visible area", `${Math.round(areaSqM / SQM_PER_ACRE).toLocaleString()} acres`],
+          ["", `${(areaSqM / SQM_PER_SQMI).toFixed(2)} sq mi`],
+          ["Polygon parts", rings.length.toLocaleString()],
+          ["Compute time", `${seconds.toFixed(1)} s`],
+        ]);
+        resultsBlock.hidden = false;
+
+        setProgress(1);
+        setStatus("Done.");
+        setRunning(false);
+
+        if (rings.length) {
+          view.goTo({ target: polygon.extent.clone().expand(1.15), tilt: view.camera.tilt }).catch(() => {});
+        }
+      }
+
+      // Tree heights (m) resampled onto the analysis grid. No-data (e.g. the lake) becomes 0.
+      let canopyLayer = null;
+      async function fetchCanopy(extent, ncols, nrows, signal) {
+        canopyLayer ??= new ImageryTileLayer({ url: CANOPY_URL });
+        await canopyLayer.load(signal);
+        const { pixelBlock } = await canopyLayer.fetchPixels(extent, ncols, nrows, { signal });
+        const band = pixelBlock.pixels[0];
+        const mask = pixelBlock.mask;
+        const canopy = new Uint8Array(ncols * nrows);
+        for (let i = 0; i < canopy.length; i++) {
+          canopy[i] = mask && !mask[i] ? 0 : band[i];
+        }
+        return canopy;
+      }
+
+      // Distribute observers across Web Workers, then OR the visibility grids together.
+      // Falls back to the main thread (in slices) if workers can't be created, e.g. under strict CSP.
+      async function computeCombined(payload, observers, signal, onProgress) {
+        const nObs = observers.length / 4;
+        const combined = new Uint8Array(payload.ncols * payload.nrows);
+        const orInto = (vis) => {
+          for (let i = 0; i < vis.length; i++) {
+            combined[i] |= vis[i];
+          }
+        };
+
+        let workerUrl = null;
+        try {
+          const src = `${computeVisibility.toString()}
+            self.onmessage = (e) => {
+              const vis = computeVisibility(e.data, (n) => self.postMessage({ type: "progress", n }));
+              self.postMessage({ type: "done", vis }, [vis.buffer]);
+            };`;
+          workerUrl = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
+          new Worker(workerUrl).terminate();
+        } catch (error) {
+          console.warn("Web Workers unavailable, computing on the main thread.", error);
+          workerUrl = null;
+        }
+
+        if (!workerUrl) {
+          const slice = 8;
+          for (let start = 0; start < nObs; start += slice) {
+            const sub = observers.subarray(start * 4, Math.min(nObs, start + slice) * 4);
+            orInto(computeVisibility({ ...payload, observers: sub }, null));
+            onProgress(Math.min(nObs, start + slice));
+            await yieldToUI();
+            throwIfAborted(signal);
+          }
+          return combined;
+        }
+
+        const nWorkers = Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 1, nObs));
+        const chunks = Array.from({ length: nWorkers }, (_, w) => {
+          const count = Math.ceil((nObs - w) / nWorkers);
+          const chunk = new Float64Array(count * 4);
+          for (let j = 0, idx = w; idx < nObs; idx += nWorkers, j++) {
+            chunk.set(observers.subarray(idx * 4, idx * 4 + 4), j * 4);
+          }
+          return chunk;
+        });
+        const doneCounts = new Array(nWorkers).fill(0);
+        const workers = [];
+
+        try {
+          const results = await Promise.all(
+            chunks.map(
+              (chunk, w) =>
+                new Promise((resolve, reject) => {
+                  const worker = new Worker(workerUrl);
+                  workers.push(worker);
+                  signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+                  worker.onmessage = (e) => {
+                    if (e.data.type === "progress") {
+                      doneCounts[w] = e.data.n;
+                      onProgress(doneCounts.reduce((a, b) => a + b, 0));
+                    } else {
+                      resolve(e.data.vis);
+                    }
+                  };
+                  worker.onerror = (error) => reject(error);
+                  worker.postMessage({ ...payload, observers: chunk });
+                }),
+            ),
+          );
+          results.forEach(orInto);
+          return combined;
+        } finally {
+          workers.forEach((worker) => worker.terminate());
+          URL.revokeObjectURL(workerUrl);
+        }
+      }
+
+      // Radial line-of-sight viewshed. Self-contained so it can be serialized into a Web Worker.
+      // Grid coords: column increases east and row increases south. Integer coordinates are cell centers.
+      function computeVisibility(p, onProgress) {
+        const { dem, ncols, nrows, cellG, observers, obsH, tgtH, maxDist, curvature, fovRad, canopy, clearing } = p;
+        const vis = new Uint8Array(ncols * nrows);
+        const R = Math.ceil(maxDist / cellG);
+        // Earth curvature drop with standard refraction coefficient 0.13: d² (1 - k) / 2Re
+        const curvK = curvature ? (1 - 0.13) / (2 * 6371000) : 0;
+        const limitFov = fovRad < 2 * Math.PI;
+        const nObs = observers.length / 4;
+
+        for (let o = 0; o < nObs; o++) {
+          const ox = observers[o * 4];
+          const oy = observers[o * 4 + 1];
+          const heading = observers[o * 4 + 2];
+          const z0 = observers[o * 4 + 3] + obsH;
+          const cx = Math.round(ox);
+          const cy = Math.round(oy);
+          if (cx >= 0 && cy >= 0 && cx < ncols && cy < nrows) {
+            vis[cy * ncols + cx] = 1;
+          }
+          if (z0 !== z0) {
+            continue;
+          }
+
+          // Cast a ray to every cell on the perimeter of a square of radius R
+          const sideLen = 2 * R;
+          for (let t = 0; t < 4 * sideLen; t++) {
+            const side = (t / sideLen) | 0;
+            const off = t - side * sideLen;
+            let px, py;
+            if (side === 0) {
+              px = cx - R + off;
+              py = cy - R;
+            } else if (side === 1) {
+              px = cx + R;
+              py = cy - R + off;
+            } else if (side === 2) {
+              px = cx + R - off;
+              py = cy + R;
+            } else {
+              px = cx - R;
+              py = cy + R - off;
+            }
+            const dx = px - ox;
+            const dy = py - oy;
+
+            if (limitFov) {
+              const az = Math.atan2(dx, -dy); // 0 = north, clockwise
+              let diff = Math.abs(az - heading);
+              if (diff > Math.PI) {
+                diff = 2 * Math.PI - diff;
+              }
+              if (diff > fovRad / 2) {
+                continue;
+              }
+            }
+
+            const len = Math.hypot(dx, dy);
+            const sx = dx / len;
+            const sy = dy / len;
+            const steps = Math.ceil(len);
+            let maxSlope = -Infinity;
+
+            for (let s = 1; s <= steps; s++) {
+              const d = s * cellG;
+              if (d > maxDist) {
+                break;
+              }
+              const ci = Math.round(ox + sx * s);
+              const ri = Math.round(oy + sy * s);
+              if (ci < 0 || ri < 0 || ci >= ncols || ri >= nrows) {
+                break;
+              }
+              const idx = ri * ncols + ci;
+              const z = dem[idx];
+              if (z !== z) {
+                continue;
+              }
+              // Obstruction surface: terrain plus trees, except inside the observer's clearing
+              const trees = canopy && d > clearing ? canopy[idx] : 0;
+              const drop = d * d * curvK;
+              const slope = (z + trees - drop - z0) / d;
+              // Target: the taller of the tree tops and the target height above ground
+              const targetSlope = (z + Math.max(trees, tgtH) - drop - z0) / d;
+              if (!vis[idx] && targetSlope >= maxSlope) {
+                vis[idx] = 1;
+              }
+              if (slope > maxSlope) {
+                maxSlope = slope;
+              }
+            }
+          }
+
+          if (onProgress && ((o & 3) === 3 || o === nObs - 1)) {
+            onProgress(o + 1);
+          }
+        }
+        return vis;
+      }
+
+      // Trace the boundaries of visible cells into rings (outer rings clockwise, holes counter-clockwise, per Esri convention).
+      // Edges are directed so the visible cell is on the right; at saddle vertices the walk turns right,
+      // so cells that only touch diagonally become separate rings.
+      function traceRaster(vis, grid) {
+        const { ncols, nrows, xmin, ymax, cellM } = grid;
+        const W = ncols + 1;
+        const bits = new Uint8Array(W * (nrows + 1)); // outgoing edge directions per grid corner: 0=E, 1=S, 2=W, 3=N
+        const isVis = (r, c) => r >= 0 && c >= 0 && r < nrows && c < ncols && vis[r * ncols + c] === 1;
+
+        for (let r = 0; r < nrows; r++) {
+          for (let c = 0; c < ncols; c++) {
+            if (!vis[r * ncols + c]) {
+              continue;
+            }
+            if (!isVis(r - 1, c)) bits[r * W + c] |= 1; // top edge, heading east
+            if (!isVis(r, c + 1)) bits[r * W + c + 1] |= 2; // right edge, heading south
+            if (!isVis(r + 1, c)) bits[(r + 1) * W + c + 1] |= 4; // bottom edge, heading west
+            if (!isVis(r, c - 1)) bits[(r + 1) * W + c] |= 8; // left edge, heading north
+          }
+        }
+
+        const DC = [1, 0, -1, 0];
+        const DR = [0, 1, 0, -1];
+        const rings = [];
+
+        for (let start = 0; start < bits.length; start++) {
+          while (bits[start]) {
+            let d = 31 - Math.clz32(bits[start] & -bits[start]);
+            bits[start] &= ~(1 << d);
+            let cur = start;
+            let prevD = -1;
+            const ring = [];
+
+            while (true) {
+              if (d !== prevD) {
+                const r = (cur / W) | 0;
+                const c = cur - r * W;
+                ring.push([xmin + c * cellM, ymax - r * cellM]);
+              }
+              prevD = d;
+              const r = (cur / W) | 0;
+              const c = cur - r * W;
+              cur = (r + DR[d]) * W + (c + DC[d]);
+              if (cur === start) {
+                break;
+              }
+              const b = bits[cur];
+              const right = (d + 1) & 3;
+              const left = (d + 3) & 3;
+              if (b & (1 << right)) d = right;
+              else if (b & (1 << d)) d = d;
+              else if (b & (1 << left)) d = left;
+              else break; // should not happen for a closed boundary
+              bits[cur] &= ~(1 << d);
+            }
+
+            ring.push([ring[0][0], ring[0][1]]);
+            rings.push(ring);
+          }
+        }
+        return rings;
+      }
+
+      // Sample points at a fixed ground spacing along all paths of a polyline. Returns flat [x, y, headingRad, ...].
+      function sampleLine(line, spacingM) {
+        const out = [];
+        for (const path of line.paths) {
+          let next = 0;
+          let heading = 0;
+          for (let i = 0; i < path.length - 1; i++) {
+            const [x0, y0] = path[i];
+            const [x1, y1] = path[i + 1];
+            const dx = x1 - x0;
+            const dy = y1 - y0;
+            const lenMerc = Math.hypot(dx, dy);
+            if (!lenMerc) {
+              continue;
+            }
+            const lenGround = lenMerc * mercScale((y0 + y1) / 2);
+            heading = Math.atan2(dx, dy);
+            while (next <= lenGround) {
+              const t = next / lenGround;
+              out.push(x0 + dx * t, y0 + dy * t, heading);
+              next += spacingM;
+            }
+            next -= lenGround;
+          }
+          const last = path[path.length - 1];
+          out.push(last[0], last[1], heading);
+        }
+        return out;
+      }
+
+      // Every grid cell whose center is inside the polygon (even-odd rule, so holes are respected), found with a scanline
+      // per row. Appends [x, y, heading = 0] to samples and returns how many cells were added.
+      function appendInteriorCells(samples, rings, grid) {
+        const { xmin, ymax, cellM, ncols, nrows } = grid;
+        let added = 0;
+        for (let r = 0; r < nrows; r++) {
+          const y = ymax - (r + 0.5) * cellM;
+          const xs = [];
+          for (const ring of rings) {
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+              const [xi, yi] = ring[i];
+              const [xj, yj] = ring[j];
+              if (yi > y !== yj > y) {
+                xs.push(xi + ((y - yi) * (xj - xi)) / (yj - yi));
+              }
+            }
+          }
+          xs.sort((a, b) => a - b);
+          for (let k = 0; k + 1 < xs.length; k += 2) {
+            const c0 = Math.max(0, Math.ceil((xs[k] - xmin) / cellM - 0.5));
+            const c1 = Math.min(ncols - 1, Math.floor((xs[k + 1] - xmin) / cellM - 0.5));
+            for (let c = c0; c <= c1; c++) {
+              samples.push(xmin + (c + 0.5) * cellM, y, 0);
+              added++;
+            }
+          }
+        }
+        return added;
+      }
+
+      /**********************************************
+       * Export
+       *********************************************/
+      function inputFeature(geom) {
+        const toLngLat = (coords) => coords.map(([x, y]) => [round6(xToLon(x)), round6(yToLat(y))]);
+        if (geom.type === "polygon") {
+          // RFC 7946 wants counter-clockwise outer rings; sketched polygons have no holes
+          const rings = pathsOf(geom).map((ring) => (signedArea(ring) < 0 ? [...ring].reverse() : ring));
+          return {
+            type: "Feature",
+            properties: { description: "Input polygon" },
+            geometry: { type: "Polygon", coordinates: rings.map(toLngLat) },
+          };
+        }
+        return {
+          type: "Feature",
+          properties: { description: "Input line" },
+          geometry: { type: "MultiLineString", coordinates: geom.paths.map(toLngLat) },
+        };
+      }
+
+      function downloadGeoJSON(result) {
+        const { rings, grid, params, areaSqM, lineLengthM, nSamples, nObs } = result;
+        const outers = [];
+        const holes = [];
+        for (const ring of rings) {
+          const area = signedArea(ring);
+          (area < 0 ? outers : holes).push({ ring, area: Math.abs(area), bbox: ringBBox(ring), holes: [] });
+        }
+
+        // Assign each hole to the smallest outer ring that contains a point just inside the hole's boundary.
+        // The visible side of every edge is on its right, so offset right from the hole's first edge.
+        for (const hole of holes) {
+          const [a, b] = hole.ring;
+          const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+          const nx = (b[1] - a[1]) / len;
+          const ny = -(b[0] - a[0]) / len;
+          const px = (a[0] + b[0]) / 2 + nx * grid.cellM * 0.25;
+          const py = (a[1] + b[1]) / 2 + ny * grid.cellM * 0.25;
+          let best = null;
+          for (const outer of outers) {
+            const [bx0, by0, bx1, by1] = outer.bbox;
+            if (px < bx0 || px > bx1 || py < by0 || py > by1) continue;
+            if ((!best || outer.area < best.area) && pointInRing(px, py, outer.ring)) best = outer;
+          }
+          best?.holes.push(hole.ring);
+        }
+
+        // GeoJSON (RFC 7946): WGS84 lon/lat, outer rings counter-clockwise, holes clockwise
+        const toLngLat = (ring) => ring.map(([x, y]) => [round6(xToLon(x)), round6(yToLat(y))]).reverse();
+        const geojson = {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                description: "Area visible from at least one observer point",
+                input_shape: params.shape,
+                input_length_ft: Math.round(lineLengthM / FT),
+                point_spacing_ft: +(params.spacingM / FT).toFixed(3),
+                sample_points: nSamples,
+                distinct_observers: nObs,
+                observer_height_ft: +(params.obsH / FT).toFixed(2),
+                target_height_ft: +(params.tgtH / FT).toFixed(2),
+                max_distance_mi: +(params.maxDist / MI).toFixed(2),
+                view_direction: params.forward ? `forward ${params.fovDeg}deg` : "360",
+                earth_curvature: params.curvature,
+                tree_canopy: result.canopyUsed,
+                clearing_ft: result.canopyUsed ? Math.round(params.clearing / FT) : null,
+                cell_size_m: +grid.cellG.toFixed(2),
+                visible_acres: +(areaSqM / SQM_PER_ACRE).toFixed(1),
+                created: new Date().toISOString(),
+              },
+              geometry: {
+                type: "MultiPolygon",
+                coordinates: outers.map((o) => [toLngLat(o.ring), ...o.holes.map(toLngLat)]),
+              },
+            },
+            inputFeature(result.input),
+          ],
+        };
+
+        const blob = new Blob([JSON.stringify(geojson)], { type: "application/geo+json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `tahoe_line_viewshed_${new Date().toISOString().slice(0, 10)}.geojson`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }
+
+      /**********************************************
+       * Support functions
+       *********************************************/
+      function goToBookmark(key, animate) {
+        const b = BOOKMARKS[key];
+        if (!b) return;
+        view.goTo({ center: b.center, zoom: b.zoom, tilt: b.tilt, heading: 0 }, { animate }).catch(() => {});
+      }
+
+      function clearResults() {
+        viewshedLayer.removeAll();
+        observerLayer.removeAll();
+        resultsBlock.hidden = true;
+        lastResult = null;
+      }
+
+      function setRunning(running) {
+        runBtn.disabled = running || !currentGeom;
+        shapeControl.disabled = running;
+        polyModeControl.disabled = running;
+        drawBtn.disabled = running;
+        cancelBtn.disabled = !running;
+        progressEl.hidden = !running;
+        if (!running) abortController = null;
+      }
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function setProgress(value) {
+        progressEl.value = Math.max(0, Math.min(1, value));
+      }
+
+      function renderStats(rows) {
+        statsBody.replaceChildren(
+          ...rows.map(([label, value]) => {
+            const tr = document.createElement("tr");
+            const td1 = document.createElement("td");
+            const td2 = document.createElement("td");
+            td1.textContent = label;
+            td2.textContent = value;
+            tr.append(td1, td2);
+            return tr;
+          }),
+        );
+      }
+
+      function readNumber(id, fallback) {
+        const n = Number($(id).value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function yieldToUI() {
+        return new Promise((resolve) => setTimeout(resolve, 0));
+      }
+
+      function throwIfAborted(signal) {
+        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      }
+
+      // Paths of a polyline, or the rings of a polygon (closed) so the perimeter can be walked like a line
+      function pathsOf(geom) {
+        if (geom.type !== "polygon") return geom.paths;
+        return geom.rings.map((ring) => {
+          const [fx, fy] = ring[0];
+          const [lx, ly] = ring[ring.length - 1];
+          return fx === lx && fy === ly ? ring : [...ring, ring[0]];
+        });
+      }
+
+      function ringsArea(rings) {
+        return rings.reduce((sum, ring) => sum + signedArea(pathsOf({ type: "polygon", rings: [ring] })[0]), 0);
+      }
+
+      function groundLength(geom) {
+        let total = 0;
+        for (const path of pathsOf(geom)) {
+          for (let i = 0; i < path.length - 1; i++) {
+            const [x0, y0] = path[i];
+            const [x1, y1] = path[i + 1];
+            total += Math.hypot(x1 - x0, y1 - y0) * mercScale((y0 + y1) / 2);
+          }
+        }
+        return total;
+      }
+
+      function formatLength(m) {
+        const ft = m / FT;
+        return ft < 5280 ? `${Math.round(ft).toLocaleString()} ft` : `${(m / MI).toFixed(2)} mi`;
+      }
+
+      // Web Mercator helpers. Scale factor = ground meters per Web Mercator unit = cos(latitude).
+      function xToLon(x) {
+        return (x / R_MERC) * (180 / Math.PI);
+      }
+      function yToLat(y) {
+        return (2 * Math.atan(Math.exp(y / R_MERC)) - Math.PI / 2) * (180 / Math.PI);
+      }
+      function mercScale(y) {
+        return Math.cos((yToLat(y) * Math.PI) / 180);
+      }
+      function round6(v) {
+        return Math.round(v * 1e6) / 1e6;
+      }
+
+      function signedArea(ring) {
+        let a = 0;
+        for (let i = 0; i < ring.length - 1; i++) {
+          a += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+        }
+        return a / 2;
+      }
+
+      function ringBBox(ring) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const [x, y] of ring) {
+          if (x < x0) x0 = x;
+          if (y < y0) y0 = y;
+          if (x > x1) x1 = x;
+          if (y > y1) y1 = y;
+        }
+        return [x0, y0, x1, y1];
+      }
+
+      function pointInRing(px, py, ring) {
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const [xi, yi] = ring[i];
+          const [xj, yj] = ring[j];
+          if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+        }
+        return inside;
+      }
+    </script>
+  </body>
+</html>

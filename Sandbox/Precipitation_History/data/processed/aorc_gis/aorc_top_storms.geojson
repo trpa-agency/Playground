@@ -1,0 +1,1145 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.159,
+     38.991
+    ]
+   },
+   "properties": {
+    "end_local": "2021-10-25 06:00",
+    "year": 2021,
+    "max24_in": 16.744,
+    "basin_mean24_in": 6.806,
+    "max1h_in": 1.189,
+    "lat": 38.991,
+    "lon": -120.159
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.15,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2010-10-24 22:00",
+    "year": 2010,
+    "max24_in": 11.78,
+    "basin_mean24_in": 4.393,
+    "max1h_in": 1.098,
+    "lat": 38.966,
+    "lon": -120.15
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.15,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2009-10-14 06:00",
+    "year": 2009,
+    "max24_in": 6.311,
+    "basin_mean24_in": 2.824,
+    "max1h_in": 0.48,
+    "lat": 38.966,
+    "lon": -120.15
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.074
+    ]
+   },
+   "properties": {
+    "end_local": "2016-10-16 17:00",
+    "year": 2016,
+    "max24_in": 5.051,
+    "basin_mean24_in": 3.414,
+    "max1h_in": 0.535,
+    "lat": 39.074,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.15,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2012-10-23 07:00",
+    "year": 2012,
+    "max24_in": 3.406,
+    "basin_mean24_in": 1.091,
+    "max1h_in": 0.276,
+    "lat": 38.966,
+    "lon": -120.15
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.984,
+     39.399
+    ]
+   },
+   "properties": {
+    "end_local": "2011-06-06 05:00",
+    "year": 2011,
+    "max24_in": 3.358,
+    "basin_mean24_in": 1.092,
+    "max1h_in": 0.461,
+    "lat": 39.399,
+    "lon": -119.984
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.125,
+     38.691
+    ]
+   },
+   "properties": {
+    "end_local": "2011-10-05 23:00",
+    "year": 2011,
+    "max24_in": 3.134,
+    "basin_mean24_in": 1.302,
+    "max1h_in": 0.524,
+    "lat": 38.691,
+    "lon": -120.125
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.183
+    ]
+   },
+   "properties": {
+    "end_local": "2016-10-28 17:00",
+    "year": 2016,
+    "max24_in": 3.087,
+    "basin_mean24_in": 1.47,
+    "max1h_in": 0.634,
+    "lat": 39.183,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     38.716
+    ]
+   },
+   "properties": {
+    "end_local": "2013-09-22 02:00",
+    "year": 2013,
+    "max24_in": 2.929,
+    "basin_mean24_in": 0.691,
+    "max1h_in": 0.72,
+    "lat": 38.716,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.975,
+     38.724
+    ]
+   },
+   "properties": {
+    "end_local": "2023-09-02 12:00",
+    "year": 2023,
+    "max24_in": 2.626,
+    "basin_mean24_in": 0.759,
+    "max1h_in": 0.559,
+    "lat": 38.724,
+    "lon": -119.975
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.15,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2015-10-17 13:00",
+    "year": 2015,
+    "max24_in": 2.492,
+    "basin_mean24_in": 0.976,
+    "max1h_in": 1.161,
+    "lat": 38.966,
+    "lon": -120.15
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.867,
+     39.199
+    ]
+   },
+   "properties": {
+    "end_local": "2014-07-21 03:00",
+    "year": 2014,
+    "max24_in": 2.343,
+    "basin_mean24_in": 0.562,
+    "max1h_in": 0.965,
+    "lat": 39.199,
+    "lon": -119.867
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.259,
+     39.399
+    ]
+   },
+   "properties": {
+    "end_local": "2025-08-26 05:00",
+    "year": 2025,
+    "max24_in": 2.335,
+    "basin_mean24_in": 0.293,
+    "max1h_in": 0.957,
+    "lat": 39.399,
+    "lon": -120.259
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.309,
+     39.399
+    ]
+   },
+   "properties": {
+    "end_local": "2016-10-31 03:00",
+    "year": 2016,
+    "max24_in": 2.327,
+    "basin_mean24_in": 1.327,
+    "max1h_in": 0.528,
+    "lat": 39.399,
+    "lon": -120.309
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.867,
+     39.166
+    ]
+   },
+   "properties": {
+    "end_local": "2010-10-05 19:00",
+    "year": 2010,
+    "max24_in": 2.28,
+    "basin_mean24_in": 0.688,
+    "max1h_in": 0.583,
+    "lat": 39.166,
+    "lon": -119.867
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.159,
+     38.991
+    ]
+   },
+   "properties": {
+    "end_local": "2021-10-22 15:00",
+    "year": 2021,
+    "max24_in": 2.165,
+    "basin_mean24_in": 0.822,
+    "max1h_in": 0.417,
+    "lat": 38.991,
+    "lon": -120.159
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.934,
+     39.349
+    ]
+   },
+   "properties": {
+    "end_local": "2023-06-12 09:00",
+    "year": 2023,
+    "max24_in": 2.165,
+    "basin_mean24_in": 0.535,
+    "max1h_in": 0.209,
+    "lat": 39.349,
+    "lon": -119.934
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.158
+    ]
+   },
+   "properties": {
+    "end_local": "2008-10-04 16:00",
+    "year": 2008,
+    "max24_in": 2.122,
+    "basin_mean24_in": 0.801,
+    "max1h_in": 0.272,
+    "lat": 39.158,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.259,
+     38.808
+    ]
+   },
+   "properties": {
+    "end_local": "2011-06-29 13:00",
+    "year": 2011,
+    "max24_in": 2.102,
+    "basin_mean24_in": 0.931,
+    "max1h_in": 0.22,
+    "lat": 38.808,
+    "lon": -120.259
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.9,
+     39.399
+    ]
+   },
+   "properties": {
+    "end_local": "2018-07-22 05:00",
+    "year": 2018,
+    "max24_in": 2.098,
+    "basin_mean24_in": 0.124,
+    "max1h_in": 1.283,
+    "lat": 39.399,
+    "lon": -119.9
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.242,
+     39.349
+    ]
+   },
+   "properties": {
+    "end_local": "2015-07-21 20:00",
+    "year": 2015,
+    "max24_in": 2.075,
+    "basin_mean24_in": 0.311,
+    "max1h_in": 0.783,
+    "lat": 39.349,
+    "lon": -120.242
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.017,
+     38.716
+    ]
+   },
+   "properties": {
+    "end_local": "2017-09-21 16:00",
+    "year": 2017,
+    "max24_in": 2.02,
+    "basin_mean24_in": 0.693,
+    "max1h_in": 0.354,
+    "lat": 38.716,
+    "lon": -120.017
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.117,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2014-09-27 17:00",
+    "year": 2014,
+    "max24_in": 1.992,
+    "basin_mean24_in": 0.857,
+    "max1h_in": 0.248,
+    "lat": 38.966,
+    "lon": -120.117
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.2,
+     38.941
+    ]
+   },
+   "properties": {
+    "end_local": "2006-08-01 05:00",
+    "year": 2006,
+    "max24_in": 1.984,
+    "basin_mean24_in": 0.488,
+    "max1h_in": 0.083,
+    "lat": 38.941,
+    "lon": -120.2
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.158
+    ]
+   },
+   "properties": {
+    "end_local": "2013-06-25 05:00",
+    "year": 2013,
+    "max24_in": 1.925,
+    "basin_mean24_in": 0.673,
+    "max1h_in": 0.181,
+    "lat": 39.158,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.242,
+     39.174
+    ]
+   },
+   "properties": {
+    "end_local": "2015-07-09 15:00",
+    "year": 2015,
+    "max24_in": 1.874,
+    "basin_mean24_in": 0.311,
+    "max1h_in": 1.531,
+    "lat": 39.174,
+    "lon": -120.242
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.317,
+     38.999
+    ]
+   },
+   "properties": {
+    "end_local": "2025-09-03 05:00",
+    "year": 2025,
+    "max24_in": 1.843,
+    "basin_mean24_in": 0.451,
+    "max1h_in": 0.394,
+    "lat": 38.999,
+    "lon": -120.317
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.3,
+     39.258
+    ]
+   },
+   "properties": {
+    "end_local": "2015-10-01 13:00",
+    "year": 2015,
+    "max24_in": 1.827,
+    "basin_mean24_in": 0.43,
+    "max1h_in": 0.433,
+    "lat": 39.258,
+    "lon": -120.3
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.108
+    ]
+   },
+   "properties": {
+    "end_local": "2022-06-06 03:00",
+    "year": 2022,
+    "max24_in": 1.807,
+    "basin_mean24_in": 0.275,
+    "max1h_in": 0.327,
+    "lat": 39.108,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.934,
+     39.341
+    ]
+   },
+   "properties": {
+    "end_local": "2014-08-05 03:00",
+    "year": 2014,
+    "max24_in": 1.803,
+    "basin_mean24_in": 0.415,
+    "max1h_in": 0.327,
+    "lat": 39.341,
+    "lon": -119.934
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.158
+    ]
+   },
+   "properties": {
+    "end_local": "2012-06-05 09:00",
+    "year": 2012,
+    "max24_in": 1.795,
+    "basin_mean24_in": 0.68,
+    "max1h_in": 0.374,
+    "lat": 39.158,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.909,
+     38.658
+    ]
+   },
+   "properties": {
+    "end_local": "2025-10-15 05:00",
+    "year": 2025,
+    "max24_in": 1.768,
+    "basin_mean24_in": 0.861,
+    "max1h_in": 0.173,
+    "lat": 38.658,
+    "lon": -119.909
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.867,
+     38.724
+    ]
+   },
+   "properties": {
+    "end_local": "2013-07-26 11:00",
+    "year": 2013,
+    "max24_in": 1.76,
+    "basin_mean24_in": 0.321,
+    "max1h_in": 0.756,
+    "lat": 38.724,
+    "lon": -119.867
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.967,
+     38.716
+    ]
+   },
+   "properties": {
+    "end_local": "2022-09-20 05:00",
+    "year": 2022,
+    "max24_in": 1.74,
+    "basin_mean24_in": 0.726,
+    "max1h_in": 0.177,
+    "lat": 38.716,
+    "lon": -119.967
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.15,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2010-10-03 15:00",
+    "year": 2010,
+    "max24_in": 1.74,
+    "basin_mean24_in": 0.603,
+    "max1h_in": 0.346,
+    "lat": 38.966,
+    "lon": -120.15
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.234,
+     39.208
+    ]
+   },
+   "properties": {
+    "end_local": "2015-08-07 19:00",
+    "year": 2015,
+    "max24_in": 1.638,
+    "basin_mean24_in": 0.115,
+    "max1h_in": 0.433,
+    "lat": 39.208,
+    "lon": -120.234
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.116
+    ]
+   },
+   "properties": {
+    "end_local": "2011-10-11 05:00",
+    "year": 2011,
+    "max24_in": 1.602,
+    "basin_mean24_in": 0.525,
+    "max1h_in": 0.26,
+    "lat": 39.116,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.309,
+     39.191
+    ]
+   },
+   "properties": {
+    "end_local": "2016-10-14 16:00",
+    "year": 2016,
+    "max24_in": 1.587,
+    "basin_mean24_in": 0.898,
+    "max1h_in": 0.287,
+    "lat": 39.191,
+    "lon": -120.309
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.867,
+     39.199
+    ]
+   },
+   "properties": {
+    "end_local": "2013-10-29 00:00",
+    "year": 2013,
+    "max24_in": 1.583,
+    "basin_mean24_in": 0.628,
+    "max1h_in": 0.213,
+    "lat": 39.199,
+    "lon": -119.867
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.325,
+     39.116
+    ]
+   },
+   "properties": {
+    "end_local": "2012-07-23 06:00",
+    "year": 2012,
+    "max24_in": 1.571,
+    "basin_mean24_in": 0.199,
+    "max1h_in": 0.366,
+    "lat": 39.116,
+    "lon": -120.325
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.158
+    ]
+   },
+   "properties": {
+    "end_local": "2007-10-20 02:00",
+    "year": 2007,
+    "max24_in": 1.547,
+    "basin_mean24_in": 0.422,
+    "max1h_in": 0.433,
+    "lat": 39.158,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.934,
+     39.349
+    ]
+   },
+   "properties": {
+    "end_local": "2022-08-05 13:00",
+    "year": 2022,
+    "max24_in": 1.535,
+    "basin_mean24_in": 0.152,
+    "max1h_in": 0.346,
+    "lat": 39.349,
+    "lon": -119.934
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.159,
+     38.991
+    ]
+   },
+   "properties": {
+    "end_local": "2022-06-13 05:00",
+    "year": 2022,
+    "max24_in": 1.508,
+    "basin_mean24_in": 0.401,
+    "max1h_in": 0.248,
+    "lat": 38.991,
+    "lon": -120.159
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.967,
+     38.716
+    ]
+   },
+   "properties": {
+    "end_local": "2023-08-21 16:00",
+    "year": 2023,
+    "max24_in": 1.508,
+    "basin_mean24_in": 0.704,
+    "max1h_in": 0.445,
+    "lat": 38.716,
+    "lon": -119.967
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.867,
+     39.283
+    ]
+   },
+   "properties": {
+    "end_local": "2025-10-03 05:00",
+    "year": 2025,
+    "max24_in": 1.48,
+    "basin_mean24_in": 0.832,
+    "max1h_in": 0.252,
+    "lat": 39.283,
+    "lon": -119.867
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.366
+    ]
+   },
+   "properties": {
+    "end_local": "2015-06-11 00:00",
+    "year": 2015,
+    "max24_in": 1.472,
+    "basin_mean24_in": 0.566,
+    "max1h_in": 0.406,
+    "lat": 39.366,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.05,
+     39.324
+    ]
+   },
+   "properties": {
+    "end_local": "2025-07-26 05:00",
+    "year": 2025,
+    "max24_in": 1.457,
+    "basin_mean24_in": 0.187,
+    "max1h_in": 0.591,
+    "lat": 39.324,
+    "lon": -120.05
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.934,
+     39.349
+    ]
+   },
+   "properties": {
+    "end_local": "2021-10-08 09:00",
+    "year": 2021,
+    "max24_in": 1.409,
+    "basin_mean24_in": 0.371,
+    "max1h_in": 0.193,
+    "lat": 39.349,
+    "lon": -119.934
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.225,
+     39.174
+    ]
+   },
+   "properties": {
+    "end_local": "2025-10-26 18:00",
+    "year": 2025,
+    "max24_in": 1.394,
+    "basin_mean24_in": 0.57,
+    "max1h_in": 0.228,
+    "lat": 39.174,
+    "lon": -120.225
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.9,
+     39.308
+    ]
+   },
+   "properties": {
+    "end_local": "2014-07-17 05:00",
+    "year": 2014,
+    "max24_in": 1.354,
+    "basin_mean24_in": 0.065,
+    "max1h_in": 0.76,
+    "lat": 39.308,
+    "lon": -119.9
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.15,
+     38.966
+    ]
+   },
+   "properties": {
+    "end_local": "2010-10-18 05:00",
+    "year": 2010,
+    "max24_in": 1.323,
+    "basin_mean24_in": 0.409,
+    "max1h_in": 0.366,
+    "lat": 38.966,
+    "lon": -120.15
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.925,
+     38.883
+    ]
+   },
+   "properties": {
+    "end_local": "2023-06-09 03:00",
+    "year": 2023,
+    "max24_in": 1.319,
+    "basin_mean24_in": 0.211,
+    "max1h_in": 0.409,
+    "lat": 38.883,
+    "lon": -119.925
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.399
+    ]
+   },
+   "properties": {
+    "end_local": "2017-10-20 09:00",
+    "year": 2017,
+    "max24_in": 1.299,
+    "basin_mean24_in": 0.55,
+    "max1h_in": 0.378,
+    "lat": 39.399,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.084,
+     38.908
+    ]
+   },
+   "properties": {
+    "end_local": "2018-10-04 11:00",
+    "year": 2018,
+    "max24_in": 1.228,
+    "basin_mean24_in": 0.566,
+    "max1h_in": 0.575,
+    "lat": 38.908,
+    "lon": -120.084
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.809,
+     39.191
+    ]
+   },
+   "properties": {
+    "end_local": "2015-10-15 05:00",
+    "year": 2015,
+    "max24_in": 1.217,
+    "basin_mean24_in": 0.064,
+    "max1h_in": 1.134,
+    "lat": 39.191,
+    "lon": -119.809
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.867,
+     39.349
+    ]
+   },
+   "properties": {
+    "end_local": "2013-08-08 19:00",
+    "year": 2013,
+    "max24_in": 1.209,
+    "basin_mean24_in": 0.042,
+    "max1h_in": 0.768,
+    "lat": 39.349,
+    "lon": -119.867
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.917,
+     38.999
+    ]
+   },
+   "properties": {
+    "end_local": "2015-07-05 05:00",
+    "year": 2015,
+    "max24_in": 1.209,
+    "basin_mean24_in": 0.246,
+    "max1h_in": 0.453,
+    "lat": 38.999,
+    "lon": -119.917
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.225,
+     38.749
+    ]
+   },
+   "properties": {
+    "end_local": "2023-08-14 18:00",
+    "year": 2023,
+    "max24_in": 1.177,
+    "basin_mean24_in": 0.111,
+    "max1h_in": 0.413,
+    "lat": 38.749,
+    "lon": -120.225
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.116
+    ]
+   },
+   "properties": {
+    "end_local": "2024-09-19 05:00",
+    "year": 2024,
+    "max24_in": 1.071,
+    "basin_mean24_in": 0.386,
+    "max1h_in": 0.264,
+    "lat": 39.116,
+    "lon": -120.342
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.342,
+     39.258
+    ]
+   },
+   "properties": {
+    "end_local": "2020-08-14 23:00",
+    "year": 2020,
+    "max24_in": 1.063,
+    "basin_mean24_in": 0.089,
+    "max1h_in": 0.177,
+    "lat": 39.258,
+    "lon": -120.342
+   }
+  }
+ ]
+}

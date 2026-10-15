@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>3D Scene - visibleArea | Sample | ArcGIS Maps SDK for JavaScript</title>
+
+    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
+    <script type="module" src="https://js.arcgis.com/5.1/"></script>
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      arcgis-scene {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      .container {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        height: 100vh;
+        position: relative;
+      }
+
+      #supportScene {
+        width: 25%;
+        height: 35%;
+        top: 5px;
+        right: 20px;
+        border: 2px solid black;
+        display: none; /* Initially hidden, shown after main scene is loaded */
+        position: absolute;
+        z-index: 5;
+      }
+
+      #toggleContainer {
+        display: none; /* Initially hidden, shown after support scene is loaded */
+        position: absolute;
+        bottom: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        pointer-events: all;
+      }
+
+      .esri-view-surface:after {
+        outline: 0 !important;
+      }
+
+      :root {
+        --my-width: 100vw;
+      }
+
+      calcite-shell-panel {
+        --calcite-shell-panel-min-width: var(--my-width);
+        z-index: 10;
+      }
+
+      calcite-tile-group {
+        width: var(--my-width);
+      }
+
+      #treesCountersGroup {
+        display: flex;
+        justify-content: center;
+      }
+
+      .tile-container {
+        pointer-events: none;
+      }
+
+      .tile-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        place-items: center;
+      }
+
+      .white-text {
+        color: white;
+        line-height: 0;
+      }
+
+      .transparent-while-loading {
+        opacity: 0.5;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <arcgis-scene id="mainScene" item-id="bbd5445579bb4d56897d28a607f945b0">
+        <arcgis-zoom slot="top-left"> </arcgis-zoom>
+        <arcgis-navigation-toggle slot="top-left"> </arcgis-navigation-toggle>
+        <arcgis-compass slot="top-left"> </arcgis-compass>
+      </arcgis-scene>
+
+      <calcite-shell-panel slot="panel-bottom" scale="l" id="shell-panel-start">
+        <div id="treesCountersGroup" style="position: relative">
+          <calcite-loader
+            id="treeLoader"
+            type="indeterminate"
+            label="Loading trees..."
+            style="
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              transform: translate(-50%, -50%);
+              display: block;
+              z-index: 100;
+            "
+          ></calcite-loader>
+          <calcite-tile-group id="footprintSelectTileGroup" class="transparent-while-loading" alignment="center">
+            <calcite-tile class="tile-container" heading="Crape Myrtle">
+              <div slot="content-top" class="tile-content">
+                <img
+                  src="https://static.arcgis.com/arcgis/styleItems/RealisticTrees/thumbnails/RhododendronTsutsuji.png"
+                />
+                <calcite-chip>0</calcite-chip>
+              </div>
+            </calcite-tile>
+            <calcite-tile class="tile-container" heading="Mexican Fan Palm">
+              <div slot="content-top" class="tile-content">
+                <img src="https://static.arcgis.com/arcgis/styleItems/RealisticTrees/thumbnails/SabalMexicana.png" />
+                <calcite-chip>0</calcite-chip>
+              </div>
+            </calcite-tile>
+            <calcite-tile class="tile-container" heading="California Fan Palm">
+              <div slot="content-top" class="tile-content">
+                <img
+                  src="https://static.arcgis.com/arcgis/styleItems/RealisticTrees/thumbnails/WashingtoniaFilifera.png"
+                />
+                <calcite-chip>0</calcite-chip>
+              </div>
+            </calcite-tile>
+            <calcite-tile class="tile-container" heading="Holly Oak">
+              <div slot="content-top" class="tile-content">
+                <img src="https://static.arcgis.com/arcgis/styleItems/RealisticTrees/thumbnails/QuercusRubra.png" />
+                <calcite-chip>0</calcite-chip>
+              </div>
+            </calcite-tile>
+            <calcite-tile class="tile-container" heading="Coast Live Oak" alignment="center">
+              <div slot="content-top" class="tile-content">
+                <img src="https://static.arcgis.com/arcgis/styleItems/RealisticTrees/thumbnails/QuercusAlba.png" />
+                <calcite-chip>0</calcite-chip>
+              </div>
+            </calcite-tile>
+          </calcite-tile-group>
+        </div>
+      </calcite-shell-panel>
+
+      <arcgis-scene id="supportScene" hide-attribution>
+        <div id="toggleContainer">
+          <calcite-label scale="s" layout="inline">
+            <p class="white-text">2D</p>
+            <calcite-switch id="3dToggle" scale="s"></calcite-switch>
+            <p class="white-text">3D</p>
+          </calcite-label>
+        </div>
+      </arcgis-scene>
+    </div>
+
+    <script type="module">
+      const [
+        GraphicsLayer,
+        Graphic,
+        reactiveUtils,
+        Polygon,
+        Polyline,
+        promiseUtils,
+        IconSymbol3DLayer,
+        PointSymbol3D,
+        ObjectSymbol3DLayer,
+        Point,
+        Map,
+      ] = await $arcgis.import([
+        "@arcgis/core/layers/GraphicsLayer.js",
+        "@arcgis/core/Graphic.js",
+        "@arcgis/core/core/reactiveUtils.js",
+        "@arcgis/core/geometry/Polygon.js",
+        "@arcgis/core/geometry/Polyline.js",
+        "@arcgis/core/core/promiseUtils.js",
+        "@arcgis/core/symbols/IconSymbol3DLayer.js",
+        "@arcgis/core/symbols/PointSymbol3D.js",
+        "@arcgis/core/symbols/ObjectSymbol3DLayer.js",
+        "@arcgis/core/geometry/Point.js",
+        "@arcgis/core/Map.js",
+      ]);
+
+      /**********************************************
+       * Environment | Variables and HTML elements
+       *********************************************/
+      // Set the camera icon and 3D object
+      const cameraIconUrl = "https://developers.arcgis.com/javascript/latest/assets/sample-code/scene-visible-area/cameraIcon.svg";
+      const camera3DObjectUrl = "https://developers.arcgis.com/javascript/latest/assets/sample-code/scene-visible-area/cameraObject.glb";
+
+      const toggleContainer = document.getElementById("toggleContainer");
+      const toggle = document.getElementById("3dToggle");
+
+      const treeLoader = document.getElementById("treeLoader");
+      const footprintSelectTileGroup = document.getElementById("footprintSelectTileGroup");
+
+      let countersHaveData = false;
+
+      toggle.addEventListener("calciteSwitchChange", (event) => {
+        handle3DToggle(event);
+      });
+
+      /**********************************************
+       * Environment | Main Scene and Support Scene
+       *********************************************/
+      // Access the main scene component
+      const mainScene = document.getElementById("mainScene");
+
+      // Use viewOnReady to wait for the main scene to load
+      await mainScene.viewOnReady();
+
+      // Access the support scene component
+      const supportScene = document.getElementById("supportScene");
+
+      // Configure support scene component
+      supportScene.map = new Map({
+        basemap: "streets-night-vector",
+        ground: "world-elevation",
+      });
+
+      supportScene.constraints = {
+        tilt: {
+          max: 0, // Prevent the user from tilting the camera
+        },
+      };
+
+      supportScene.view.ui.components = []; // Remove attribution
+
+      supportScene.style.display = "flex"; // Make it visible
+
+      // Keep track of the support scene view-mode (top-down or tilted)
+      let isSupportSceneTilted = false;
+
+      /**********************************************
+       * Environment | Layers and Graphics
+       *********************************************/
+      // Create the graphics layer for the support scene. It contains the lines which connect the camera object and the visibleArea geometry
+      const frustumGraphicsLayer = new GraphicsLayer({
+        elevationInfo: {
+          mode: "relative-to-scene",
+        },
+        visible: false,
+      });
+      supportScene.map.add(frustumGraphicsLayer);
+
+      const visibleAreaGraphicsLayer = new GraphicsLayer({
+        elevationInfo: {
+          mode: "on-the-ground",
+        },
+      });
+      supportScene.map.add(visibleAreaGraphicsLayer);
+
+      // Create the graphics layer for the camera icon
+      const cameraGraphicLayer = new GraphicsLayer({
+        elevationInfo: {
+          mode: "on-the-ground",
+        },
+      });
+      supportScene.map.add(cameraGraphicLayer);
+
+      // Create a graphic for the camera with an icon symbol
+      const cameraGraphic = new Graphic({
+        geometry: mainScene.camera.position,
+        symbol: new PointSymbol3D({
+          symbolLayers: [
+            new IconSymbol3DLayer({
+              resource: { href: cameraIconUrl },
+              angle: mainScene.camera.heading - 90,
+            }),
+          ],
+        }),
+      });
+      cameraGraphicLayer.add(cameraGraphic);
+
+      // Get the tree layer from the main scene's map
+      const treeLayer = mainScene.map.allLayers.find((layer) => (layer.title = "Trees" && layer.type == "feature"));
+
+      // Get the groundView elevation sampler to later get the elevation value
+      let elevationSampler = mainScene.groundView.elevationSampler;
+
+      /**********************************************
+       * Environment | Symbology and Styles
+       *********************************************/
+      // Create the Polygon3D Symbol for the visibleArea polygon
+      const visibleAreaSymbol = {
+        type: "polygon-3d",
+        symbolLayers: [
+          {
+            type: "fill",
+            material: { color: "white" },
+            outline: { color: "white" },
+            pattern: {
+              type: "style",
+              style: "forward-diagonal",
+            },
+          },
+        ],
+      };
+
+      // Create the graphics for the visibleArea vertices
+      function getVisibleAreaGraphics(visibleArea) {
+        const parts = visibleArea.rings.map(
+          (ring) => new Polygon({ rings: [ring], spatialReference: visibleArea.spatialReference }),
+        );
+
+        return parts.map((part) => new Graphic({ geometry: part, symbol: visibleAreaSymbol }));
+      }
+
+      /**********************************************
+       * Event Listeners
+       *********************************************/
+      // Wait until the support view is ready
+      await supportScene.viewOnReady();
+
+      // Show the toggle after the support scene is ready
+      toggleContainer.style.display = "flex";
+
+      const treeLayerView = await mainScene.whenLayerView(treeLayer);
+
+      // Debounces queries to the tree feature layer view to efficiently fetch tree data within the visible area.
+      // This prevents excessive querying as the user navigates the main scene.
+      const debounceQueryTrees = promiseUtils.debounce(async () => {
+        try {
+          setTreeLoadingState(true);
+          // Query the treeLayerView to get all the trees inside the visibleArea
+          const featureSet = await treeLayerView.queryFeatures({
+            geometry: mainScene.visibleArea,
+            returnGeometry: false,
+            outFields: ["commonname"],
+          });
+          const treeFeaturesResult = featureSet.features;
+          updateTreesIndicators(treeFeaturesResult);
+        } catch (error) {
+          console.error("query failed: ", error);
+          setTreeLoadingState(false);
+        }
+      });
+
+      // Whenever the tree layerView is not updating its data, trigger the debounced query
+      reactiveUtils.when(
+        () => !treeLayerView.dataUpdating,
+        () => {
+          debounceQueryTrees().catch((error) => {
+            if (error.name === "AbortError") {
+              return;
+            }
+            console.error(error);
+          });
+        },
+      );
+
+      // Every time the visibleArea of the main scene change, we update both the support scene and the trees indicators
+      reactiveUtils.when(
+        () => mainScene.visibleArea,
+        () => {
+          debounceQueryTrees().catch((error) => {
+            if (error.name === "AbortError") {
+              return;
+            }
+            console.error(error);
+          });
+          updateScene();
+        },
+        {
+          initial: true,
+        },
+      );
+
+      reactiveUtils.when(
+        () => !mainScene.updating,
+        () => {
+          if (mainScene.visibleArea) {
+            supportScene.goTo({
+              target: [mainScene.visibleArea.extent],
+              tilt: isSupportSceneTilted ? 60 : 0,
+            });
+          }
+        },
+      );
+
+      /**********************************************
+       * Support functions
+       *********************************************/
+      // Create the frustum and visibleArea polygon graphics in the support scene
+      async function updateScene() {
+        frustumGraphicsLayer.removeAll();
+        visibleAreaGraphicsLayer.removeAll();
+
+        let { visibleArea } = mainScene;
+        if (!visibleArea) {
+          return;
+        }
+        const visibleAreaGraphics = getVisibleAreaGraphics(visibleArea);
+        visibleAreaGraphicsLayer.addMany(visibleAreaGraphics);
+
+        // Get the elevation value from the elevationSampler starting from the camera position
+        const cameraPosition = mainScene.camera.position;
+        const groundElevation = elevationSampler.elevationAt(cameraPosition.x, cameraPosition.y);
+        const relativeCameraHeight = cameraPosition.z - groundElevation;
+
+        // Update the camera graphic according to the main scene's camera
+        cameraGraphic.geometry = new Point({
+          x: cameraPosition.x,
+          y: cameraPosition.y,
+          z: relativeCameraHeight,
+          spatialReference: visibleArea.spatialReference,
+        });
+
+        cameraGraphic.symbol = updateCameraSymbol(mainScene.camera.heading, mainScene.camera.tilt);
+
+        // Symbol for the connecting lines between camera and visibleArea vertices
+        const lineSymbol = {
+          type: "simple-line",
+          color: [255, 255, 255],
+          width: 0.5,
+        };
+
+        for (const ring of visibleArea.rings) {
+          for (const point of ring) {
+            // Create a Polyline connecting the camera position to visibleArea vertices
+            const connectingLine = new Polyline({
+              paths: [
+                [
+                  [point[0], point[1], 0],
+                  [cameraPosition.x, cameraPosition.y, relativeCameraHeight],
+                ],
+              ],
+              spatialReference: visibleArea.spatialReference,
+            });
+
+            const lineGraphic = new Graphic({
+              geometry: connectingLine,
+              symbol: lineSymbol,
+            });
+            frustumGraphicsLayer.add(lineGraphic);
+          }
+        }
+      }
+
+      // Define the behavior of the toggle for handling top-down vs tilted view-mode
+      function handle3DToggle(event) {
+        isSupportSceneTilted = event.target.checked;
+        if (isSupportSceneTilted) {
+          frustumGraphicsLayer.visible = true;
+          supportScene.constraints.tilt = {}; // Remove max constraint
+          cameraGraphicLayer.elevationInfo.mode = "relative-to-scene";
+        } else {
+          // support scene is in bird's-eye view-mode (top-down)
+          frustumGraphicsLayer.visible = false;
+          supportScene.constraints.tilt.max = 0;
+          cameraGraphicLayer.elevationInfo.mode = "on-the-ground";
+        }
+        // Get the proper symbol for the camera and then rotate it
+        cameraGraphic.symbol = updateCameraSymbol(mainScene.camera.heading, mainScene.camera.tilt);
+
+        // Center the support scene to the visibleArea extent
+        if (mainScene.visibleArea) {
+          supportScene.goTo({
+            target: [mainScene.visibleArea.extent],
+            tilt: isSupportSceneTilted ? 60 : 0,
+          });
+        }
+      }
+
+      // Update the camera symbol according to the support scene's view-mode
+      function updateCameraSymbol(heading, tilt) {
+        if (isSupportSceneTilted) {
+          return new PointSymbol3D({
+            symbolLayers: [
+              new ObjectSymbol3DLayer({
+                width: 15,
+                heading,
+                tilt: tilt - 90,
+                resource: {
+                  href: camera3DObjectUrl,
+                },
+              }),
+            ],
+          });
+        } else {
+          // support scene is in bird's-eye view-mode (top-down)
+          return new PointSymbol3D({
+            symbolLayers: [
+              new IconSymbol3DLayer({
+                resource: { href: cameraIconUrl },
+                angle: heading - 90, // Adjust angle for icon orientation
+              }),
+            ],
+          });
+        }
+      }
+
+      // Update the bottom indicators with the numbers of trees for each category
+      function updateTreesIndicators(treesFeatures) {
+        // Count the occurrences of each common name (tree category)
+        const commonNameCounts = {};
+        for (const feature of treesFeatures) {
+          const commonName = feature.attributes.commonname;
+          commonNameCounts[commonName] = (commonNameCounts[commonName] || 0) + 1;
+        }
+
+        const tiles = document.querySelectorAll("calcite-tile");
+        let hasNonZero = false;
+
+        // Update the calcite-chip with the count of each tree category in the visible area
+        tiles.forEach((tile) => {
+          const heading = tile.getAttribute("heading");
+          const count = commonNameCounts[heading] || 0;
+
+          if (count > 0) {
+            hasNonZero = true;
+          }
+
+          const chip = tile.querySelector("calcite-chip");
+          if (chip) {
+            chip.textContent = count.toString();
+          }
+        });
+
+        // Remove loader only if there is data to show
+        if (!countersHaveData && hasNonZero) {
+          countersHaveData = true;
+          setTreeLoadingState(false);
+        }
+        // Hide loader after each
+        else if (countersHaveData) {
+          setTreeLoadingState(false);
+        }
+      }
+
+      // Show/hide the loading state when the tree layer is being queried
+      function setTreeLoadingState(isLoading) {
+        treeLoader.style.display = isLoading ? "block" : "none";
+        footprintSelectTileGroup.classList.toggle("transparent-while-loading", isLoading);
+      }
+    </script>
+  </body>
+</html>

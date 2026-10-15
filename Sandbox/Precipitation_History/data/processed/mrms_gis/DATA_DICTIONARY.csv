@@ -1,0 +1,34 @@
+raster,units,meaning
+mean_season_total.tif,inches,Mean Jun-Oct precipitation total
+mean_wet_hours.tif,hours per season,Mean count of hours with at least 0.01 in
+mean_ams_1h.tif,inches,Mean annual maximum 1-hour depth
+mean_ams_24h.tif,inches,Mean annual maximum 24-hour depth
+record_max_1h.tif,inches,Largest 1-hour depth in the record
+record_max_24h.tif,inches,Largest rolling 24-hour depth in the record
+rl_1h_2yr.tif,inches,"1h rainfall depth with a 2-year return period (Gumbel, L-moments)"
+rl_1h_5yr.tif,inches,"1h rainfall depth with a 5-year return period (Gumbel, L-moments)"
+rl_1h_10yr.tif,inches,"1h rainfall depth with a 10-year return period (Gumbel, L-moments)"
+rl_1h_25yr.tif,inches,"1h rainfall depth with a 25-year return period (Gumbel, L-moments)"
+rl_1h_50yr.tif,inches,"1h rainfall depth with a 50-year return period (Gumbel, L-moments)"
+rl_1h_100yr.tif,inches,"1h rainfall depth with a 100-year return period (Gumbel, L-moments)"
+rl_24h_2yr.tif,inches,"24h rainfall depth with a 2-year return period (Gumbel, L-moments)"
+rl_24h_5yr.tif,inches,"24h rainfall depth with a 5-year return period (Gumbel, L-moments)"
+rl_24h_10yr.tif,inches,"24h rainfall depth with a 10-year return period (Gumbel, L-moments)"
+rl_24h_25yr.tif,inches,"24h rainfall depth with a 25-year return period (Gumbel, L-moments)"
+rl_24h_50yr.tif,inches,"24h rainfall depth with a 50-year return period (Gumbel, L-moments)"
+rl_24h_100yr.tif,inches,"24h rainfall depth with a 100-year return period (Gumbel, L-moments)"
+exc_1h_0.1in_per_season.tif,count per season,1h windows per Jun-Oct season reaching 0.1 in
+exc_1h_0.25in_per_season.tif,count per season,1h windows per Jun-Oct season reaching 0.25 in
+exc_1h_0.5in_per_season.tif,count per season,1h windows per Jun-Oct season reaching 0.5 in
+exc_1h_0.75in_per_season.tif,count per season,1h windows per Jun-Oct season reaching 0.75 in
+exc_1h_1in_per_season.tif,count per season,1h windows per Jun-Oct season reaching 1 in
+exc_24h_0.5in_per_season.tif,count per season,24h windows per Jun-Oct season reaching 0.5 in
+exc_24h_1in_per_season.tif,count per season,24h windows per Jun-Oct season reaching 1 in
+exc_24h_1.5in_per_season.tif,count per season,24h windows per Jun-Oct season reaching 1.5 in
+exc_24h_2in_per_season.tif,count per season,24h windows per Jun-Oct season reaching 2 in
+exc_24h_3in_per_season.tif,count per season,24h windows per Jun-Oct season reaching 3 in
+prone_index_1h.tif,ratio,10-year 1-hour depth divided by the basin median
+prone_index_24h.tif,ratio,10-year 24-hour depth divided by the basin median
+flashiness.tif,ratio,10-year 1-hour depth divided by 10-year 24-hour depth; high means the design event is a short burst
+norm_intensity_1h.tif,in per in,10-year 1-hour depth per inch of mean Jun-Oct total
+norm_intensity_24h.tif,in per in,10-year 24-hour depth per inch of mean Jun-Oct total
