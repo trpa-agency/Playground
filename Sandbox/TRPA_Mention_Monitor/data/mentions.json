@@ -1,19 +1,19 @@
 {
- "generated_at": "2026-10-14T21:05:05+00:00",
+ "generated_at": "2026-10-19T16:46:30+00:00",
  "window": {
-  "start": "2026-09-14",
-  "end": "2026-10-14"
+  "start": "2026-09-19",
+  "end": "2026-10-19"
  },
  "meeting_window": {
-  "start": "2026-09-14",
-  "end": "2026-11-13"
+  "start": "2026-09-19",
+  "end": "2026-11-18"
  },
  "sources": [
   {
    "name": "Google News",
    "kind": "press",
    "platform": "Google News search",
-   "hits": 15,
+   "hits": 18,
    "ok": true,
    "error": ""
   },
@@ -21,7 +21,7 @@
    "name": "Bing News",
    "kind": "press",
    "platform": "Bing News search",
-   "hits": 23,
+   "hits": 24,
    "ok": true,
    "error": ""
   },
@@ -29,7 +29,7 @@
    "name": "Tahoe Daily Tribune",
    "kind": "press",
    "platform": "RSS feed",
-   "hits": 4,
+   "hits": 5,
    "ok": true,
    "error": ""
   },
@@ -37,7 +37,7 @@
    "name": "Sierra Sun",
    "kind": "press",
    "platform": "RSS feed",
-   "hits": 3,
+   "hits": 0,
    "ok": true,
    "error": ""
   },
@@ -53,7 +53,7 @@
    "name": "South Tahoe Now",
    "kind": "press",
    "platform": "RSS feed",
-   "hits": 1,
+   "hits": 0,
    "ok": true,
    "error": ""
   },
@@ -77,7 +77,7 @@
    "name": "California Tahoe Conservancy (news)",
    "kind": "press",
    "platform": "RSS feed",
-   "hits": 1,
+   "hits": 0,
    "ok": true,
    "error": ""
   },
@@ -88,7 +88,7 @@
    "hits": 2,
    "ok": true,
    "error": "",
-   "docs_scanned": 42,
+   "docs_scanned": 36,
    "docs_unreadable": 0
   },
   {
@@ -98,27 +98,27 @@
    "hits": 2,
    "ok": true,
    "error": "",
-   "docs_scanned": 26,
+   "docs_scanned": 27,
    "docs_unreadable": 0
   },
   {
    "name": "Placer County",
    "kind": "meetings",
    "platform": "CivicPlus AgendaCenter",
-   "hits": 4,
+   "hits": 5,
    "ok": true,
    "error": "",
-   "docs_scanned": 47,
+   "docs_scanned": 33,
    "docs_unreadable": 0
   },
   {
    "name": "Douglas County",
    "kind": "meetings",
    "platform": "Granicus",
-   "hits": 4,
+   "hits": 2,
    "ok": true,
    "error": "",
-   "docs_scanned": 24,
+   "docs_scanned": 23,
    "docs_unreadable": 0
   },
   {
@@ -128,8 +128,8 @@
    "hits": 1,
    "ok": true,
    "error": "",
-   "docs_scanned": 10,
-   "docs_unreadable": 0
+   "docs_scanned": 9,
+   "docs_unreadable": 1
   },
   {
    "name": "Town of Truckee",
@@ -155,30 +155,30 @@
    "name": "Incline Village General Improvement District",
    "kind": "meetings",
    "platform": "CivicClerk",
-   "hits": 2,
+   "hits": 3,
    "ok": true,
    "error": "",
-   "docs_scanned": 4,
+   "docs_scanned": 5,
    "docs_unreadable": 0
   },
   {
    "name": "North Tahoe Public Utility District",
    "kind": "meetings",
    "platform": "Agency website",
-   "hits": 1,
+   "hits": 2,
    "ok": true,
    "error": "",
-   "docs_scanned": 8,
+   "docs_scanned": 10,
    "docs_unreadable": 0
   },
   {
    "name": "Tahoe Transportation District",
    "kind": "meetings",
    "platform": "Agency website",
-   "hits": 3,
+   "hits": 2,
    "ok": true,
    "error": "",
-   "docs_scanned": 3,
+   "docs_scanned": 2,
    "docs_unreadable": 0
   },
   {
@@ -195,10 +195,10 @@
    "name": "California Tahoe Conservancy (board)",
    "kind": "meetings",
    "platform": "Agency website",
-   "hits": 2,
+   "hits": 0,
    "ok": true,
    "error": "",
-   "docs_scanned": 21,
+   "docs_scanned": 0,
    "docs_unreadable": 0
   },
   {
@@ -208,14 +208,14 @@
    "hits": 1,
    "ok": true,
    "error": "",
-   "docs_scanned": 10,
+   "docs_scanned": 9,
    "docs_unreadable": 0
   },
   {
    "name": "Tahoe Resource Conservation District",
    "kind": "meetings",
    "platform": "Agency website",
-   "hits": 1,
+   "hits": 0,
    "ok": true,
    "error": "",
    "docs_scanned": 1,
@@ -262,27 +262,19 @@
   "parking",
   "vehicle miles traveled",
   "VMT",
-  "Regional Plan",
-  "area plan",
-  "code amendment",
-  "general plan",
-  "zoning",
-  "Environmental Improvement Program",
-  "stream environment zone",
-  "restoration",
-  "stormwater",
-  "lake clarity",
-  "aquatic invasive species",
-  "glyphosate",
-  "defensible space",
-  "fuel reduction",
-  "forest health",
-  "wildfire",
   "shoreline",
   "pier",
   "buoy",
   "land coverage",
-  "scenic"
+  "scenic",
+  "defensible space",
+  "lake clarity",
+  "stream environment zone",
+  "stormwater",
+  "aquatic invasive species",
+  "glyphosate",
+  "threshold evaluation",
+  "water quality"
  ],
  "departments": {
   "Long Range": [
@@ -329,10 +321,10 @@
  "mentions": [
   {
    "category": "upcoming",
-   "source": "Placer County",
-   "title": "Zoning Administrator / Parcel Review Committee: October 22, 2026 ZA/PRC Hearing",
+   "source": "Douglas County",
+   "title": "Stormwater Task Force",
    "date": "2026-10-22",
-   "url": "https://www.placer.ca.gov/AgendaCenter/ViewFile/Agenda/_10222026-6649",
+   "url": "https://douglascountynv.granicus.com/AgendaViewer.php?view_id=1&event_id=2437",
    "hit_count": 0,
    "snippets": [],
    "detail": "Agenda",
@@ -340,7 +332,7 @@
    "contexts": [
     {
      "type": "Agenda item",
-     "title": "ZONING ADMINISTRATOR / PARCEL REVIEW COMMITTEE AGENDA THURSDAY, OCTOBER 22, 2026 10:00 a.m. Planning Commission Hearing Room, 3091 County Center Drive, Auburn, CA 95603 Crystal Jacobsen, Zoning…",
+     "title": "Douglas County Stormwater Task Force Public Meeting Notice and Agenda Thursday, October 22, 2026 5:30 PM Community & Senior Center Dining Room 1329 Waterloo Lane Gardnerville, NV 89410 The Douglas…",
      "pages": [
       1
      ],
@@ -349,7 +341,16 @@
     },
     {
      "type": "Agenda item",
-     "title": "Crystal Jacobsen, Zoning Administrator/ Marci Branaugh, Deputy Clerk of the Board Parcel Review Committee Chair Sasha Pelletier, Board Commission Clerk The Planning Commission Hearing Room will be…",
+     "title": "The Douglas County Stormwater Task Force (\"Task Force\") serves as a collaborative forum for reviewing and evaluating the proposed Douglas County Stormwater Utility and its associated funding…",
+     "pages": [
+      1
+     ],
+     "count": 4,
+     "in_title": true
+    },
+    {
+     "type": "Agenda item",
+     "title": "https://lp.constantcontactpages.com/sl/bnuE28T Douglas County Stormwater Task Force October 22, 2026 1",
      "pages": [
       1
      ],
@@ -358,43 +359,16 @@
     },
     {
      "type": "Agenda item",
-     "title": "The Zoning Administrator/Parcel Review Committee Chair will consider the following applications at a Public Hearing to be held in the CDRA Building, Planning Commission Hearing Room, at 3091 County…",
+     "title": "4. AGENDA ITEMS 4.a For Presentation Only. Stormwater Workshop. An interactive roundtable workshop for community members and Task Force representatives to rotate through guided discussion stations…",
      "pages": [
-      1
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "Note: The Applicant or an authorized representative should be present in order to present information and/or testimony relative to the application. The Zoning Administrator / Parcel Review Committee…",
-     "pages": [
-      1
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "Materials related to an item on this agenda submitted to the Zoning Administrator/Parcel Review Committee Chair after distribution of the agenda packet are available for public inspection at the…",
-     "pages": [
-      1
+      2
      ],
      "count": 2,
      "in_title": true
     },
     {
      "type": "Agenda item",
-     "title": "CONSENT AGENDA: All items will be approved by a single roll call vote. Anyone may ask to address Consent items prior to the Zoning Administrator/ Parcel Review Committee Chair taking action, and the…",
-     "pages": [
-      1
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "ZONING ADMINISTRATOR / PARCEL REVIEW COMMITTEE October 22, 2026 PLACER COUNTY PARCEL REVIEW COMMITTEE TIMED ITEMS to be discussed at the time shown or shortly thereafter 10:00 AM 1. PLANNING SERVICES…",
+     "title": "4.b For Possible Action. Stormwater Workshop Report-Out. Task Force members will report-out on the workshop round-tables to summarize themes, answer recurring questions, and identify topics for…",
      "pages": [
       2
      ],
@@ -403,7 +377,25 @@
     },
     {
      "type": "Agenda item",
-     "title": "PLACER COUNTY ZONING ADMINISTRATOR TIMED ITEMS to be discussed at the time shown or shortly thereafter 10:05 AM 2. PLANNING SERVICES DIVISION A. Mercer Variance, Extension of Time…",
+     "title": "6. ADJOURNMENT DOUGLAS COUNTY STORMWATER TASK FORCE FINAL AGENDA October 22, 2026",
+     "pages": [
+      2
+     ],
+     "count": 2,
+     "in_title": true
+    },
+    {
+     "type": "Agenda item",
+     "title": "https://douglascountynv.granicus.com/ViewPublisher.php? view_id=1 Notice to Persons with Disabilities: Members of the public who have a disability and require special assistance or accommodations at…",
+     "pages": [
+      1
+     ],
+     "count": 5,
+     "in_title": false
+    },
+    {
+     "type": "Public comment",
+     "title": "2. PUBLIC COMMENT At this time, public comment will be taken on those items that are within the jurisdiction and control of the Stormwater Task Force. Public comment is limited to three minutes per…",
      "pages": [
       2
      ],
@@ -411,44 +403,83 @@
      "in_title": true
     },
     {
-     "type": "Agenda item",
-     "title": "ZONING ADMINISTRATOR / PARCEL REVIEW COMMITTEE October 22, 2026 PLACER COUNTY ZONING ADMINISTRATOR/PARCEL REVIEW COMMITTEE CONSENT ITEMS All items will be approved by a single roll call vote. Anyone…",
+     "type": "Public comment",
+     "title": "5. PUBLIC COMMENT At this time, public comment will be taken on those items that are within the jurisdiction and control of the Stormwater Task Force",
      "pages": [
-      3
+      2
      ],
      "count": 1,
      "in_title": true
-    },
+    }
+   ],
+   "keywords": {
+    "stormwater": {
+     "count": 18,
+     "snippets": [
+      "p.1: Douglas County Stormwater Task Force Public Meeting Notice and Agenda Thursday, October 22, 2026 5:30 PM Community & Senior Center Dining Room 1329 Waterloo Lane Gardnerville, NV 89410...",
+      "p.1: ...ing Notice and Agenda Thursday, October 22, 2026 5:30 PM Community & Senior Center Dining Room 1329 Waterloo Lane Gardnerville, NV 89410 The Douglas County Stormwater Task Force (\"Task Force\") serves as a collaborative forum for reviewing and evaluating the proposed Douglas County Stormwater Utility and its associated fundin...",
+      "p.1: ...taken out of order, combined for consideration, or removed from the agenda at any time. To ensure that every citizen wishing to speak before the Douglas County Stormwater Task Force has an opportunity to express an opinion, the audience is requested to refrain from making comments, clapping, or making remarks or gestures that ma..."
+     ]
+    }
+   }
+  },
+  {
+   "category": "upcoming",
+   "source": "North Tahoe Public Utility District",
+   "title": "RP Commission regular meeting",
+   "date": "2026-10-22",
+   "url": "https://ntpud.org/wp-content/uploads/2026/10/1-RP-Commission-regular-meeting-agenda-and-packet-10222026.pdf",
+   "hit_count": 1,
+   "snippets": [
+    "p.24: ...n for a new Utility Operations and Fleet Maintenance Facility, proceed with boundary identification, a topographic survey, and land use planning efforts with TRPA and Placer County at the September 9, 2025, meeting. The topographic survey is complete, and the fleet consultant has visited the site to conduct a workshop a..."
+   ],
+   "detail": "Agenda packet",
+   "verified": true,
+   "contexts": [
+    {
+     "type": "Staff report",
+     "title": "Planning and Engineering Department Status Report",
+     "pages": [
+      24
+     ],
+     "count": 1,
+     "in_title": false
+    }
+   ],
+   "keywords": {
+    "parking": {
+     "count": 10,
+     "snippets": [
+      "p.6: ...ports 1. Recreation, Parks, and Facilities Department Report – RPF Manager Conk highlighted items from her report, including the new scholarship program, and parking management in the Regional Park went live on August 12. 2. Public Information and Recreation Outreach Update – GCA Manager Broglio provided highlights fro...",
+      "p.6: ...pplications for the Public Art Project to date. 3. Planning and Engineering Department Report – Engineering Manager Chorey provided more details about the parking management rollout. Greg Hansen, a public member, commented on challenges with paid parking kiosks at another trail location. In response to Director Coolidg...",
+      "p.12: ...from two years ago. o In August, rental ad-on’s had a 447% increase year over year, and a 1237% increase from two years ago. Administration • Parking Management continues to have a slow rollout. Staff works regularly with the implementation teams from the parking systems to iron out the wrinkles, notably t..."
+     ]
+    }
+   }
+  },
+  {
+   "category": "upcoming",
+   "source": "Placer County",
+   "title": "Development Review Committee: Development Review Committee Meeting - October 21, 2026 - Agenda",
+   "date": "2026-10-21",
+   "url": "https://www.placer.ca.gov/AgendaCenter/ViewFile/Agenda/_10212026-6653",
+   "hit_count": 0,
+   "snippets": [],
+   "detail": "Agenda",
+   "verified": true,
+   "contexts": [
     {
      "type": "Agenda item",
-     "title": "PLACER COUNTY ZONING ADMINISTRATOR/PARCEL REVIEW COMMITTEE CONSENT ITEMS All items will be approved by a single roll call vote. Anyone may ask to address Consent items prior to the Zoning…",
+     "title": "iii. Project Title: Cal Neva Revitalization Project Improvement Plans (ESD24-00185) Project Location: Parking lot, stormwater, utility, frontage, and grading improvements to the California side of…",
      "pages": [
-      3
+      5
      ],
      "count": 2,
      "in_title": true
     },
     {
      "type": "Agenda item",
-     "title": "5. ZONING ADMINISTRATOR CLERK",
-     "pages": [
-      3
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "1. Approve the Summary Action from the September 17, 2026, Zoning Administrator/Parcel Review Committee Meeting",
-     "pages": [
-      3
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "Placer County is committed to ensuring that persons with disabilities are provided the resources to participate fully in its public meetings. If you are hearing impaired, we have listening devices…",
+     "title": "Development Review Committee Wednesday, October 21, 2026, 10:00 AM Placer County Community Development Resource Center 3091 County Center Drive, Auburn, CA 95603 Birch Conference Room In Person…",
      "pages": [
       1
      ],
@@ -456,22 +487,150 @@
      "in_title": false
     },
     {
-     "type": "Public comment",
-     "title": "PUBLIC COMMENT: Following the consideration of any correspondence and/or reports, the public will be offered the opportunity to discuss with the Zoning Administrator /Parcel Review Committee Chair ,…",
+     "type": "Agenda item",
+     "title": "C. Improvement Plan(s) for Review and Approval i. Project Title: Homewood Snowmaking Replacement Project Improvement Plans (ESD26-00146) Project Location: Replacement and update of the snowmaking…",
      "pages": [
-      1
+      5
      ],
      "count": 2,
-     "in_title": true
+     "in_title": false
     }
    ],
    "keywords": {
-    "zoning": {
-     "count": 17,
+    "housing": {
+     "count": 1,
      "snippets": [
-      "p.1: ZONING ADMINISTRATOR / PARCEL REVIEW COMMITTEE AGENDA THURSDAY, OCTOBER 22, 2026 10:00 a.m. Planning Commission Hearing Room, 3091 County Center Drive, Auburn, C...",
-      "p.1: ...W COMMITTEE AGENDA THURSDAY, OCTOBER 22, 2026 10:00 a.m. Planning Commission Hearing Room, 3091 County Center Drive, Auburn, CA 95603 Crystal Jacobsen, Zoning Administrator/ Marci Branaugh, Deputy Clerk of the Board Parcel Review Committee Chair Sasha Pelletier, Board Commission Clerk The Planning Commission He...",
-      "p.1: ...o feed of the meeting can be viewed at https://www.youtube.com/@placercomeetings. Note that the video may be slightly delayed from the actual meeting. The Zoning Administrator/Parcel Review Committee Chair will consider the following applications at a Public Hearing to be held in the CDRA Building, Planning Commission..."
+      "p.1: ...approved Placer Vineyards Specific Plan (PVSP) Property 19 Phase 1 Small Lot Vesting Tentative Subdivision Map Conditions of Approval related to the affordable housing requirements and to; 2) Approve the PVSP Property 19 Phase 2 Development Phase Phasing Plan, which identifies infrastructure necessary to support development w..."
+     ]
+    },
+    "affordable housing": {
+     "count": 1,
+     "snippets": [
+      "p.1: ...Modify the approved Placer Vineyards Specific Plan (PVSP) Property 19 Phase 1 Small Lot Vesting Tentative Subdivision Map Conditions of Approval related to the affordable housing requirements and to; 2) Approve the PVSP Property 19 Phase 2 Development Phase Phasing Plan, which identifies infrastructure necessary to support development w..."
+     ]
+    },
+    "parking": {
+     "count": 2,
+     "snippets": [
+      "p.5: ...at Homewood Mountain Resort Staff: Monica Grammenos ii. Project Title: Cal Neva Revitalization Project Improvement Plans – (ESD24-00185) Project Location: Parking lot, stormwater, utility, frontage, and grading improvements to the California side of the Cal Neva Revitalization Project Staff: Monica Grammenos iii....",
+      "p.5: ...va Revitalization Project Staff: Monica Grammenos iii. Project Title: Cal Neva Revitalization Project Improvement Plans (ESD24-00185) Project Location: Parking lot, stormwater, utility, frontage, and grading improvements to the California side of the Cal Neva Revitalization Project Staff: Monica Grammenos iv. P..."
+     ]
+    },
+    "stormwater": {
+     "count": 2,
+     "snippets": [
+      "p.5: ...Mountain Resort Staff: Monica Grammenos ii. Project Title: Cal Neva Revitalization Project Improvement Plans – (ESD24-00185) Project Location: Parking lot, stormwater, utility, frontage, and grading improvements to the California side of the Cal Neva Revitalization Project Staff: Monica Grammenos iii. Project Title: C...",
+      "p.5: ...tion Project Staff: Monica Grammenos iii. Project Title: Cal Neva Revitalization Project Improvement Plans (ESD24-00185) Project Location: Parking lot, stormwater, utility, frontage, and grading improvements to the California side of the Cal Neva Revitalization Project Staff: Monica Grammenos iv. Project Title: Pl..."
+     ]
+    }
+   }
+  },
+  {
+   "category": "upcoming",
+   "source": "Placer County",
+   "title": "West Placer Municipal Advisory Council (MAC): West Placer Community Forum and West Placer MAC - MAC Agenda Items: Placer Vineyards Specific Plan Properties 9 & 11 | Correspondence",
+   "date": "2026-10-21",
+   "url": "https://www.placer.ca.gov/AgendaCenter/ViewFile/Agenda/_10212026-6654",
+   "hit_count": 0,
+   "snippets": [],
+   "detail": "Agenda",
+   "verified": true,
+   "contexts": [
+    {
+     "type": "Agenda item",
+     "title": "Noe Fierros – Asked for clarification on how the sidewalks would reflect the rural setting. David Oulrey-Urroz – Responded. Dan Reason – Asked for clarification on the overall size of the project.…",
+     "pages": [
+      3
+     ],
+     "count": 1,
+     "in_title": true
+    },
+    {
+     "type": "Agenda item",
+     "title": "Dan Reason – Asked about the bike trail and if the sidewalk would be built on school property at the same time. Alex Fisch – Responded. David Oulrey-Urroz – Responded by showing the clarified area on…",
+     "pages": [
+      3
+     ],
+     "count": 1,
+     "in_title": true
+    },
+    {
+     "type": "Agenda item",
+     "title": "Patrick Stiehr – Asked about the land use, the increased use of the open space , who spec’d the community plan for residential and if parking is planned to be on the street. Harsev Singh (Owner) –…",
+     "pages": [
+      4
+     ],
+     "count": 1,
+     "in_title": true
+    },
+    {
+     "type": "Agenda item",
+     "title": "Rick Burtzlaff – Shared his concerns about people parking on both sides of the street and the space needed. Dan Reason – Asked for clarification on what size homes are planned. Rick Burtzlaff –…",
+     "pages": [
+      4
+     ],
+     "count": 1,
+     "in_title": true
+    },
+    {
+     "type": "Agenda item",
+     "title": "Laura Bullard – Asked for location clarification, asking if this area would go all the way to Watt. Asked if this would be a gated community and if there would be a HOA. Asked questions about the…",
+     "pages": [
+      5
+     ],
+     "count": 1,
+     "in_title": false
+    }
+   ],
+   "keywords": {
+    "housing": {
+     "count": 1,
+     "snippets": [
+      "p.5: ...r concerns about going against the community plan and the impact this would have on the area with overburdened schools. Asked for clarification on low-income housing and shared her concerns about higher density development. David Oulrey-Urroz – Responded. 5. Correspondence: A. Correspondence received for MAC betwee..."
+     ]
+    },
+    "sidewalk": {
+     "count": 2,
+     "snippets": [
+      "p.3: ...location. Noe Fierros – Asked if the County of Sacramento has been notified. Alex Fisch – Responded. Noe Fierros – Asked for clarification on how the sidewalks would reflect the rural setting. David Oulrey-Urroz – Responded. Dan Reason – Asked for clarification on the overall size of the project. David Willi...",
+      "p.3: ...ked for clarification on the distance between the area and PFE Road. Harsev Singh (Owner) – Responded. Dan Reason – Asked about the bike trail and if the sidewalk would be built on school property at the same time. Alex Fisch – Responded. David Oulrey-Urroz – Responded by showing the clarified area on the presenta..."
+     ]
+    },
+    "parking": {
+     "count": 2,
+     "snippets": [
+      "p.4: ...current schools are. Patrick Stiehr – Asked about the land use, the increased use of the open space , who spec’d the community plan for residential and if parking is planned to be on the street. Harsev Singh (Owner) – Responded. Patrick Stiehr – Shared that 4,000 sq. ft. lots doesn’t provide any room to park....",
+      "p.4: ...(Owner) – Responded. Patrick Stiehr – Shared that 4,000 sq. ft. lots doesn’t provide any room to park. Rick Burtzlaff – Shared his concerns about people parking on both sides of the street and the space needed. Dan Reason – Asked for clarification on what size homes are planned. Rick Burtzlaff – Shared that medi..."
+     ]
+    }
+   }
+  },
+  {
+   "category": "upcoming",
+   "source": "El Dorado County",
+   "title": "Board of Supervisors",
+   "date": "2026-10-20",
+   "url": "https://eldorado.legistar1.com/eldorado/meetings/2026/10/5287_A_Board_of_Supervisors_26-10-20_MEETING_AGENDA.pdf",
+   "hit_count": 0,
+   "snippets": [],
+   "detail": "Agenda",
+   "verified": true,
+   "contexts": [
+    {
+     "type": "Agenda item",
+     "title": "Board of Supervisors County of El Dorado MEETING AGENDA Board of Supervisors Department 330 Fair Lane, Building A Placerville, California 530-621-5390 Brooke Laine, Chair, District V Greg Ferrero,…",
+     "pages": [
+      1
+     ],
+     "count": 1,
+     "in_title": false
+    }
+   ],
+   "keywords": {
+    "housing": {
+     "count": 1,
+     "snippets": [
+      "p.1: ...Board meets simultaneously as the Board of Supervisors and the Board of Directors of the Air Quality Management District, In-Home Supportive Services, Public Housing Authority, Redevelopment Agency, and other Special Districts. The County of El Dorado strives to ensure all Board agenda materials are ADA-compliant. Howeve..."
      ]
     }
    }
@@ -547,144 +706,68 @@
    }
   },
   {
-   "category": "upcoming",
-   "source": "El Dorado County",
-   "title": "Commission on Aging",
-   "date": "2026-10-15",
-   "url": "https://eldorado.legistar1.com/eldorado/meetings/2026/10/5319_A_Commission_on_Aging_26-10-15_MEETING_AGENDA.pdf",
-   "hit_count": 0,
-   "snippets": [],
-   "detail": "Agenda",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Agenda item",
-     "title": "COMMISSION AREAS OF FOCUS AND INTEREST Triple -A Council of California (TACC) Outreach and Education Outreach and Financial Issues Housing for Seniors South Lake Tahoe Behavioral Health Commission…",
-     "pages": [
-      5
-     ],
-     "count": 1,
-     "in_title": true
-    }
+   "category": "press",
+   "source": "Tahoe Daily Tribune",
+   "title": "Kudos:  It Takes A Village to Feed South Lake Tahoe’s Food Insecure",
+   "date": "2026-10-19",
+   "url": "https://www.tahoedailytribune.com/news/kudos-it-takes-a-village-to-feed-south-lake-tahoes-food-insecure/",
+   "hit_count": 1,
+   "snippets": [
+    "...bout Measure S in El Dorado County Oct 16, 2026 No Kings IV Vote Early rally to take place at Lakeview Commons this weekend Oct 16, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Saxsquatch..."
    ],
-   "keywords": {
-    "housing": {
-     "count": 1,
-     "snippets": [
-      "p.5: ...inal COMMISSION AREAS OF FOCUS AND INTEREST Triple -A Council of California (TACC) Outreach and Education Outreach and Financial Issues Housing for Seniors South Lake Tahoe Behavioral Health Commission NEW BUSINESS The Commission on Aging will appoint Lisbeth Powell as a Community Represen..."
-     ]
-    }
-   }
+   "detail": "Tahoe Daily Tribune",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
   },
   {
-   "category": "upcoming",
-   "source": "Douglas County",
-   "title": "Board of County Commissioners",
-   "date": "2026-10-15",
-   "url": "https://douglascountynv.granicus.com/AgendaViewer.php?view_id=1&event_id=2063",
-   "hit_count": 0,
-   "snippets": [],
-   "detail": "Agenda",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Agenda item",
-     "title": "12.2 For possible action. Discussion to approve an interlocal agreement with the Nevada Division of Environmental Protection to implement the Lake Tahoe Total Maximum Daily Load (TMDL) for Water…",
-     "pages": [
-      6
-     ],
-     "count": 6,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "13. For possible action. Discussion to adopt Ordinance 2026-1672 , an ordinance creating Chapter 20.850 of the Douglas County Code, pertaining to Art in Public Places; and a zoning text amendment to…",
-     "pages": [
-      6
-     ],
-     "count": 1,
-     "in_title": true
-    }
+   "category": "press",
+   "source": "Bing News",
+   "title": "TRPA seeks input on Tahoe’s transportation future",
+   "date": "2026-10-16",
+   "url": "https://www.mtdemocrat.com/news/trpa-seeks-input-on-tahoe-s-transportation-future/article_d5f37e33-c29e-4c36-b648-83ea6b068181.html",
+   "hit_count": 3,
+   "snippets": [
+    "TRPA seeks input on Tahoe’s transportation future | News | mtdemocrat.com Skip to main content You have permission to edit this article. Edit Close A key transporta...",
+    "...content You have permission to edit this article. Edit Close A key transportation corridor on Lake Tahoe's east shore runs next to the water. Photo courtesy of TRPA Tags Lake Tahoe Transport Vortices Storms Natural Disasters Weather Events Weather Natural Hazards Tropical Cyclones Tropical Cyclone Seasons Tahoe Regional Pl..."
    ],
-   "keywords": {
-    "housing": {
-     "count": 3,
-     "snippets": [
-      "p.6: ...nly. Introduction of Ordinance 2026-1673 , a Zoning Text Amendment amending Douglas County Code, Title 20, by revising section 20.664.125 to add an affordable housing exemption to the commercial floor area requirement applicable to multi- family housing that requires a mixed-use component. The proposed exemption does not app...",
-      "p.6: ...ty Code, Title 20, by revising Chapter 20.440, adding definitions applicable to the Chapter, revising the conditions that apply to density bonus and affordable housing agreements, and modifying the findings required for approval of such agreements; and amending Douglas County Code, Title 20, Section 20.560.050, revising defin..."
-     ]
-    },
-    "affordable housing": {
-     "count": 2,
-     "snippets": [
-      "p.6: ...sentation only. Introduction of Ordinance 2026-1673 , a Zoning Text Amendment amending Douglas County Code, Title 20, by revising section 20.664.125 to add an affordable housing exemption to the commercial floor area requirement applicable to multi- family housing that requires a mixed-use component. The proposed exemption does not app...",
-      "p.6: ...ouglas County Code, Title 20, by revising Chapter 20.440, adding definitions applicable to the Chapter, revising the conditions that apply to density bonus and affordable housing agreements, and modifying the findings required for approval of such agreements; and amending Douglas County Code, Title 20, Section 20.560.050, revising defin..."
-     ]
-    },
-    "zoning": {
-     "count": 3,
-     "snippets": [
-      "p.6: ...e, Community Development Director & Andrea Pawling, Deputy Community Development Director) 12.4 For presentation only. Introduction of Ordinance 2026-1673 , a Zoning Text Amendment amending Douglas County Code, Title 20, by revising section 20.664.125 to add an affordable housing exemption to the commercial floor area requi...",
-      "p.6: ...rst Reading. (Kate Moroles-O'Neil, Economic Vitality Manager - Interim Principal Planner) 12.5 For presentation only. Introduction of Ordinance 2026-1674 , a Zoning Text Amendment amending Douglas County Code, Title 20, by revising Chapter 20.440, adding definitions applicable to the Chapter, revising the conditions that a...",
-      "p.6: ...action. Discussion to adopt Ordinance 2026-1672 , an ordinance creating Chapter 20.850 of the Douglas County Code, pertaining to Art in Public Places; and a zoning text amendment to Section 20.660.050(N) of the Douglas County Code, decategorizing “murals” as a “use of community significance.” Second Reading. (Brook Adie..."
-     ]
-    },
-    "stormwater": {
-     "count": 1,
-     "snippets": [
-      "p.6: ...to implement the Lake Tahoe Total Maximum Daily Load (TMDL) for Water Years 2027–2031, and authorize Chairman Gardner to sign the agreement. (Courtney Walker, Stormwater Program Manager) 12.3 For presentation only. Presentation to update the Board of County Commissioners on Douglas County Community Development's Oracle Permitti..."
-     ]
-    }
-   }
+   "detail": "Mountain Democrat",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
   },
   {
-   "category": "upcoming",
-   "source": "Douglas County",
-   "title": "Board of County Commissioners - Supplemental",
-   "date": "2026-10-15",
-   "url": "https://douglascountynv.granicus.com/AgendaViewer.php?view_id=1&event_id=2435",
-   "hit_count": 0,
-   "snippets": [],
-   "detail": "Agenda",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Agenda item",
-     "title": "48Douglas County TDR Program Analysis | Existing Conditions, Market Analysis, and Best Practices Demographic Overview • Douglas County has higher home prices than surrounding counties and the overall…",
-     "pages": [
-      4
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Agenda item",
-     "title": "INTRODUCTION Douglas County’s Transfer of Development Rights (TDR) program was adopted in 1996 with the dual goal of preserving land and encouraging development in areas with adequate infrastructure…",
-     "pages": [
-      9
-     ],
-     "count": 2,
-     "in_title": false
-    }
+   "category": "press",
+   "source": "Tahoe Daily Tribune",
+   "title": "Saxsquatch to bring Bigfoot-sized beats to South Lake Tahoe",
+   "date": "2026-10-16",
+   "url": "https://www.tahoedailytribune.com/news/saxsquatch-to-bring-bigfoot-sized-beats-to-south-lake-tahoe/",
+   "hit_count": 1,
+   "snippets": [
+    "...bout Measure S in El Dorado County Oct 16, 2026 No Kings IV Vote Early rally to take place at Lakeview Commons this weekend Oct 16, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Saxsquatch..."
    ],
-   "keywords": {
-    "housing": {
-     "count": 2,
-     "snippets": [
-      "p.4: ...18% 8% 17% 16% Avg. Ann Growth Rate 0.6% 1.4% 0.6% 1.3% 1.3% Number of Households 22,081 23,749 23,970 201,725 1,234,111 Avg. HH Size 2.27 2.57 2.34 2.48 2.59 Housing Units 24,769 25,247 25,025 216,520 1,328,687 % Renter 24.2% 25.6% 40.7% 37.6% 38.1% Median Household Income $83,908 $73,065 $65,779 $79,883 $68,261 Median Per...",
-      "p.9: ...ch landowners sell the right to develop on agricultural or resource land in exchange for monetary compensation. Developers can then use those rights to build housing in more appropriate areas. Sending areas are designated areas i n which preservation is prioritized, while receiving areas are those most suitable for growth..."
-     ]
-    },
-    "scenic": {
-     "count": 1,
-     "snippets": [
-      "p.9: ...ed by Wood Rodgers to evaluate the current TDR program and recommend implementation actions to improve it, thereby encouraging more preservation in the most scenic and environmentally sensitive areas of the county. As part of this effort, the consultant team interviewed stakeholders including ranchers, landowners, deve..."
-     ]
-    }
-   }
+   "detail": "Tahoe Daily Tribune",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
   },
   {
-   "category": "upcoming",
+   "category": "press",
+   "source": "Tahoe Daily Tribune",
+   "title": "Obituary: Natalie Lynn Spandau",
+   "date": "2026-10-16",
+   "url": "https://www.tahoedailytribune.com/news/obituaries/obituary-natalie-lynn-spandau/",
+   "hit_count": 1,
+   "snippets": [
+    "...bout Measure S in El Dorado County Oct 16, 2026 No Kings IV Vote Early rally to take place at Lakeview Commons this weekend Oct 16, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Saxsquatch..."
+   ],
+   "detail": "Tahoe Daily Tribune",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "meeting",
    "source": "South Tahoe Public Utility District",
    "title": "Board Meeting",
    "date": "2026-10-15",
@@ -706,67 +789,51 @@
      "in_title": false
     }
    ],
-   "keywords": {
-    "parking": {
-     "count": 1,
-     "snippets": [
-      "p.41: ...RTMENT ACCOUNT DESCRIPTION AMOUNT 14 - Electrical 8310 Sunset Well - VFD, Pressure Trans., Enclosure 12,000$ 16 - Heavy Maintenance 8344 Admin Parking Lot Seal & Stripe 10,000$ 24 - Underground Repair Water 8305 Replace Wacker 10,000$ 24 - Underground Repair Water 8441 Vacuum..."
-     ]
-    }
-   }
+   "keywords": {}
   },
   {
-   "category": "upcoming",
-   "source": "Tahoe Resource Conservation District",
-   "title": "Board Meeting",
+   "category": "press",
+   "source": "Tahoe Daily Tribune",
+   "title": "Forecasted winds Thursday evening could stir large waves on Tahoe",
    "date": "2026-10-15",
-   "url": "https://www.tahoercd.org/files/e8777592e/10.15.26+Board+Meeting+Agenda.pdf",
-   "hit_count": 0,
-   "snippets": [],
-   "detail": "Agenda",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Agenda item",
-     "title": "4. Acceptance of Contribution of $100,000.00 from Action/Approve 133-134 Tahoe Fund for the Johnson Meadow Restoration Project",
-     "pages": [
-      3
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Agenda item",
-     "title": "5. Sole Source Justification: Johnson Meadow Restoration Action/Approve 135-136 Finalization of Permitting and Design Contractor Northwest Hydraulic Consultants (NHC)",
-     "pages": [
-      3
-     ],
-     "count": 1,
-     "in_title": true
-    }
+   "url": "https://www.tahoedailytribune.com/news/forecasted-winds-thursday-evening-could-stir-large-waves-on-tahoe/",
+   "hit_count": 1,
+   "snippets": [
+    "...bout Measure S in El Dorado County Oct 16, 2026 No Kings IV Vote Early rally to take place at Lakeview Commons this weekend Oct 16, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Saxsquatch..."
    ],
-   "keywords": {
-    "restoration": {
-     "count": 2,
-     "snippets": [
-      "p.3: ...ciation to Director Harold Singer 4. Acceptance of Contribution of $100,000.00 from Action/Approve 133-134 Tahoe Fund for the Johnson Meadow Restoration Project 5. Sole Source Justification: Johnson Meadow Restoration Action/Approve 135-136 Finalization of Permitting and Design Contractor Northwest Hydr..."
-     ]
-    }
-   }
+   "detail": "Tahoe Daily Tribune",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Tahoe Daily Tribune",
+   "title": "Mofos Pizza planning to open Carson City location",
+   "date": "2026-10-15",
+   "url": "https://www.tahoedailytribune.com/news/mofos-pizza-planning-to-open-carson-city-location/",
+   "hit_count": 1,
+   "snippets": [
+    "...bout Measure S in El Dorado County Oct 16, 2026 No Kings IV Vote Early rally to take place at Lakeview Commons this weekend Oct 16, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Saxsquatch..."
+   ],
+   "detail": "Tahoe Daily Tribune",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
   },
   {
    "category": "meeting",
    "source": "Douglas County",
    "title": "Stormwater Task Force - Supplemental",
    "date": "2026-10-14",
-   "url": "https://douglascountynv.granicus.com/AgendaViewer.php?view_id=1&event_id=2431",
+   "url": "https://douglascountynv.granicus.com/AgendaViewer.php?view_id=1&clip_id=1910",
    "hit_count": 24,
    "snippets": [
-    "p.1253: ...tment Daily Work Record MS4 Work Area? Y/N Prepared By: Jason Job description: List Street Name, Length Completed & Time Spent on Project Jesse and Cody vactor TRPA, Brad haul decant dirt to Carson Labor Record Input Date: 7/15/24 Maintenance Operator Hours",
-    "p.1370: ...8 8 - - 8 - - - 8 X 8 - - - - - - - - - - 7.12.24 Crew Finish Out-R-Way rock job 24 - - 8 8 - 8 8 - - - 8 X 8 - - - - - - - - - - 7.15.23 Jesse and Cody vactor TRPA, Brad haul decant dirt to Carson 32 4 - - - - - - 8 - 8 - X - - - - - - - - - - - 7.16.24 - - - - - - - - - - - - X - - - - - - - - - - - 7.17.24 Brad cleaned...",
-    "p.1877: ...are already subject to an extensive and costly stormwater regulatory regime that substantially duplicates the stated purpose of the proposed utility fee. The Tahoe Regional Planning Agency (TRPA), operating under the authority of the bi-state Tahoe Regional Planning Compact (Public Law 96-551, as amended), has long mandated that property owners...",
-    "p.1877: ...holds a Small Municipal Separate Storm Sewer System (MS4) permit from the Nevada Division of Environmental Protection (NDEP). East Shore property owners fund TRPA BMP compliance directly and contribute indirectly through local taxes to County TMDL obligations, which are largely covered by federal (SNPLMA, 319h, FEMA),...",
-    "p.1877: ...ribute indirectly through local taxes to County TMDL obligations, which are largely covered by federal (SNPLMA, 319h, FEMA), state (Nevada bond funds, NDSL), TRPA mitigation fees, and county general funds. Imposing an additional utility fee for stormwater services that are already mandated and funded through parallel me..."
+    "p.1255: ...tment Daily Work Record MS4 Work Area? Y/N Prepared By: Jason Job description: List Street Name, Length Completed & Time Spent on Project Jesse and Cody vactor TRPA, Brad haul decant dirt to Carson Labor Record Input Date: 7/15/24 Maintenance Operator Hours",
+    "p.1372: ...8 8 - - 8 - - - 8 X 8 - - - - - - - - - - 7.12.24 Crew Finish Out-R-Way rock job 24 - - 8 8 - 8 8 - - - 8 X 8 - - - - - - - - - - 7.15.23 Jesse and Cody vactor TRPA, Brad haul decant dirt to Carson 32 4 - - - - - - 8 - 8 - X - - - - - - - - - - - 7.16.24 - - - - - - - - - - - - X - - - - - - - - - - - 7.17.24 Brad cleaned...",
+    "p.1879: ...are already subject to an extensive and costly stormwater regulatory regime that substantially duplicates the stated purpose of the proposed utility fee. The Tahoe Regional Planning Agency (TRPA), operating under the authority of the bi-state Tahoe Regional Planning Compact (Public Law 96-551, as amended), has long mandated that property owners...",
+    "p.1879: ...holds a Small Municipal Separate Storm Sewer System (MS4) permit from the Nevada Division of Environmental Protection (NDEP). East Shore property owners fund TRPA BMP compliance directly and contribute indirectly through local taxes to County TMDL obligations, which are largely covered by federal (SNPLMA, 319h, FEMA),...",
+    "p.1879: ...ribute indirectly through local taxes to County TMDL obligations, which are largely covered by federal (SNPLMA, 319h, FEMA), state (Nevada bond funds, NDSL), TRPA mitigation fees, and county general funds. Imposing an additional utility fee for stormwater services that are already mandated and funded through parallel me..."
    ],
    "detail": "Agenda",
    "verified": true,
@@ -775,7 +842,7 @@
      "type": "Agenda item",
      "title": "Date: 7.15.23 RegHours O.T. Fuel Miles/Feet 4 245-305 Westernstar 12yd 245-205 525Gal Water buffalo 245-301 JD 85G Excavator 245-304 01 Peterbilt 12yd 8 Other Basin Ditch Channel Culvert Structural…",
      "pages": [
-      1253
+      1255
      ],
      "count": 1,
      "in_title": false
@@ -784,7 +851,7 @@
      "type": "Agenda item",
      "title": "4.25.24 Jesse, cody cleaned ditch on Pawnee. Brad, Jason cleared cottonwood slough trash rack, cleared West point Vista div 32 8 - 8 8 - - 8 - - - 8 X - - - - - - 40 - - - - 4.26.24 Finished…",
      "pages": [
-      1370
+      1372
      ],
      "count": 1,
      "in_title": false
@@ -793,11 +860,11 @@
      "type": "Public comment",
      "title": "Written Public Comment for October 14, 2026, Douglas County Stormwater Task Force",
      "pages": [
-      1877,
-      1878,
       1879,
       1880,
-      1881
+      1881,
+      1882,
+      1883
      ],
      "count": 22,
      "in_title": false
@@ -893,15 +960,19 @@
   },
   {
    "category": "press",
-   "source": "South Tahoe Now",
-   "title": "Highlight of progress on East Shore Trail and SR28 as construction season winds down",
+   "source": "Bing News",
+   "title": "City council to demand TRPA prevent herbicide spraying in Caldor Fire area",
    "date": "2026-10-14",
-   "url": "https://southtahoenow.com/10/13/2026/highlight-of-progress-on-east-shore-trail-and-sr28-as-construction-season-winds-down",
-   "hit_count": 1,
+   "url": "https://www.tahoedailytribune.com/news/city-council-to-demand-trpa-prevent-herbicide-spraying-in-caldor-fire-area/",
+   "hit_count": 22,
    "snippets": [
-    "...constructing new sections of the East Shore Trail.” TTD is working with numerous partners, including the USDA Forest Service Lake Tahoe Basin Management Unit, Tahoe Regional Planning Agency, Nevada Department of Transportation, Tahoe Fund, Nevada Division of State Lands, Nevada State Parks, and local jurisdictions to build upon many recent transpo..."
+    "City council to demand TRPA prevent herbicide spraying in Caldor Fire area | TahoeDailyTribune.com Breaking News - YOUR AD HERE » City council to demand TRPA prevent herbicide spraying in...",
+    "...local water board to increase water quality testing after any herbicides are applied and explore legal options for a future citywide ban and means to force the Tahoe Regional Planning Agency into taking action. Frustration with TRPA’s inaction Councilmembers’ main concern was the fact that no agency, particularly the Tahoe Regional Planning Agency,...",
+    "...l objections to herbicide use in Tahoe’s fragile environment. Mayor Cody Bass at Tuesday’s meeting. Bass originally brought the issue of glyphosate spraying to TRPA Governing Board, and said he was “frustrated” with its inaction. Carly Heltzel / Tahoe Daily Tribune Councilmember Heather Horgan said the Tahoe Basin shouldn’...",
+    "...ting pesticide use, and all of the area of the Caldor Fire Restoration Project is outside of city limits. Multiple members expressed their frustration that the TRPA, took no action despite hundreds speaking in opposition to its use over four hours of public comment to oppose glyphosate spraying at its meeting. “We live und...",
+    "...in opposition to its use over four hours of public comment to oppose glyphosate spraying at its meeting. “We live under so many inane environmental rules that [TRPA] put down on us as to how big our decks can be and to whether or not we can have a gravel or a paved driveway,” Councilmember Scott Robbins said. “But somehow..."
    ],
-   "detail": "South Tahoe Now",
+   "detail": "Tahoe Daily Tribune",
    "verified": true,
    "contexts": [],
    "keywords": {}
@@ -972,51 +1043,6 @@
    "keywords": {}
   },
   {
-   "category": "press",
-   "source": "Bing News",
-   "title": "Construction season ends, East Shore Trail, SR 28 corridor improvements",
-   "date": "2026-10-13",
-   "url": "https://www.tahoedailytribune.com/news/construction-season-ends-east-shore-trail-sr-28-corridor-improvements/",
-   "hit_count": 1,
-   "snippets": [
-    "...constructing new sections of the East Shore Trail.” TTD is working with numerous partners, including the USDA Forest Service Lake Tahoe Basin Management Unit, Tahoe Regional Planning Agency, Nevada Department of Transportation, Tahoe Fund, Nevada Division of State Lands, Nevada State Parks, and local jurisdictions to build upon many recent transpo..."
-   ],
-   "detail": "Tahoe Daily Tribune",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Bing News",
-   "title": "Tahoe East Shore Trail expansion advances as construction season ends",
-   "date": "2026-10-13",
-   "url": "https://thisisreno.com/2026/10/tahoe-east-shore-trail-expansion-advances-as-construction-season-ends/",
-   "hit_count": 1,
-   "snippets": [
-    "...are necessary steps on the path to constructing new sections of the East Shore Trail.” The district is coordinating the projects with the U.S. Forest Service, Tahoe Regional Planning Agency, Nevada Department of Transportation, Tahoe Fund, Nevada Division of State Lands, Nevada State Parks and local governments. Several improvements have been comp..."
-   ],
-   "detail": "This Is Reno",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Tahoe Daily Tribune",
-   "title": "Bike Tahoe announces winners of inaugural Best of Bike",
-   "date": "2026-10-13",
-   "url": "https://www.tahoedailytribune.com/news/bike-tahoe-announces-winners-of-inaugural-best-of-bike/",
-   "hit_count": 1,
-   "snippets": [
-    "...makes Tahoe unique. Bike Tahoe produced the 2026 campaign with the support of community sponsors Lake Tahoe Travel, Visit Lake Tahoe, City of South Lake Tahoe, Tahoe Regional Planning Agency, Barton Health, Forest Suites Resort, Granlibakken Tahoe, and others. “We are grateful to our sponsors for helping us launch this first campaign,” Polastri sai..."
-   ],
-   "detail": "Tahoe Daily Tribune",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
    "category": "meeting",
    "source": "El Dorado County",
    "title": "Meyers Advisory Council",
@@ -1045,24 +1071,6 @@
   {
    "category": "press",
    "source": "Bing News",
-   "title": "Tahoe grading season ends October 15",
-   "date": "2026-10-12",
-   "url": "https://www.sierrasun.com/news/tahoe-grading-season-ends-october-15-2/",
-   "hit_count": 7,
-   "snippets": [
-    "...RE » Tahoe grading season ends October 15 News News | Oct 12, 2026 Staff Report Follow editor@sierrasun.com Share this story A A LAKE TAHOE, Nev./Calif. – The Tahoe Regional Planning Agency (TRPA) is reminding property owners and contractors that the annual grading and digging season for permitted projects will close Thursday, October 15, 2026. Al...",
-    "...ashing into stormwater systems and the lake. Disturbing or compacting soil during Tahoe’s wettest time of year can harm lake clarity and increase algal growth. TRPA’s winterization requirements are available on trpa.gov/applications-forms/winterization-guidelines . The agency may permit grading season exceptions under spec...",
-    "...ing season exceptions under special circumstances such as public health, safety, or water quality emergencies. The application for an exception is available at trpa.gov/inspections-and-securities . Applications can be submitted beginning October 12, 2026. Some digging activities are considered exempt and do not require TRP...",
-    "...the site must be stabilized following the winterization guidelines at the link above. A list of exempt projects is under “How do I know if I need a permit?” at trpa.gov/frequently-asked-questions . The grading and digging season for permitted projects at Lake Tahoe will open again May 1, 2027. Share this story News Bangko..."
-   ],
-   "detail": "Sierra Sun",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Bing News",
    "title": "Protect Tahoe brings campaign against herbicides to Truckee",
    "date": "2026-10-12",
    "url": "https://www.sierrasun.com/news/protect-tahoe-brings-campaign-against-herbicides-to-truckee/",
@@ -1080,13 +1088,31 @@
   {
    "category": "press",
    "source": "Bing News",
-   "title": "Former chair of Tahoe Douglas Sewer District and community banker says listening is her top priority in Douglas County Commissioner race",
-   "date": "2026-10-11",
-   "url": "https://www.tahoedailytribune.com/news/former-chair-of-tahoe-douglas-sewer-district-and-community-banker-says-listening-is-her-top-priority-in-douglas-county-commissioner-race/",
-   "hit_count": 3,
+   "title": "Bike Tahoe announces winners of inaugural Best of Bike",
+   "date": "2026-10-12",
+   "url": "https://www.sierrasun.com/news/bike-tahoe-announces-winners-of-inaugural-best-of-bike/",
+   "hit_count": 1,
    "snippets": [
-    "...he first time in a long time that there’s more than one option on the ballot for this race. The lack of information on what was happening in her county and the Tahoe Regional Planning Agency (TRPA), where the commissioner has a seat, was a major motivator for Imbach to run. Imbach said, “I think that government works better when it listens to peopl...",
-    "...ons and nonprofits she has worked on have put Imbach in close touch with many of the agencies around the basin. Imbach said that her interest in serving on the TRPA board as part of the commissioner’s duties comes from her desire for responsible growth in the Tahoe Basin. “I want to get it right. Residents should have a vo..."
+    "...makes Tahoe unique. Bike Tahoe produced the 2026 campaign with the support of community sponsors Lake Tahoe Travel, Visit Lake Tahoe, City of South Lake Tahoe, Tahoe Regional Planning Agency, Barton Health, Forest Suites Resort, Granlibakken Tahoe, and others. “We are grateful to our sponsors for helping us launch this first campaign,” Polastri sai..."
+   ],
+   "detail": "Sierra Sun",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Bing News",
+   "title": "Tahoe grading season ends October 15",
+   "date": "2026-10-11",
+   "url": "https://www.tahoedailytribune.com/news/tahoe-grading-season-ends-october-15-2/",
+   "hit_count": 8,
+   "snippets": [
+    "...oe grading season ends October 15 News News | Oct 12, 2026 Staff Report Follow editor@tahoedailytribune.com Share this story A A LAKE TAHOE, Nev./Calif. – The Tahoe Regional Planning Agency (TRPA) is reminding property owners and contractors that the annual grading and digging season for permitted projects will close Thursday, October 15, 2026. Al...",
+    "...ashing into stormwater systems and the lake. Disturbing or compacting soil during Tahoe’s wettest time of year can harm lake clarity and increase algal growth. TRPA’s winterization requirements are available on trpa.gov/applications-forms/winterization-guidelines . The agency may permit grading season exceptions under spec...",
+    "...ing season exceptions under special circumstances such as public health, safety, or water quality emergencies. The application for an exception is available at trpa.gov/inspections-and-securities . Applications can be submitted beginning October 12, 2026. Some digging activities are considered exempt and do not require TRP...",
+    "...the site must be stabilized following the winterization guidelines at the link above. A list of exempt projects is under “How do I know if I need a permit?” at trpa.gov/frequently-asked-questions . The grading and digging season for permitted projects at Lake Tahoe will open again May 1, 2027. Share this story News Hyatt...",
+    "...eads not guilty at arraignment Tuesday Oct 13, 2026 City council opposes Measure S, the proposed El Dorado County sales tax Oct 14, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Everything..."
    ],
    "detail": "Tahoe Daily Tribune",
    "verified": true,
@@ -1096,17 +1122,16 @@
   {
    "category": "press",
    "source": "Bing News",
-   "title": "TRPA Seeks Input on Tahoe’s Transportation Future",
-   "date": "2026-10-09",
-   "url": "https://www.moonshineink.com/brief/2026/10/trpa-seeks-input-on-tahoes-transportation-future/",
-   "hit_count": 6,
+   "title": "Former chair of Tahoe Douglas Sewer District and community banker says listening is her top priority in Douglas County Commissioner race",
+   "date": "2026-10-11",
+   "url": "https://www.tahoedailytribune.com/news/former-chair-of-tahoe-douglas-sewer-district-and-community-banker-says-listening-is-her-top-priority-in-douglas-county-commissioner-race/",
+   "hit_count": 4,
    "snippets": [
-    "TRPA Seeks Input on Tahoe’s Transportation Future - Moonshine Ink Sign in Join Home News All News Elections Business Feature In the Past You Asked. They Answered. O...",
-    "...Updates Moonshine Ink Members HIGHWAY 28: A key transportation corridor on Lake Tahoe's East Shore. Photo courtesy Tahoe Transportation District LAKE TAHOE The Tahoe Regional Planning Agency (TRPA) is inviting Lake Tahoe residents, workers, commuters, and visitors to participate in a survey to help create a more resilient transportation system. The...",
-    "...e information gathered will help partners strengthen Lake Tahoe’s transportation and emergency communications systems during hazardous events. Take the survey: trpa.gov/resilienttransportation Participants who complete the survey and provide their contact information may enter to win a $100 Safeway gift card. Lake Tahoe is...",
-    "...t Operations for Transformative, Efficient, and Cost-Saving Transportation (PROTECT) Program. The final plan is anticipated to be completed in late 2027. Visit trpa.gov/resilienttransportation to take the survey, learn more about the project, and get involved. ~ TRPA press release Author Special to Moonshine Ink More from..."
+    "...he first time in a long time that there’s more than one option on the ballot for this race. The lack of information on what was happening in her county and the Tahoe Regional Planning Agency (TRPA), where the commissioner has a seat, was a major motivator for Imbach to run. Imbach said, “I think that government works better when it listens to peopl...",
+    "...ons and nonprofits she has worked on have put Imbach in close touch with many of the agencies around the basin. Imbach said that her interest in serving on the TRPA board as part of the commissioner’s duties comes from her desire for responsible growth in the Tahoe Basin. “I want to get it right. Residents should have a vo...",
+    "...eads not guilty at arraignment Tuesday Oct 13, 2026 City council opposes Measure S, the proposed El Dorado County sales tax Oct 14, 2026 City council to demand TRPA prevent herbicide spraying in Caldor Fire area Oct 14, 2026 G-Pro Snow Removal celebrates 10-plus years in business with new home base Oct 15, 2026 Everything..."
    ],
-   "detail": "Moonshine Ink",
+   "detail": "Tahoe Daily Tribune",
    "verified": true,
    "contexts": [],
    "keywords": {}
@@ -1150,16 +1175,32 @@
   },
   {
    "category": "press",
-   "source": "Google News",
-   "title": "City council looks at regional housing, geothermal energy, sandwich boards and more",
+   "source": "Bing News",
+   "title": "The Beach Boys’ Mike Love Expanded His $43M Lake Tahoe Estate with 6 Acres of Protected Land to Save It from Development",
    "date": "2026-10-08",
-   "url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQRlo2X0YwenFrbDRTY0x0ZlcyRlJRVnZTTWQ4OHc1cUt6ajZDRDlEZm9ScUdsNmJFclFoOHFnWTVSYk1ERHFxdTVCMGowWUNLWldEb3NPRElWTGUzSnVJbERFX3hVamVmaFJNaDVIbDYyNEVTSHJYZEgwRTNoZFNJZDFUbWdrcGRhRi1OVGZULUNLRmFlUjFTM0hRWXU5X0RCdFNFcnBhOW1BOUJhS2FKYWN4emotMUhTVkFkNEF3?oc=5",
-   "hit_count": 0,
+   "url": "https://au.lifestyle.yahoo.com/beach-boys-mike-love-expanded-190142144.html",
+   "hit_count": 1,
    "snippets": [
-    "City council looks at regional housing, geothermal energy, sandwich boards and more - Tahoe Daily Tribune"
+    "...5 acres of land located near the northeast shore of Lake Tahoe. Over the years, Love, and his wife, Jacquelyne Piesen, worked with local organizations like the Tahoe Regional Planning Agency and University of California Davis, to protect the clarity and purity of the body of water. Mountain range near Incline Village, Nev. Credit: Smith Collection/..."
    ],
-   "detail": "Tahoe Daily Tribune",
-   "verified": false,
+   "detail": "Yahoo Lifestyle Australia",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Bing News",
+   "title": "Homewood is Public. Let’s Keep It that Way",
+   "date": "2026-10-08",
+   "url": "https://www.moonshineink.com/opinion/homewood-is-public-lets-keep-it-that-way/",
+   "hit_count": 2,
+   "snippets": [
+    "...! Homewood will always be public.” We are at this moment because we, as a community, succeeded in getting Homewood to commit to public access in 2025. With the Tahoe Regional Planning Agency’s help, we got this in writing, including legal remedies if Homewood slips. Thanks to our collective effort, the ski hill is open to everyone and can thrive co...",
+    "...investment. While these risks are outside our control, we must factor them in as we scrutinize Homewood’s upcoming development phases. For example, next up on TRPA’s docket is residential and commercial construction next to the new North Base gondola terminal. Per Homewood’s Master Plan, this phase includes the only publi..."
+   ],
+   "detail": "Moonshine Ink",
+   "verified": true,
    "contexts": [],
    "keywords": {}
   },
@@ -1397,17 +1438,17 @@
    "category": "press",
    "source": "Bing News",
    "title": "TRPA welcomes Eric Cachinero as Public Information Officer",
-   "date": "2026-10-02",
-   "url": "https://www.tahoedailytribune.com/news/trpa-welcomes-eric-cachinero-as-public-information-officer/",
+   "date": "2026-10-05",
+   "url": "https://www.sierrasun.com/news/trpa-welcomes-eric-cachinero-as-public-information-officer/",
    "hit_count": 10,
    "snippets": [
-    "TRPA welcomes Eric Cachinero as Public Information Officer | TahoeDailyTribune.com YOUR AD HERE » TRPA welcomes Eric Cachinero as Public Information Officer News Ne...",
-    "...nero as Public Information Officer News News | Oct 2, 2026 Staff Report Follow editor@tahoedailytribune.com Share this story A A LAKE TAHOE, Nev./Calif. – The Tahoe Regional Planning Agency (TRPA) welcomed Eric Cachinero as its new Public Information Officer this week, bringing more than a decade of experience in media, public relations, and gover...",
+    "TRPA welcomes Eric Cachinero as Public Information Officer | SierraSun.com Breaking News - YOUR AD HERE » TRPA welcomes Eric Cachinero as Public Information Officer...",
+    "...ng News - YOUR AD HERE » TRPA welcomes Eric Cachinero as Public Information Officer News News | Oct 5, 2026 Share this story A A LAKE TAHOE, Nev./Calif. – The Tahoe Regional Planning Agency (TRPA) welcomed Eric Cachinero as its new Public Information Officer this week, bringing more than a decade of experience in media, public relations, and gover...",
     "...ging more than a decade of experience in media, public relations, and government communications to the role. Cachinero will lead public information efforts for TRPA, including community correspondence, strengthening partnerships, and helping communicate the agency’s work. “Eric brings a valuable combination of journalism e...",
     "...valuable combination of journalism experience, public-sector communications expertise, and a genuine connection to the people and places of the Tahoe Region,” TRPA Executive Director Julie Regan said. “His experience and personal connection to Lake Tahoe will be an asset as TRPA continues to communicate its work and engag...",
     "...grew up in Sparks and earned a bachelor’s degree in print journalism from the Reynolds School of Journalism at the University of Nevada, Reno. Prior to joining TRPA, Cachinero served as Community Relations Manager/Public Information Officer for Douglas County. He previously served nearly two years as a Public Information O..."
    ],
-   "detail": "Tahoe Daily Tribune",
+   "detail": "Sierra Sun",
    "verified": true,
    "contexts": [],
    "keywords": {}
@@ -1450,31 +1491,15 @@
   },
   {
    "category": "press",
-   "source": "Bing News",
+   "source": "Google News",
    "title": "Annual mooring lottery now open",
    "date": "2026-10-01",
-   "url": "https://www.sierrasun.com/news/annual-mooring-lottery-now-open/",
-   "hit_count": 4,
-   "snippets": [
-    "...AD HERE » Annual mooring lottery now open News News | Oct 1, 2026 Staff Report Follow editor@sierrasun.com Share this story A A LAKE TAHOE, Nev./Calif. – The Tahoe Regional Planning Agency (TRPA) announced that it will begin accepting entries for the annual mooring lottery on October 1, 2026. Under the 2018 Lake Tahoe Shoreline Plan , TRPA conduc...",
-    "...the pace of permit applications for new moorings until the cap is reached. Entries for the lottery can be submitted online from October 1 through November 13. TRPA only conducts a drawing if the number of entries exceeds the number of allocations available for the year. If not, each entry will be reviewed to confirm eligi..."
-   ],
-   "detail": "Sierra Sun",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Bing News",
-   "title": "Top Glenbrook, NV Real Estate Agent Matthew Schorr Lists Lakefront Property in Glenbrook for $10,900,000",
-   "date": "2026-10-01",
-   "url": "https://www.usatoday.com/press-release/story/45935/top-glenbrook-nv-real-estate-agent-matthew-schorr-lists-lakefront-property-in-glenbrook-for-10900000/",
+   "url": "https://news.google.com/rss/articles/CBMie0FVX3lxTFBaQzVuUWVpNWpHa2NTbXVXZUhRSUgzWC1MMVV0QU4xdFMtM0pjeFktVTRlTHljTHNXSWM4OTRmQm5keFhNalB0dmdObnZmZlo0bWhseUY0dGV5Yk9GeUUxMlZaSUE2QkpyNjZ2OWtPODliazhEa0IwY1AxQQ?oc=5",
    "hit_count": 0,
    "snippets": [
-    "Top Glenbrook Real Estate Agent Matthew Schorr of Team Blair Tahoe at Compass, a top choice for buyers and sellers in ..."
+    "Annual mooring lottery now open - Tahoe Daily Tribune"
    ],
-   "detail": "USA TODAY",
+   "detail": "Tahoe Daily Tribune",
    "verified": false,
    "contexts": [],
    "keywords": {}
@@ -1497,25 +1522,6 @@
   {
    "category": "press",
    "source": "Bing News",
-   "title": "GSB alum co-founds organization to stop herbicide spraying in Lake Tahoe",
-   "date": "2026-09-30",
-   "url": "https://stanforddaily.com/2026/10/01/protect-tahoe-herbicide-spraying/",
-   "hit_count": 6,
-   "snippets": [
-    "...rotection Agency (EPA) has found it not likely to cause cancer. Protect Tahoe is not asking for a delay; they want a ban. “We proceeded to meet with members of Tahoe Regional Planning Agency (TRPA) and the Forest Service, federal and regional, to discuss a vision to create a bio-regional pilot that would eliminate the use of conventional herbicides...",
-    "...an immediate halt to the spraying has drawn more than 5,200 signatures, and its Facebook group has more than 3,200 members, according to its website. Ahead of TRPA’s Aug. 26 meeting, Protect Tahoe posted the time and place, instructions for calling in and scripts for contacting elected officials, urging supporters to show...",
-    "...f American Regeneration, which advocates for farming methods intended to rebuild soil health rather than deplete it. Much of the group’s pressure has landed on TRPA, which holds land-use authority across the Basin and is where Ryerson wants local protections passed. The agency told The Daily it has not treated the herbicid...",
-    "...oval. The meeting Protect Tahoe rallied supporters to attend ended with no binding action. After four hours of public comment on Aug. 26., the committee “asked TRPA staff to continue working with the Forest Service regarding potential future herbicide use in the Caldor Fire Restoration Project,” wrote Jeff Cowen, the agenc...",
-    "...overnments tend to all be corrupted by chemical lobbyists, but there is room on local levels to pass local protective ordinances. Which is exactly what we want TRPA to do.” Print Article The Stanford Daily Login or create an account"
-   ],
-   "detail": "The Stanford Daily",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Bing News",
    "title": "$150,000 Settlement Forces Lake Tahoe Homeowner to Undo Unpermitted Construction",
    "date": "2026-09-27",
    "url": "https://www.yahoo.com/news/articles/150-000-settlement-forces-lake-120018392.html",
@@ -1528,6 +1534,66 @@
     "...ement Advertisement Indeed, building around Lake Tahoe can involve more than the usual legwork of obtaining an ordinary local construction permit. According to TRPA's permitting manual , many projects in the Lake Tahoe Region require environmental review from TRPA as well as any building permits required by the relevant ci..."
    ],
    "detail": "Yahoo",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Bing News",
+   "title": "30-year-old beloved steakhouse chain closes 10 locations",
+   "date": "2026-09-26",
+   "url": "https://www.thestreet.com/restaurants/tahoe-joes-steakhouse-chain-closes-10-locations",
+   "hit_count": 0,
+   "snippets": [
+    "Rising beef prices have pressured steakhouse chains to raise menu prices that can discourage consumers from dining on ribeye steaks and prime rib in their restaurants. Beef prices increased by 5.9% ..."
+   ],
+   "detail": "TheStreet",
+   "verified": false,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Google News",
+   "title": "Glampground debate far from resolved",
+   "date": "2026-09-25",
+   "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxPQzBVemszd1k3WVlOeWJPSmp5UU0wWHdiUExMVVdBaEJlc0ZxdDRUcU5GNUtqbExWQkl4TExPQ2ljQlUwMG9xVWU4U2MtQi1GNE5wRlp4c0FIdzN1ZlJzTjhwUnZqYmQ5eFU3MkpSZzhHM2NqZFpmVXg4RzJrSVhZMjJsMUZDUUFrcHAzLQ?oc=5",
+   "hit_count": 0,
+   "snippets": [
+    "Glampground debate far from resolved - The Record Courier"
+   ],
+   "detail": "The Record Courier",
+   "verified": false,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Google News",
+   "title": "TRPA Board takes action on construction violation",
+   "date": "2026-09-24",
+   "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOVXlsdnh5Rk1WOG5MTTRRaDA5YVR4VW1MYTcyZjg2TGFBTHRBUU12OFRpMkFlUDhsLU1kcXRVVXoyVHFLZzN4bkJuNjFld25weURVaEIydzZTRi11LWVEY3ROZE1yQlRaUDR0TDV0UzRaZlRYZ2otLXlWYVRXN21NZEZsR0U4SXhna3c0QjNCUE9NMDQ?oc=5",
+   "hit_count": 1,
+   "snippets": [
+    "TRPA Board takes action on construction violation - Tahoe Daily Tribune"
+   ],
+   "detail": "Tahoe Daily Tribune",
+   "verified": true,
+   "contexts": [],
+   "keywords": {}
+  },
+  {
+   "category": "press",
+   "source": "Google News",
+   "title": "TRPA Board approves $150,000 settlement with lakefront homeowner over construction violations",
+   "date": "2026-09-24",
+   "url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxNTURLMTRVVDk3LXZrTUM4ZUIzZmEwY1VRbjN3S2RRYWJLS21XTmlFZjhDX1Bya21malE4Tk93ckJZcHV1enZDX0JzV3U0YzdNaHpnTFc4MTI0T1ZCX3E5OG5mSC1KUGJocUU1NHN2LWs3RklvS1dmUW1uazhHUEJUaFVxZWlsZjhTcWxJNnFmZF9uckNTd3ZnREdMSEZ0dGg4aVBhVTl0MG41X094REZCZkZkdHNQVllCRnBoRFp2TWN5V0tPNFVR?oc=5",
+   "hit_count": 1,
+   "snippets": [
+    "TRPA Board approves $150,000 settlement with lakefront homeowner over construction violations - South Tahoe Now"
+   ],
+   "detail": "South Tahoe Now",
    "verified": true,
    "contexts": [],
    "keywords": {}
@@ -1577,6 +1643,37 @@
   },
   {
    "category": "meeting",
+   "source": "Incline Village General Improvement District",
+   "title": "Board of Trustees Meeting",
+   "date": "2026-09-23",
+   "url": "https://ivgid.api.civicclerk.com/v1/Meetings/GetMeetingFileStream(fileId=2874,plainText=false)",
+   "hit_count": 5,
+   "snippets": [
+    "p.3: ...candidate for trustee) stated that contracting for design before firm requirements and community buy-in are established is premature, expressed concern that TRPA would not approve an increased commercial footprint, and recommended community buy-in on a buildable project and use of recreation funds to replace ski lifts...",
+    "p.4: ...vent/756/media Media Timestamp (00:57:35 – 01:13:35) Treasurer Mick Homan first responded to two public comments, stating that (1) the District holds prior TRPA approval under the 1987 master plan, that the scope and visitor numbers remain within that plan, and that staff is working with TRPA on an update; and (2) st...",
+    "p.8: ...d more than 20 people. Ms. Waters confirmed the lodge site is District-owned land, not Forest Service property, and noted the project will require a difficult TRPA permitting process, which staff is pursuing in parallel. Staff and the Vice Chair clarified that the action before the Board is limited to a professional se...",
+    "p.12: ...s to fund it, referenced NRS 354.517 and Board Policy 12.1, and stated his understanding that the master plan had been submitted to, rather than approved by, TRPA. K. ADJOURNMENT - (For possible Action) The Meeting of the IVGID Board of Trustees adjourned at 6:24 p.m."
+   ],
+   "detail": "Minutes",
+   "verified": true,
+   "contexts": [
+    {
+     "type": "Minutes",
+     "title": "Minutes",
+     "pages": [
+      3,
+      4,
+      8,
+      12
+     ],
+     "count": 5,
+     "in_title": false
+    }
+   ],
+   "keywords": {}
+  },
+  {
+   "category": "meeting",
    "source": "Tahoe Douglas Fire Protection District",
    "title": "Board of Trustees",
    "date": "2026-09-23",
@@ -1614,21 +1711,6 @@
      "in_title": false
     }
    ],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Bing News",
-   "title": "TRPA Board approves $150,000 settlement with lakefront homeowner over construction violations",
-   "date": "2026-09-23",
-   "url": "https://www.southtahoenow.com/09/23/2026/trpa-board-approves-150000-settlement-with-lakefront-homeowner-over-construction-violations",
-   "hit_count": 0,
-   "snippets": [
-    "LAKE TAHOE, Calif./Nev. – The Tahoe Regional Planning Agency (TRPA) Governing Board has approved a violation settlement with a lakefront property owner. The Incline Village, Nevada homeowner made ..."
-   ],
-   "detail": "South Lake Tahoe",
-   "verified": false,
-   "contexts": [],
    "keywords": {}
   },
   {
@@ -1681,661 +1763,6 @@
      "in_title": false
     }
    ],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "California Tahoe Conservancy (news)",
-   "title": "Conservancy Awards $2 Million for Shared-Use Trail across Upper Truckee River",
-   "date": "2026-09-18",
-   "url": "https://tahoe.ca.gov/conservancy-awards-2-million-for-shared-use-trail-across-upper-truckee-river/",
-   "hit_count": 1,
-   "snippets": [
-    "...Tahoe Environmental Improvement Program (EIP) project. Additional funding for the project comes from the U.S. Federal Highway Administration, Caltrans, and the Tahoe Regional Planning Agency, along with potential funding from El Dorado County. The County expects to begin construction in 2027. Raised trail and bridge sections over creek and meadow c..."
-   ],
-   "detail": "California Tahoe Conservancy (news)",
-   "verified": true,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "meeting",
-   "source": "Douglas County",
-   "title": "Board of County Commissioners - Supplemental",
-   "date": "2026-09-17",
-   "url": "https://douglascountynv.granicus.com/AgendaViewer.php?view_id=1&clip_id=1881",
-   "hit_count": 184,
-   "snippets": [
-    "p.37: ...able to actually build and is a great risk to residents,visitors, and the environment. It is our job to protect this special place for future generations. The TRPA has pushed through multiple projects without considering logistics or funding. This area requires access via public land and the public should not have to deal...",
-    "p.38: ...o use the road for access for other uses like the fire station and the church) were to our knowledge, never informed of this project before it had gone through TRPA and Douglas County Planning review and approval. We think that this was a conscious act to keep those of us who will be greatly affected by this project from p...",
-    "p.42: ...have also been contributors to the Tahoe Fund for many years because protecting this basin matters to us. My husband Jack spoke in favor of this project at the TRPA Governing Board hearing and he still feels just as strongly today that it is an excellent addition to this community. He is out on the trails almost every week...",
-    "p.53: ...ed congestion at an already congested corridor and environmental concerns. The forest behind my lower Kingsbury home is being decimated and I no longer trust TRPA or the USFS as stewards of our precious land. Please preserve the forest, meadows and our beautiful lake! Susan Glasson 775-741-2574",
-    "p.54: ...hould almost NEVER be prompted to enter your login credentials as a result of opening or clicking anything. Dear Commissioners, Stop rubber stamping everything TRPA approves. Represent the residents who live in your area and oppose this monster glamping project. It defies the imagination to call this camping and push it th..."
-   ],
-   "detail": "Agenda",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Minutes",
-     "title": "September 13, 2026",
-     "pages": [
-      128,
-      129,
-      130
-     ],
-     "count": 8,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Item 12.3",
-     "pages": [
-      37
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Talaz Glamping Campground",
-     "pages": [
-      38
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Board of County Commissioners Comment Form 2026-09-17 09:39 AM(PST) Submission Notification",
-     "pages": [
-      42
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Glamping",
-     "pages": [
-      53,
-      170
-     ],
-     "count": 6,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: 12.3 oppose approval of glamping project",
-     "pages": [
-      54
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: APN 1318-22-001-013/DP25-0184/2026-APPEAL-0003",
-     "pages": [
-      56
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Appeal of Elk\"s Point Glamping Project",
-     "pages": [
-      57,
-      185
-     ],
-     "count": 5,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Board of County Commissioners Comment Form 2026-09-14 01:45 PM(PST) Submission Notification",
-     "pages": [
-      59
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Development behind Nv Beach",
-     "pages": [
-      62
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Fw: Do not approve of this project as it is against the codes",
-     "pages": [
-      71,
-      73,
-      74
-     ],
-     "count": 6,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Opposition to Item 12.3 Glamping Project",
-     "pages": [
-      95
-     ],
-     "count": 3,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Plea for Honesty - Item 12.3 - September 17, 2026 Meeting",
-     "pages": [
-      99
-     ],
-     "count": 3,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Please Reject the Nevada Beach / Dorla Court Glamping Development",
-     "pages": [
-      101
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Proposed campground behind Dorla Ct/NV Beach",
-     "pages": [
-      104
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Public Comment 9-17-2026 Douglas County Board of Commissioners Agenda item 12.3 Glamping project appeal",
-     "pages": [
-      107,
-      108,
-      109,
-      110,
-      111,
-      112,
-      114,
-      115
-     ],
-     "count": 39,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Public Comment Douglas county Commissioners",
-     "pages": [
-      119,
-      120
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Letter",
-     "pages": [
-      127
-     ],
-     "count": 4,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Re: item 12.3, proposed Glamping project",
-     "pages": [
-      132,
-      191
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Stop the high density development behind Nevada Beach",
-     "pages": [
-      137
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: STOP THE HIGH DENSITY DEVELOPMENT BEHIND NEVADA BEACH",
-     "pages": [
-      139
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Round Hill Glamping Project",
-     "pages": [
-      155
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: September 17 BOCC meeting Consent Item K",
-     "pages": [
-      157,
-      158,
-      159,
-      160,
-      161,
-      162,
-      163,
-      164,
-      165,
-      166,
-      167,
-      168,
-      169
-     ],
-     "count": 44,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Public Comment for Item 12.3: Oppose Design Review Approval DP25-0184 (Talaz Eco-Camp Project)",
-     "pages": [
-      173
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Elks Point Glamping Project",
-     "pages": [
-      179
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: WE DON\"T NEED GLAMPING",
-     "pages": [
-      183,
-      184
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Opposition to Elks Point Glamping",
-     "pages": [
-      188
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: 53 Unit Campground Elks Point Rd",
-     "pages": [
-      203
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Fwd: Commissioners Meeting 9-17-26 re: glamping Elk Pt Rd",
-     "pages": [
-      203
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Glamping Proposal--9-17-2026--Agenda Item 12.3",
-     "pages": [
-      206
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Re: Development near Nevada Beach",
-     "pages": [
-      207
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Review of Glamping project 9-17-26",
-     "pages": [
-      208,
-      209
-     ],
-     "count": 2,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Documenting our opposition to changing Any zoning near Nevada Beach area!",
-     "pages": [
-      211
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Board of County Commissioners Comment Form 2026-09-16 02:34 PM(PST) Submission Notification",
-     "pages": [
-      215,
-      216
-     ],
-     "count": 4,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Support for Appeal 2026-APPEAL-0003 — Opposition to TALĀZ Major Design Review DP25-0184",
-     "pages": [
-      218
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Email: Talaz DoCo Comm 9/17/26",
-     "pages": [
-      272,
-      273,
-      274,
-      279,
-      280,
-      367,
-      378,
-      382,
-      395,
-      396,
-      400,
-      401,
-      405,
-      406
-     ],
-     "count": 30,
-     "in_title": false
-    }
-   ],
-   "keywords": {}
-  },
-  {
-   "category": "meeting",
-   "source": "California Tahoe Conservancy (board)",
-   "title": "Conservancy Board meeting",
-   "date": "2026-09-17",
-   "url": "https://tahoe.ca.gov/wp-content/uploads/sites/257/2026/09/6_NTPUD_Land-Exchange.pdf",
-   "hit_count": 2,
-   "snippets": [
-    "p.3: ...nsolidate management under the NTPUD, improving operational efficiency and provide a clear point of contact for the public. The Beach Parcel is subject to a Tahoe Regional Planning Agency (TRPA) deed restriction that prohibits new residential development and requires the property to be maintained in a natural state. This deed restriction will..."
-   ],
-   "detail": "Staff report: 6. Update on Potential Exchange of Conservancy Land with North Tahoe Public Utility District (discussion o",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Staff report",
-     "title": "6. Update on Potential Exchange of Conservancy Land with North Tahoe Public Utility District (discussion o",
-     "pages": [
-      3
-     ],
-     "count": 2,
-     "in_title": false
-    }
-   ],
-   "keywords": {}
-  },
-  {
-   "category": "meeting",
-   "source": "California Tahoe Conservancy (board)",
-   "title": "Conservancy Board meeting",
-   "date": "2026-09-17",
-   "url": "https://tahoe.ca.gov/wp-content/uploads/sites/257/2026/09/10_Johnson-Meadow-Greenway-Grant.pdf",
-   "hit_count": 1,
-   "snippets": [
-    "p.4: ...portation Improvement Program (secured) $2,601,000 U.S Federal Highway Administration: Congestion Mitigation and Air Quality Program (secured) $2,366,000 Tahoe Regional Planning Agency: Mitigation funds (secured) $296,000 El Dorado County: County General Fund (proposed) $571,000 California Tahoe Conservancy: Proposition 4 (Climate Bond) (p..."
-   ],
-   "detail": "Staff report: 10. Johnson Meadow Greenway Connector Implementation Grant (action) (Resolution 26-09-03)",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Staff report",
-     "title": "10. Johnson Meadow Greenway Connector Implementation Grant (action) (Resolution 26-09-03)",
-     "pages": [
-      4
-     ],
-     "count": 1,
-     "in_title": false
-    }
-   ],
-   "keywords": {}
-  },
-  {
-   "category": "meeting",
-   "source": "Tahoe Transportation District",
-   "title": "TTD/C Board of Directors Meeting and Strategic Planning Workshop",
-   "date": "2026-09-16",
-   "url": "https://tahoetransportation.org/wp-content/uploads/2026/09/2026-9-16-TTD-C-Board-Agenda-Packet.pdf",
-   "hit_count": 169,
-   "snippets": [
-    "p.2: Agenda Page 2 IV. TAHOE TRANSPORTATION COMMISSION (TTC) CONSENT ITEMS Page A. For Possible Action: Recommend Approval of the Final 2027 Tahoe Regional Planning Agency/ Tahoe Metropolitan Planning Organization Federal Transportation Improvement Program (FTIP) to the TMPO Governing Board 27 V. ADJOURN AS TTC AND RECONVENE...",
-    "p.5: ...indy Gustafson, Placer County Sharla Hales, Douglas County Alexis Hill, Washoe County Brooke Laine, El Dorado County Chris Proctor, SS-TMA Julie Regan, Tahoe Regional Planning Agency Appointee Scott Robbins, City of South Lake Tahoe Stefan Watkins (Hvly), (sitting in for Brian Bigley) Guinevere Hobdy, NDOT Alex Fong, Caltrans (attended...",
-    "p.5: ...Tahoe Transportation District Leslie Conard, Tahoe Transportation District Linda Rao, Tahoe Transportation District Eli Flushman, Legal Counsel Nick Haven, Tahoe Regional Planning Agency I. TAHOE TRANSPORTATION DISTRICT CALL TO ORDER AND ROLL A. Roll Call and Determination of Quorum of TTD The meeting of the Tahoe Transportation District...",
-    "p.5: ...A. Roll Call and Determination of Quorum of TTD The meeting of the Tahoe Transportation District was called to order by Chair Chapman at 3:00 p.m. at the Tahoe Regional Planning Agency and via Zoom. Roll call was taken and it was determined a quorum was in attendance for TTD. B. Approval of TTD Agenda of August 5, 2026 Ms. Styer reques...",
-    "p.7: ...d: Informational Only V. ADJOURN AS TTD AND CONVENE AS TTC VI. TAHOE TRANSPORTATION COMMISSION (TTC) BUSINESS ITEMS Public Hearing for the Tahoe Regional Planning Agency/Tahoe Metropolitan Planning Organization Draft 2027 Federal Transportation Improvement Program Ms. Weber of the Tahoe Regional and Planning Agency (TRPA) re..."
-   ],
-   "detail": "Agenda packet",
-   "verified": true,
-   "contexts": [
-    {
-     "type": "Agenda item",
-     "title": "A. For Possible Action: Recommend Approval of the Final 2027 Tahoe Regional Planning Agency/ Tahoe Metropolitan Planning Organization Federal Transportation Improvement Program (FTIP) to the TMPO…",
-     "pages": [
-      2
-     ],
-     "count": 1,
-     "in_title": true
-    },
-    {
-     "type": "Staff report",
-     "title": "Recommend approval of the Final 2027 Tahoe Regional Planning Agency/ Tahoe",
-     "pages": [
-      31,
-      32,
-      33,
-      34,
-      35,
-      38,
-      39,
-      40,
-      42,
-      43,
-      44,
-      45,
-      46,
-      49,
-      50,
-      52,
-      54,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      63,
-      64,
-      66,
-      69,
-      70,
-      71,
-      72,
-      73,
-      75,
-      76,
-      77,
-      78,
-      79,
-      80,
-      81,
-      82,
-      83,
-      84,
-      85,
-      86,
-      87,
-      88,
-      89,
-      90,
-      91,
-      92,
-      95,
-      96,
-      98,
-      99,
-      101
-     ],
-     "count": 124,
-     "in_title": false
-    },
-    {
-     "type": "Staff report",
-     "title": "Strategic Planning Workshop",
-     "pages": [
-      157,
-      158,
-      159,
-      161,
-      165
-     ],
-     "count": 8,
-     "in_title": false
-    },
-    {
-     "type": "Attachment",
-     "title": "C: Amending the Federal Transportation Improvement Program",
-     "pages": [
-      104
-     ],
-     "count": 1,
-     "in_title": false
-    },
-    {
-     "type": "Attachment",
-     "title": "ix D: California Transportati",
-     "pages": [
-      109,
-      113,
-      114,
-      119,
-      121,
-      123,
-      124,
-      125,
-      130,
-      141,
-      142,
-      143
-     ],
-     "count": 18,
-     "in_title": false
-    },
-    {
-     "type": "Attachment",
-     "title": "TAHOE",
-     "pages": [
-      149,
-      150
-     ],
-     "count": 3,
-     "in_title": false
-    },
-    {
-     "type": "Minutes",
-     "title": "Tahoe Transportation District Board Meeting Minutes – April 1, 2026",
-     "pages": [
-      5
-     ],
-     "count": 3,
-     "in_title": false
-    },
-    {
-     "type": "Minutes",
-     "title": "Tahoe Transportation District Board Meeting Minutes – August 5, 2026",
-     "pages": [
-      7,
-      8,
-      11,
-      13
-     ],
-     "count": 9,
-     "in_title": false
-    },
-    {
-     "type": "Public comment",
-     "title": "Letter",
-     "pages": [
-      148
-     ],
-     "count": 2,
-     "in_title": false
-    }
-   ],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Google News",
-   "title": "Developer seeks major height increase for Fremont Avenue condo proposal",
-   "date": "2026-09-15",
-   "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNeTBNdVZsZ3QyenZOUFZMSHJweWg1V1cwMzRZUEpla0tEOWpmMEZJeHNXb2JPTWlCLXFVbXk3Tk9rcFZDSWFlNXBmOHJleXoybmYwakRuUm5tcFNuUmgta0dxTkxZeE8tQ2tVYmh0UmQ4bGtTaUoybXVzbFdjdzFpY3M4czBYYWZFR3R0eks0am00RXJNSkRPcGkwQ1ZiWndkWkRTc1BscVVFTmtmTnpoZg?oc=5",
-   "hit_count": 0,
-   "snippets": [
-    "Developer seeks major height increase for Fremont Avenue condo proposal - Tahoe Daily Tribune"
-   ],
-   "detail": "Tahoe Daily Tribune",
-   "verified": false,
-   "contexts": [],
-   "keywords": {}
-  },
-  {
-   "category": "press",
-   "source": "Google News",
-   "title": "Tahoe’s Free Boating App Now Warns You When the Weather Is About to Turn",
-   "date": "2026-09-14",
-   "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxObzJyMFlwcXJfdy1Kc1Q5MVRqaHJzZ0ltNDI3Rk5KZWVIUmgwWmlqck42cXlRdExhVkwwNm1lV2piMmxjXzd6TW9vRjJmcHgyX3Fya0JoaEllQlQycXpWS1ZLdzdBbzJQZDBoQWIwY0ozM1B1Rkx5eEQwdXhUalhFTzBtanlxWXB1TjlCTHRKWm5OYkgxV25pc2MydnhpdzRfUHFV?oc=5",
-   "hit_count": 0,
-   "snippets": [
-    "Tahoe’s Free Boating App Now Warns You When the Weather Is About to Turn - Active NorCal"
-   ],
-   "detail": "Active NorCal",
-   "verified": false,
-   "contexts": [],
    "keywords": {}
   }
  ]
