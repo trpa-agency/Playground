@@ -4,10 +4,12 @@ import io
 import json
 import logging
 import re
+import tempfile
 import threading
 import time
 from collections import defaultdict
 from pathlib import Path
+from typing import BinaryIO
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -21,7 +23,7 @@ log = logging.getLogger(__name__)
 
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/140.0 Safari/537.36 TRPA-mention-monitor")
-MAX_DOC_BYTES = 80 * 1024 * 1024
+SPOOL_BYTES = 32 * 1024 * 1024   # downloads bigger than this go to a temp file, not memory
 CACHE_DIR = Path(__file__).resolve().parent.parent / ".cache"
 CACHE_TTL_SECONDS = 24 * 3600
 
@@ -147,17 +149,18 @@ _host_slots: dict[str, threading.BoundedSemaphore] = defaultdict(
 _host_slots_lock = threading.Lock()
 
 
-def _download(url: str) -> tuple[bytes, str]:
+def _download(url: str) -> tuple[BinaryIO, str]:
+    """Download to a file object: in memory while small, spilled to a temp file when big.
+    There is no size limit; agenda packets can run to hundreds of megabytes."""
     with _host_slots_lock:
         slot = _host_slots[urlparse(url).hostname or ""]
     with slot:
-        r = get(url, timeout=120, stream=True)
-        buf = io.BytesIO()
-        for chunk in r.iter_content(1 << 16):
+        r = get(url, timeout=300, stream=True)
+        buf = tempfile.SpooledTemporaryFile(max_size=SPOOL_BYTES)
+        for chunk in r.iter_content(1 << 20):
             buf.write(chunk)
-            if buf.tell() > MAX_DOC_BYTES:
-                raise ValueError(f"document larger than {MAX_DOC_BYTES // 2**20} MB")
-        return buf.getvalue(), r.headers.get("content-type", "")
+        buf.seek(0)
+        return buf, r.headers.get("content-type", "")
 
 
 _SHARE_CLASS = re.compile(r"(^|[-_ ])(share|sharing|social)([-_ ]|$)", re.I)
@@ -176,9 +179,12 @@ def html_to_text(html: str) -> str:
     return _SHARE_TEXT.sub(" ", text)
 
 
-def extract_pages(data: bytes, content_type: str) -> list[str]:
-    if data[:5] == b"%PDF-" or "pdf" in content_type:
-        reader = PdfReader(io.BytesIO(data))
+def extract_pages(data: bytes | BinaryIO, content_type: str) -> list[str]:
+    f = io.BytesIO(data) if isinstance(data, bytes) else data
+    head = f.read(5)
+    f.seek(0)
+    if head == b"%PDF-" or "pdf" in content_type:
+        reader = PdfReader(f)
         pages = []
         for p in reader.pages:
             try:
@@ -186,7 +192,7 @@ def extract_pages(data: bytes, content_type: str) -> list[str]:
             except Exception:  # a single bad page shouldn't sink the document
                 pages.append("")
         return pages
-    return [html_to_text(data.decode("utf-8", errors="replace"))]
+    return [html_to_text(f.read().decode("utf-8", errors="replace"))]
 
 
 def document_pages(url: str, use_cache: bool = True) -> list[str]:
@@ -196,7 +202,8 @@ def document_pages(url: str, use_cache: bool = True) -> list[str]:
     if use_cache and path.exists() and time.time() - path.stat().st_mtime < CACHE_TTL_SECONDS:
         return json.loads(path.read_text(encoding="utf-8"))
     data, ctype = _download(url)
-    pages = extract_pages(data, ctype)
+    with data:
+        pages = extract_pages(data, ctype)
     path.write_text(json.dumps(pages), encoding="utf-8")
     return pages
 

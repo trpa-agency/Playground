@@ -43,7 +43,8 @@ CREATE TABLE mention (
     --   agenda    = part of an agendized item (labelled, but not ranked above other mentions)
     --   materials = only in staff reports, attachments, or minutes
     --   public    = only in public comment or correspondence (lower priority)
-    importance            TEXT CHECK (importance IN ('agenda', 'materials', 'public')),
+    --   outside   = keyword-only match from a county meeting outside the Basin (lowest priority)
+    importance            TEXT CHECK (importance IN ('agenda', 'materials', 'public', 'outside')),
     how_primary           TEXT CHECK (how_primary IN ('Agenda item', 'Staff report', 'Attachment',
                                                       'Minutes', 'Public comment')),  -- in priority order
     how_all               TEXT,                   -- "; "-separated distinct types, most significant first

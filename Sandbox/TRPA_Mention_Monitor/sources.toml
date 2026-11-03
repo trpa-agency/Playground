@@ -10,8 +10,8 @@
 #   civicplus    - CivicPlus AgendaCenter (base_url of the site)
 #
 # Set `enabled = false` to skip a source without deleting it.
-# Set `packets = true` on a meeting source to always scan its full agenda packets
-# (otherwise only done with --packets). Useful for small agencies with few meetings.
+# Full agenda packets are scanned for every meeting source. `packets = true` on a source
+# keeps its packets scanned even in a quick run with --no-packets.
 
 [settings]
 # Patterns matched (case-insensitive) against document text.
@@ -41,6 +41,18 @@ ignore_context_patterns = [
   # Stays within one sentence ("p.m." and "Ms. Bagwell" are fine; ". The" is not) and never
   # spans another mention.
   'called to order(?:(?!(?<!\bM[rs])(?<!\bMrs)(?<!\bDr)\.\s+(?-i:[A-Z])|TRPA|Tahoe Regional).){0,80}? at (the )?Tahoe Regional Planning Agency',
+]
+
+# Sources with `basin = false` (counties and Truckee) also cover places outside the Basin.
+# Their keyword-only matches (no TRPA) are kept but listed last as low priority, unless the
+# pages that match, or the meeting or document name, name one of these Basin places.
+basin_place_patterns = [
+  '\bLake\s+Tahoe\b', '\bTahoe\s+(?:City|Vista|Basin|Region|Keys|Paradise|Pines)\b', '\bIncline\b',
+  '\bCrystal\s+Bay\b', '\bKings\s+Beach\b', '\bCarnelian\s+Bay\b', '\bAgate\s+Bay\b', '\bBrockway\b',
+  '\bDollar\s+Point\b', '\bSunnyside\b', '\bHomewood\b', '\bTahoma\b', '\bMeeks\s+Bay\b', '\bRubicon\b',
+  '\bEmerald\s+Bay\b', '\bCamp\s+Richardson\b', '\bFallen\s+Leaf\b', '\bChristmas\s+Valley\b', '\bMeyers\b',
+  '\bStateline\b', '\bZephyr\s+Cove\b', '\bKingsbury\b', '\bRound\s+Hill\b', '\bGlenbrook\b',
+  '\bCave\s+Rock\b', '\bMarla\s+Bay\b', '\bTahoe\s+Township\b',
 ]
 
 # Press items from these domains are skipped (TRPA's own site is not "press").
@@ -99,33 +111,39 @@ url = "https://tahoe.ca.gov/feed/"
 name = "El Dorado County"
 type = "legistar"
 client = "eldorado"
+basin = false
 
 [[source]]
 name = "Washoe County"
 type = "legistar"
 client = "washoe-nv"
+basin = false
 
 [[source]]
 name = "Placer County"
 type = "civicplus"
 base_url = "https://www.placer.ca.gov"
+basin = false
 
 [[source]]
 name = "Douglas County"
 type = "granicus"
 host = "douglascountynv.granicus.com"
 view_id = 1
+basin = false
 
 [[source]]
 name = "City of South Lake Tahoe"
 type = "granicus"
 host = "slt.granicus.com"
 view_id = 6
+packets = true
 
 [[source]]
 name = "Town of Truckee"
 type = "municode"
 client_code = "TRUCKEECA"
+basin = false
 
 [[source]]
 name = "Tahoe City Public Utility District"
