@@ -384,11 +384,14 @@ def write_summary_pdf(path: Path, mentions: list[Mention], window: Window, meeti
     upcoming = sorted((m for m in mentions if m.category == "upcoming"), key=lambda m: (m.date, m.source))
     past = sorted((m for m in mentions if m.category == "meeting"), key=lambda m: m.date, reverse=True)
     press = sorted((m for m in mentions if m.category == "press"), key=lambda m: m.date or date.min, reverse=True)
-    agenda_items = [m for m in upcoming if importance(m.contexts) == "agenda"]
+    agenda_items = [m for m in upcoming if importance(m.contexts, m.outside_basin) == "agenda"]
     # Upcoming meetings are listed by date whether TRPA is an agenda item or in the packet;
     # only public-comment-only mentions are set apart as lower priority.
-    public_only = [m for m in upcoming if importance(m.contexts) == "public"]
-    main_upcoming = [m for m in upcoming if importance(m.contexts) != "public"]
+    # Keyword-only matches outside the Basin are listed after them, lowest priority.
+    level_of = {id(m): importance(m.contexts, m.outside_basin) for m in upcoming}
+    public_only = [m for m in upcoming if level_of[id(m)] == "public"]
+    outside = [m for m in upcoming if level_of[id(m)] == "outside"]
+    main_upcoming = [m for m in upcoming if level_of[id(m)] not in ("public", "outside")]
     n_trpa = sum(1 for m in main_upcoming if m.hit_count)
 
     story = [Spacer(1, 0.55 * inch)]
@@ -417,6 +420,9 @@ def write_summary_pdf(path: Path, mentions: list[Mention], window: Window, meeti
         lead += (f" {what} comes up only in public comment in "
                  f"{count(len(public_only), 'more', 'more')}, which {'is' if len(public_only) == 1 else 'are'} "
                  f"lower priority.")
+    if outside:
+        lead += (f" {cap(count(len(outside), 'more keyword match', 'more keyword matches'))} "
+                 f"{'is' if len(outside) == 1 else 'are'} from county meetings outside the Basin, listed last.")
     outlets = {m.detail or m.source for m in press}
     lead += (f" Over the past 30 days ({fmt_date(window.start)} to {fmt_date(window.end)}), TRPA came up in "
              f"{count(len(past), 'meeting document')} from {count(len({m.source for m in past}), 'agency', 'agencies')} "
@@ -431,7 +437,8 @@ def write_summary_pdf(path: Path, mentions: list[Mention], window: Window, meeti
         + f". Meetings that mention TRPA or Tahoe Regional Planning Agency come first, highlighted in blue "
         f"and labelled “Mentions TRPA”; meetings that match a department keyword only follow. Each group is "
         f"soonest first. "
-        f"Mentions only in public comment are listed last as lower priority. "
+        f"Mentions only in public comment, then keyword-only matches from county meetings outside the Basin, "
+        f"are listed last as lower priority. "
         f"Agendas checked through {fmt_date(meeting_window.end)}; most agencies post three to 10 days ahead.",
         st["intro"]))
     # TRPA mentions first, then keyword-only matches (each already soonest first).
@@ -446,11 +453,12 @@ def write_summary_pdf(path: Path, mentions: list[Mention], window: Window, meeti
         # Keep the heading on the same page as its first meeting.
         story.append(KeepTogether([Paragraph("Department keyword matches", st["h3"]), blocks[0]]))
         story += blocks[1:]
-    if public_only:
-        story.append(Paragraph('Public comment only <font size="10" color="#6B7688">(lower priority)</font>',
-                               st["h3"]))
+    for group, heading in ((public_only, "Public comment only"), (outside, "Outside the Basin, keywords only")):
+        if not group:
+            continue
+        story.append(Paragraph(f'{heading} <font size="10" color="#6B7688">(lower priority)</font>', st["h3"]))
         rows = []
-        for m in public_only:
+        for m in group:
             first = (m.snippets or [s for k in m.keywords.values() for s in k["snippets"]] or [""])[0]
             _, text = key_passage(first)
             c = m.contexts[0] if m.contexts else {}

@@ -14,7 +14,7 @@ from .matcher import Matcher, flatten_keywords, keyword_pattern, load_department
 from .models import Mention, Window
 from .report import (dedupe_press, table_rows, write_app_data, write_csv, write_html, write_json,
                      write_mentions_table)
-from .sources import SCAN_STATS, Context, get_adapter
+from .sources import SCAN_STATS, UNREADABLE_DOCS, Context, get_adapter
 from .summary_pdf import write_summary_pdf
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -36,8 +36,10 @@ def parse_args(argv=None):
     p.add_argument("--only", help="comma-separated source names to run (substring match)")
     p.add_argument("--meetings-only", action="store_true")
     p.add_argument("--press-only", action="store_true")
-    p.add_argument("--packets", action="store_true",
-                   help="also scan full agenda packets / staff reports (much slower, more thorough)")
+    p.add_argument("--packets", dest="packets", action="store_true", default=True,
+                   help="scan full agenda packets / staff reports for every agency (the default)")
+    p.add_argument("--no-packets", dest="packets", action="store_false",
+                   help="skip packets except for sources with packets = true (much faster, less thorough)")
     p.add_argument("--no-cache", action="store_true", help="re-download documents")
     p.add_argument("--app-data", type=Path, default=ROOT / "data",
                    help="folder for the web app's data files (mentions.json and mentions.js)")
@@ -115,6 +117,20 @@ PLATFORMS = {
 }
 
 
+def write_unreadable(path: Path, docs: list[dict], today: date):
+    """Reference list of documents that couldn't be searched, mostly scanned images that
+    would need OCR. Not shown in the app."""
+    import csv
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f)
+        w.writerow(["source", "meeting", "meeting_date", "timing", "document", "reason", "url"])
+        for d in sorted(docs, key=lambda d: (d["date"], d["source"], d["meeting"], d["document"])):
+            reason = ("Scanned image, no text (needs OCR)" if d["reason"].startswith("no extractable")
+                      else "Could not read: " + d["reason"].removeprefix("unreadable: "))
+            w.writerow([d["source"], d["meeting"], d["date"], "upcoming" if d["date"] > today else "past",
+                        d["document"], reason, d["url"]])
+
+
 def main(argv=None) -> int:
     args = parse_args(argv)
     if args.rebuild:
@@ -136,6 +152,8 @@ def main(argv=None) -> int:
         exclude_domains=[d.lower() for d in settings.get("exclude_domains", [])],
         packets=args.packets,
         use_cache=not args.no_cache,
+        basin_places=(re.compile("|".join(settings["basin_place_patterns"]), re.I)
+                      if settings.get("basin_place_patterns") else None),
     )
     departments = load_departments(args.keywords_file)
     keywords = flatten_keywords(departments)
@@ -164,7 +182,7 @@ def main(argv=None) -> int:
         row = {"name": s["name"], "kind": "press" if s["type"] in PRESS_TYPES else "meetings",
                "platform": PLATFORMS.get(s["type"], s["type"]), "hits": 0, "ok": True, "error": ""}
         try:
-            src_ctx = replace(ctx, packets=True) if s.get("packets") else ctx
+            src_ctx = replace(ctx, packets=ctx.packets or s.get("packets", False), in_basin=s.get("basin", True))
             found = get_adapter(s["type"])(s, src_ctx)
             mentions += found
             row["hits"] = len(found)
@@ -213,6 +231,7 @@ def main(argv=None) -> int:
         carried_names = {r["name"] for r in status if r.get("previous_run")}
         write_mentions_table(args.app_data / "mentions_table.csv",
                              table_rows(mentions, generated_at, platforms, carried_names, departments))
+        write_unreadable(args.app_data / "unreadable_documents.csv", UNREADABLE_DOCS, end)
         try:
             write_summary_pdf(args.app_data / "TRPA_Mention_Summary.pdf", mentions, window,
                               ctx.meeting_window, status, keywords=keywords, departments=departments)

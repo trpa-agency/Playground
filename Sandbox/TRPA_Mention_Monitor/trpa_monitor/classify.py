@@ -22,12 +22,16 @@ PRIORITY = [AGENDA, STAFF, OTHER, MINUTES, PUBLIC]
 #   "agenda"     TRPA (or a keyword) is part of an agendized item
 #   "materials"  only in staff reports, attachments, or minutes
 #   "public"     only in public comment or correspondence: flag as lower priority
+#   "outside"    keyword-only match outside the Basin (Mention.outside_basin): lowest, listed last
 IMPORTANCE = {AGENDA: "agenda", STAFF: "materials", OTHER: "materials", MINUTES: "materials", PUBLIC: "public"}
-IMPORTANCE_LABEL = {"agenda": "On the agenda", "materials": "In meeting materials", "public": "Public comment only"}
+IMPORTANCE_LABEL = {"agenda": "On the agenda", "materials": "In meeting materials", "public": "Public comment only",
+                    "outside": "Outside the Basin"}
 
 
-def importance(contexts: list[dict]) -> str:
+def importance(contexts: list[dict], outside_basin: bool = False) -> str:
     """Importance level for a list of contexts ("" when there are none, e.g. press)."""
+    if outside_basin:
+        return "outside"
     types = {c["type"] for c in contexts}
     return IMPORTANCE[min(types, key=PRIORITY.index)] if types else ""
 
@@ -36,13 +40,14 @@ def sort_contexts(contexts: list[dict]) -> list[dict]:
     return sorted(contexts, key=lambda g: (PRIORITY.index(g["type"]), not g["in_title"], g["pages"][0]))
 
 _MONTH = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?"
+_WEEKDAY = r"(?:(?:mon|tues|wednes|thurs|fri|satur|sun)day,?\s+)?"
 _DATE = rf"(?:{_MONTH}\s+\d{{1,2}},?\s+\d{{4}}|\d{{1,2}}[ ./-]\d{{1,2}}[ ./-]\d{{2,4}})"
 
 # Page-top markers (running headers and cover lines).
 _AGENDA_HEAD = re.compile(r"\bAGENDA\b(?!\s*ITEM)|\bAgenda\s*[–-]|\bMeeting Agenda\b|\bAgenda Page\b")
 # Real minutes carry the meeting date in their running header ("MEETING MINUTES: Sept. 17,
 # 2026", "BOT Minutes 08 19 2026"); an agenda line like "City Council Meeting Minutes" doesn't.
-_MINUTES_HEAD = re.compile(rf"\bminutes\b\W{{0,6}}{_DATE}|{_DATE}\W{{0,12}}(?:regular |special )?(?:board )?meeting minutes",
+_MINUTES_HEAD = re.compile(rf"\bminutes\b\W{{0,6}}{_WEEKDAY}{_DATE}|{_DATE}\W{{0,12}}(?:regular |special )?(?:board )?meeting minutes",
                            re.I)
 _PUBLIC_HEAD = re.compile(
     r"provided .{0,80}by the public|public comments? (?:received|submitted)|written (?:public )?comments?"
@@ -51,9 +56,12 @@ _PUBLIC_HEAD = re.compile(
 # Request Staff Report"), which mustn't count.
 _STAFF_HEAD = re.compile(
     r"M\s?E\s?M\s?O\s?R\s?A\s?N\s?D\s?U\s?M|^\s*(?:STAFF REPORT|Staff Report|BOARD REPORT)\b|Status Report\b"
-    r"|^\s*TO:\s.*\n(?:.*\n){0,5}?\s*FROM:", re.M)
-_NEW_DOC = re.compile(r"^\s*(?:Page 1 of \d+|1)\s*$|^\s*(?:ATTACHMENT|EXHIBIT)\s+[A-Z0-9]\b|RESOLUTION NO",
-                      re.M)
+    r"|^\s*TO:\s.*\n(?:.*\n){0,5}?\s*FROM:"
+    r"|Agenda Item Executive Summary|^\s*Report to (?:the )?(?:City|Town) Council\b", re.M)
+# Report title lines: "Agenda Item:" on South Lake Tahoe's executive summaries, "Title:"
+_TITLE = re.compile(r"^\s*(?:Agenda Item|Title):[ \t]*\n?[ \t]*(\S.*)$", re.M)
+_NEW_DOC = re.compile(r"^\s*(?:Page 1 of \d+|1)\s*$|^\s*(?:ATTACHMENT|EXHIBIT)\s+[A-Z0-9]\b|RESOLUTION NO"
+                      r"|^\s*Resolution\s*\d{4}-\S+.{0,40}\bPage\s*1\s*of\b", re.M)
 
 # Mid-page starts.
 _EMAIL = re.compile(r"^\s*From:\s.+\n(?:.*\n){0,4}?\s*(?:Sent|Date|To|Subject):", re.M)
@@ -100,10 +108,13 @@ def _page_kind(page: str) -> tuple[str | None, str]:
     if _PUBLIC_HEAD.search(head) or _EMAIL.match(top):
         subject = _SUBJECT.search(page[:900])
         return PUBLIC, ("Email: " + _clean(subject.group(1), 120)) if (subject and _EMAIL.match(top)) else ""
-    if _MINUTES_HEAD.search(head):
-        return MINUTES, _clean(top.splitlines()[0] if top else "", 120)
+    minutes = _MINUTES_HEAD.search(head)
+    if minutes:
+        first = top.splitlines()[0] if top else ""
+        # Some minutes open with the agency name; then the header itself is the better title.
+        return MINUTES, _clean(first if re.search(r"minutes", first, re.I) else minutes.group(0), 120)
     if _STAFF_HEAD.search(head):
-        subject = _SUBJECT.search(page[:1500])
+        subject = _SUBJECT.search(page[:1500]) or _TITLE.search(page[:1500])
         return STAFF, _clean(subject.group(1), 140) if subject else ""
     return None, ""
 
@@ -158,6 +169,12 @@ def classify(pages: list[str], matcher: Matcher, doc_kind: str = "") -> list[dic
     for i, page in enumerate(pages):
         if not fixed:
             kind, title = _page_kind(page)
+            # Agendas carry public-comment boilerplate ("Written comments will not be read
+            # out loud"). On an agenda page that opens with an item heading it's notice text,
+            # not the start of a public-comment attachment.
+            if (in_agenda and kind == PUBLIC and not title and not _EMAIL.match(page.lstrip()[:600])
+                    and _ITEM.match(page.lstrip())):
+                kind = "agenda"
             if kind == "agenda":
                 in_agenda = in_agenda or i == 0
             elif kind is not None:

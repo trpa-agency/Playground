@@ -25,6 +25,10 @@ class Context:
     workers: int = 6
     # Extra keywords (keywords.txt) searched in upcoming meetings only: {phrase: Matcher}
     keywords: dict[str, Matcher] | None = None
+    # False for sources that cover more than the Basin (counties, Truckee): their keyword-only
+    # matches are low priority unless the matching pages name a Basin place.
+    in_basin: bool = True
+    basin_places: re.Pattern | None = None
 
     def is_upcoming(self, d: date) -> bool:
         return d > self.window.end
@@ -61,8 +65,20 @@ def _combined(keywords: dict[str, Matcher], matched: dict) -> Matcher:
     return Matcher([keywords[k].regex.pattern for k in matched])
 
 
+def _outside_basin(pages: list[str], keyword_hits: dict, keywords: dict[str, Matcher],
+                   names: str, places: re.Pattern | None) -> bool:
+    """True when no page with a keyword match (nor the meeting/document name) names a Basin place."""
+    if places is None:
+        return False
+    hit_pages = [p for p in pages if any(keywords[k].hits(p) for k in keyword_hits)]
+    return not places.search(" ".join([names, *hit_pages]))
+
+
 # Per-source document counts for the app's "Sources checked" tab: {source: {"scanned", "unreadable"}}
 SCAN_STATS: dict[str, dict[str, int]] = {}
+# Documents that couldn't be searched (scanned images, download errors), for
+# data/unreadable_documents.csv: [{"source", "meeting", "date", "document", "reason", "url"}]
+UNREADABLE_DOCS: list[dict] = []
 
 
 def scan_meeting_docs(source: str, docs: list[MeetingDoc], ctx: Context) -> list[Mention]:
@@ -85,6 +101,8 @@ def scan_meeting_docs(source: str, docs: list[MeetingDoc], ctx: Context) -> list
         unreadable = note.startswith("unreadable") or note.startswith("no extractable")
         if unreadable:
             log.info("%s | %s %s: %s", source, d.meeting, d.date, note)
+            UNREADABLE_DOCS.append({"source": source, "meeting": d.meeting, "date": d.date,
+                                    "document": d.kind, "reason": note, "url": d.url})
             return None, unreadable
 
         def pages() -> list[str]:
@@ -112,8 +130,10 @@ def scan_meeting_docs(source: str, docs: list[MeetingDoc], ctx: Context) -> list
         except Exception as e:
             log.info("%s | %s: could not classify: %s", source, d.meeting, e)
             contexts = []
+        outside = (not n and not ctx.in_basin
+                   and _outside_basin(pages(), keyword_hits, ctx.keywords, f"{d.meeting} {d.kind}", ctx.basin_places))
         return Mention("meeting", source, d.meeting, d.date, d.url, n, snips, d.kind,
-                       contexts=contexts, keywords=keyword_hits), unreadable
+                       contexts=contexts, keywords=keyword_hits, outside_basin=outside), unreadable
 
     with ThreadPoolExecutor(ctx.workers) as pool:
         results = list(pool.map(work, todo))

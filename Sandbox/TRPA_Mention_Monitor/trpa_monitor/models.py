@@ -19,6 +19,9 @@ class Mention:
     # Upcoming meetings only: matches for the department keywords in keywords.csv,
     # {"short-term rental": {"count": 4, "snippets": [...]}}
     keywords: dict[str, dict] = field(default_factory=dict)
+    # Keyword-only match (no TRPA) at a countywide source, on pages that name no Basin
+    # place: kept, but listed last as low priority (see basin_place_patterns in sources.toml).
+    outside_basin: bool = False
 
 
 @dataclass

@@ -72,16 +72,16 @@
     .view-bar .dept-terms { font-size: 0.85rem; color: var(--gray-text); flex: 1; min-width: 240px; }
 
     /* Importance: public-comment-only muted. Agenda items get a label, not extra emphasis. */
-    .meeting-card.tier-public { border-left-color: #C9D2DE; background: var(--gray-bg); box-shadow: none;
+    .meeting-card.tier-public, .meeting-card.tier-outside { border-left-color: #C9D2DE; background: var(--gray-bg); box-shadow: none;
                                 border-top: 1px solid var(--gray-border); border-right: 1px solid var(--gray-border);
                                 border-bottom: 1px solid var(--gray-border); }
-    .meeting-card.tier-public h3 { font-weight: 600; }
+    .meeting-card.tier-public h3, .meeting-card.tier-outside h3 { font-weight: 600; }
     .flag-public { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gray-text); font-weight: 600; }
     .group-head { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
                   margin: 0.5rem 0 -0.25rem; font-size: 1.02rem; }
     .group-head .hint { font-size: 0.82rem; font-weight: 400; color: var(--gray-text); }
     .group-empty { grid-column: 1 / -1; }
-    .cal-chip.chip-public { font-style: italic; }
+    .cal-chip.chip-public, .cal-chip.chip-outside { font-style: italic; }
     .ag-row.row-public .ag-cell { color: var(--gray-text); }
     .dialog-flag { margin: 0 0 0.75rem; }
 
@@ -378,7 +378,7 @@
       <li>"Upcoming" means the meeting has not happened yet but its agenda is posted, usually three to 10 days ahead. Upcoming meetings are also searched for the department keywords listed in <code>keywords.csv</code> (one row per department and keyword); edit that file and refresh the data to change them.</li>
       <li>Department view: the default view shows only meetings and press that mention TRPA. Picking a department shows upcoming meetings that match its keywords (even without a TRPA mention), plus past meetings and press items whose TRPA passages mention one of them. Share a department's view with its link (for example <code>?dept=Transportation</code>).</li>
       <li>"How it comes up" is worked out from each document's structure: a numbered item on the agenda, public comment (letters, emails, written comments), a staff report or memo, minutes of an earlier meeting, or another attachment. "Named in the item itself" means TRPA is in the agenda item's own title or description. Treat it as a guide and confirm in the document.</li>
-      <li>Order: upcoming meetings are listed soonest first, whether TRPA or a keyword is an agenda item or appears in the staff reports, attachments, or minutes. Mentions only in public comment are flagged "Public comment only" and listed last as lower priority.</li>
+      <li>Order: upcoming meetings are listed soonest first, whether TRPA or a keyword is an agenda item or appears in the staff reports, attachments, or minutes. Mentions only in public comment are flagged "Public comment only" and listed last as lower priority. In a department view, keyword-only matches from county or Truckee meetings whose matching pages don't name a Basin place are flagged "Outside the Basin" and listed after those.</li>
       <li>"Headline match only" press items come from a news search where the article text could not be checked. Open them to confirm.</li>
     </ul>
     <p class="source-note" id="footer-source"></p>
@@ -493,16 +493,21 @@
       return cs.length ? cs.map(c => c.type).sort((a, b) => TYPE_ORDER.indexOf(a) - TYPE_ORDER.indexOf(b))[0] : '';
     }
     // "agenda" (part of an agendized item), "materials" (staff reports, attachments, minutes),
-    // or "public" (only in public comment); "" for press.
-    function importanceOf(m) { return IMPORTANCE[primaryType(m)] || ''; }
+    // "public" (only in public comment), or "outside" (keyword-only match from a county
+    // meeting outside the Basin); "" for press.
+    function importanceOf(m) { return m.outside_basin ? 'outside' : IMPORTANCE[primaryType(m)] || ''; }
     const isPublicOnly = m => importanceOf(m) === 'public';
-    // Soonest first; on the same day, public-comment-only mentions last, then by agency.
+    const isOutside = m => importanceOf(m) === 'outside';
+    const isLowPriority = m => isPublicOnly(m) || isOutside(m);
+    const lowRank = m => isOutside(m) ? 2 : isPublicOnly(m) ? 1 : 0;
+    // Soonest first; on the same day, lower-priority mentions last, then by agency.
     function byDate(a, b) {
-      return a.date.localeCompare(b.date) || isPublicOnly(a) - isPublicOnly(b) || a.source.localeCompare(b.source);
+      return a.date.localeCompare(b.date) || lowRank(a) - lowRank(b) || a.source.localeCompare(b.source);
     }
     // Flag shown at the top of cards, the calendar popover, and the details dialog.
     function flagHtml(m) {
-      return isPublicOnly(m) ? '<div class="flag-public">Public comment only · lower priority</div>' : '';
+      return isPublicOnly(m) ? '<div class="flag-public">Public comment only · lower priority</div>'
+        : isOutside(m) ? '<div class="flag-public">Outside the Basin · lower priority</div>' : '';
     }
     function pageList(pages) {
       if (pages.length === 1) return `page ${pages[0]}`;
@@ -617,13 +622,16 @@
           + ' Agencies usually post agendas three to 10 days ahead, so check back after the next update.'));
         return;
       }
-      // Soonest first, whether it's an agenda item or in the packet. Only mentions that are
-      // just in public comment are set apart, last, as lower priority.
-      for (const m of upcoming.filter(m => !isPublicOnly(m))) list.appendChild(meetingCard(m));
-      const publicOnly = upcoming.filter(isPublicOnly);
-      if (publicOnly.length) {
-        list.appendChild(el('h3', { class: 'group-head' }, 'Public comment only <span class="hint">Lower priority</span>'));
-        for (const m of publicOnly) list.appendChild(meetingCard(m));
+      // Soonest first, whether it's an agenda item or in the packet. Mentions just in public
+      // comment, then keyword-only matches from county meetings outside the Basin, are set
+      // apart, last, as lower priority.
+      for (const m of upcoming.filter(m => !isLowPriority(m))) list.appendChild(meetingCard(m));
+      for (const [test, head] of [[isPublicOnly, 'Public comment only'],
+                                  [isOutside, 'Outside the Basin, keywords only']]) {
+        const group = upcoming.filter(test);
+        if (!group.length) continue;
+        list.appendChild(el('h3', { class: 'group-head' }, `${head} <span class="hint">Lower priority</span>`));
+        for (const m of group) list.appendChild(meetingCard(m));
       }
     }
 
@@ -905,7 +913,7 @@
         onRowClicked: e => openContext(e.data),
         onCellKeyDown: e => { if (e.event.key === 'Enter') openContext(e.data); },
         overlayNoRowsTemplate: '<span style="padding: 1rem;">No mentions match these filters.</span>',
-        rowClassRules: { 'row-public': p => isPublicOnly(p.data) },
+        rowClassRules: { 'row-public': p => isLowPriority(p.data) },
         ...extra,
       });
     }
@@ -935,7 +943,7 @@
       addNotice('brand', 'information', '',
         `Updated ${fmtDateTime(DATA.generated_at)} Past meetings and press cover ${fmtDate(DATA.window.start)} to ${fmtDate(DATA.window.end)}; ` +
         `upcoming meetings cover agendas posted through ${fmtDate(DATA.meeting_window.end)}.`);
-      if (ageDays > 2) {   // the data is refreshed daily
+      if (ageDays > 5) {   // refreshed Sunday and Wednesday nights; the longest gap is about 4 days
         addNotice('warning', 'clock', 'This data is out of date',
           `It was last updated ${count(Math.floor(ageDays), 'day')} ago. Run the collector to refresh it.`);
       }
